@@ -6,6 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <title>Primus 伝票発行システム</title>
+<meta name="theme-color" content="#1a2744">
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1014,8 +1016,18 @@ firebase.initializeApp({
 // ===== 請求機能は配布版では無効 =====
 
 // auto stubs for renamed billing funcs
-function applyNexusChrome(){}
-function applyOfficeChrome(){}
+function applyNexusChrome(){/* 配布版ではネクサス表示は使わない */}
+function applyOfficeChrome(){
+  const setLink=(rel,href,type)=>{
+    let el=[...document.querySelectorAll(`link[rel="${rel}"]`)].find(n=>!type||n.getAttribute('type')===type);
+    if(!el){el=document.createElement('link');el.rel=rel;if(type)el.type=type;document.head.appendChild(el);}
+    el.href=href;
+  };
+  setLink('manifest','manifest.json');
+  let theme=document.querySelector('meta[name="theme-color"]');
+  if(!theme){theme=document.createElement('meta');theme.name='theme-color';document.head.appendChild(theme);}
+  theme.content='#1a2744';
+}
 function applyViewerUi(){}
 function buildInvoicesFromRecs(){return null;}
 function buildMeisaiRows(){return null;}
