@@ -6,12 +6,6 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <title>Primus 伝票発行システム</title>
-<script>
-if(new URLSearchParams(location.search).get('mode')==='nexus'){
-  document.title='Purims ネクサス請求閲覧';
-  const i=document.createElement('link');i.rel='icon';i.type='image/png';i.sizes='192x192';i.href='nexus-icon-192.png';document.head.appendChild(i);
-}
-</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -939,9 +933,9 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="help-section help-collapsed" id="help-master">
     <div class="help-section-hd" onclick="toggleHelp('master')">⚙️ 最初に一度だけ（マスタ設定）<span class="help-toggle" id="help-toggle-master">▶</span></div>
     <div class="help-section-body">
-      <p><span class="help-tag">マスタ管理</span> → 客先編集 で、客先ごとに次を設定します。</p>
-      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">締め日</div>20日〆・25日〆・末日〆から選択（客先ごとに異なってOK）。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">品目・納品サイクル</div>品目名と納品曜日（月〜日）を客先ごとに登録。<span class="help-tag">マスタから選ぶ</span> では <span class="help-tag">品番順</span>／<span class="help-tag">あいうえお順</span> を切り替えられます。</div></div>
+      <p><span class="help-tag">マスタ管理</span> → 客先編集 で、客先ごとに品目と納品サイクルを設定します。</p>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">品目・納品サイクル</div>品目名と納品曜日（月〜日）を客先ごとに登録。<span class="help-tag">マスタから選ぶ</span> では <span class="help-tag">品番順</span>／<span class="help-tag">あいうえお順</span> を切り替えられます。</div></div>
+      <div class="help-note">💡 締め日・最低保証・配送費・包装料・駐車場代など請求向け項目は、<span class="help-tag">データ</span> タブの「請求系マスタ項目」をONにしたときだけ表示されます（初期はOFF）。</div>
       <div class="help-note">💡 マスタ管理を開くときは、ログインパスワードの再入力が必要です。</div>
     </div>
   </div>
@@ -2015,28 +2009,8 @@ function isBillingDeliveryInScope(d){if(!d)return false;if(d.y<BILLING_DELIVERY_
 function isExportableHist(h){const d=parseHistDeliveryDate(h);return!!(h&&h.client&&d&&isBillingDeliveryInScope(d));}
 function outOfScopeUnbilled(){return(DB.history||[]).filter(h=>{if(h.billingExportedAt)return false;const d=parseHistDeliveryDate(h);return d&&!isBillingDeliveryInScope(d);});}
 function markOutOfScopeAsBilled(){
-  const entries=outOfScopeUnbilled();
-  if(!entries.length)return 0;
-  entries.forEach(h=>{h.billingExportedAt=BILLING_OUT_OF_SCOPE_MARK;});
-  persistHistoryLocal();
-  
-  if(typeof currentUser!=='undefined'&&currentUser){
-    const tok=markSelfSaving();
-    const updates={};
-    entries.forEach(h=>{if(h&&h.id!=null)updates[histPath(h.id)+'/billingExportedAt']=BILLING_OUT_OF_SCOPE_MARK;});
-    const keys=Object.keys(updates);
-    const chunk=400;
-    const writes=[];
-    for(let i=0;i<keys.length;i+=chunk){
-      const part={};
-      keys.slice(i,i+chunk).forEach(k=>{part[k]=updates[k];});
-      writes.push(db.ref().update(part));
-    }
-    Promise.all(writes)
-      .catch(e=>toast('7月以前の反映済み更新に失敗しました: '+e.message,'e'))
-      .finally(()=>setTimeout(()=>clearSelfSaving(tok),800));
-  }
-  return entries.length;
+  // 配布版: 請求対象外マーキングはしない（履歴を勝手に書き換えない）
+  return 0;
 }
 function getBillingMonth(d,closingDay){if(!d)return null;if(!closingDay||closingDay===99)return{y:d.y,m:d.m};if(d.d>closingDay){let m=d.m+1,y=d.y;if(m>12){m=1;y++;}return{y,m};}return{y:d.y,m:d.m};}
 function belongsToBillingMonth(d,year,month,closingDay){if(!d)return false;if(!closingDay||closingDay===99)return d.y===year&&d.m===month;let sy=year,sm=month-1,sd=closingDay+1;if(sm<1){sm=12;sy--;}const start=new Date(sy,sm-1,sd);const end=new Date(year,month-1,closingDay,23,59,59);const dt=new Date(d.y,d.m-1,d.d);return dt>=start&&dt<=end;}
@@ -2896,7 +2870,24 @@ function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new 
 // ===== マスタ管理 =====
 function showPanel(id,btn){
   if(currentUser&&currentUser.role==='viewer'&&id==='master')return;
-  document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.height='';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const panel=document.getElementById('panel-'+id);panel.classList.add('on');const scrollPanels=['master','history','data','help','billing'];if(scrollPanels.includes(id)){const hdrH=document.querySelector('.hdr').offsetHeight;const tabH=document.querySelector('.tabs').offsetHeight;panel.style.height=(window.innerHeight-hdrH-tabH)+'px';}if(btn&&btn.classList)btn.classList.add('on');else{const tabs=[...document.querySelectorAll('.tabs .tab')];const map={slip:0,history:1,master:2,data:3,billing:4,help:5};if(map[id]!=null&&tabs[map[id]])tabs[map[id]].classList.add('on');}if(id==='billing'){if(isViewerSession())applyViewerUi();else{renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}}}
+  document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.height='';});
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const panel=document.getElementById('panel-'+id);
+  if(!panel)return;
+  panel.classList.add('on');
+  const scrollPanels=['master','history','data','help'];
+  if(scrollPanels.includes(id)){
+    const hdrH=document.querySelector('.hdr').offsetHeight;
+    const tabH=document.querySelector('.tabs').offsetHeight;
+    panel.style.height=(window.innerHeight-hdrH-tabH)+'px';
+  }
+  if(btn&&btn.classList)btn.classList.add('on');
+  else{
+    const tabs=[...document.querySelectorAll('.tabs .tab')];
+    const map={slip:0,history:1,master:2,data:3,help:4};
+    if(map[id]!=null&&tabs[map[id]])tabs[map[id]].classList.add('on');
+  }
+}
 function _disabled_onMeisaiMonthChange(){renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}
 function showCTab(id,btn){document.querySelectorAll('#m-panel-client .m-panel').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#m-panel-client .m-tab').forEach(t=>t.classList.remove('on'));document.getElementById('c-panel-'+id).classList.add('on');if(btn)btn.classList.add('on');if(id==='new')renderCycBtns('nc-cyc-btns','nc-cyc','');}
 function showMTab(id,btn){document.querySelectorAll('.m-panel').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.m-tab').forEach(t=>t.classList.remove('on'));document.getElementById('m-panel-'+id).classList.add('on');btn.classList.add('on');if(id==='product'){renderProducts();setNPCode();}if(id==='group'){renderGroups();renderClientGrpList();}if(id==='client')setNC2();}
@@ -4041,39 +4032,18 @@ document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key===
 
 function loginSuccess(){
   resetRoleUi();
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('current-user-display').textContent=currentUser.username+(currentUser.isAdmin?' 👑':'');
+  const ls=document.getElementById('login-screen');
+  if(ls) ls.classList.add('hidden');
+  const disp=document.getElementById('current-user-display');
+  if(disp&&currentUser) disp.textContent=currentUser.username+(currentUser.isAdmin?' 👑':'');
   ['tab-loginlog','tab-masterlog'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='inline-block';});
   const umBtn=document.getElementById('user-mgr-btn');
-  if(umBtn) umBtn.style.display=(currentUser.isAdmin||currentUser.role==='admin')?'inline-block':'none';
-  if(currentUser.role==='viewer'||isNexusMode()){
-    applyViewerUi();
-    saveNexusSession(currentUser);
-    showPanel('slip');
-  }
-  // Firebase匿名認証してからfbLoad
+  if(umBtn) umBtn.style.display=(currentUser&&(currentUser.isAdmin||currentUser.role==='admin'))?'inline-block':'none';
+  // ログイン履歴は doLogin 側で purims_loginlog に記録済み。ここでは fbLoad のみ。
   if(firebase.auth().currentUser){
-    db.ref('purims/adminHash').once('value').then(snap=>{const h=snap.val();if(h)localStorage.setItem(ADMIN_HASH_KEY,h);});
     fbLoad();
   } else {
-    firebase.auth().signInAnonymously().then(()=>{
-      db.ref('purims/adminHash').once('value').then(snap=>{const h=snap.val();if(h)localStorage.setItem(ADMIN_HASH_KEY,h);});
-      fbLoad();
-    }).catch(()=>fbLoad());
-  }
-  // ログイン履歴を記録（管理者は除外）
-  if(currentUser.role!=='admin'){
-    const logEntry={user:currentUser.username,time:new Date().toISOString()};
-    const logRef=db.ref('purims/loginlog');
-    logRef.push(logEntry).then(()=>{
-      // 100件超えたら古いものを削除
-      logRef.orderByKey().once('value').then(snap=>{
-        const keys=Object.keys(snap.val()||{});
-        if(keys.length>100){
-          keys.sort().slice(0,keys.length-100).forEach(k=>logRef.child(k).remove());
-        }
-      });
-    });
+    firebase.auth().signInAnonymously().then(()=>fbLoad()).catch(()=>fbLoad());
   }
 }
 
@@ -4103,41 +4073,38 @@ function exitApp(){
   Promise.resolve(fbSave()).then(()=>toast('保存しました'));
 }
 
-// ===== ユーザー管理モーダル =====
+// ===== 会社版ユーザー管理（配布版未使用・誤パス purims/users のため隔離） =====
 let userPassEditKey=null;
-function showUserModal_dup(){openAdminPassModal();}
-function openAdminPassModal(){
+function openAdminPassModal_company_unused(){
   document.getElementById('admin-pass-modal').style.display='flex';
   document.getElementById('admin-pass-input').value='';
   document.getElementById('admin-pass-err').textContent='';
   setTimeout(()=>document.getElementById('admin-pass-input').focus(),100);
 }
-function closeAdminPassModal(){document.getElementById('admin-pass-modal').style.display='none';}
 async function verifyAdminPass_company_unused(){
   const pass=document.getElementById('admin-pass-input').value;
   const hash=await sha256(pass);
   const adminHash=await getAdminHash();
-  if(adminHash&&hash===adminHash){closeAdminPassModal();openUserModal();}
+  if(adminHash&&hash===adminHash){closeAdminPassModal();openUserModal_company_unused();}
   else document.getElementById('admin-pass-err').textContent='管理者パスワードが違います';
 }
 (function(){const el=document.getElementById('admin-pass-input');if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')verifyAdminPass();});})();
 
-function openUserModal(){
+function openUserModal_company_unused(){
   document.getElementById('user-modal').classList.remove('hidden');
   document.getElementById('user-err').textContent='';
   document.getElementById('admin-pass-change-err').textContent='';
   userPassEditKey=null;
-  renderUserList();
+  renderUserList_company_unused();
 }
-function closeUserModal_dup(){document.getElementById('user-modal').classList.add('hidden');userPassEditKey=null;}
-function showUserPassEdit(key){
+function showUserPassEdit_company_unused(key){
   userPassEditKey=key;
-  renderUserList();
+  renderUserList_company_unused();
   const keyId=String(key).replace(/[^a-zA-Z0-9_-]/g,'_');
   setTimeout(()=>document.getElementById('user-new-pass-'+keyId)?.focus(),50);
 }
-function cancelUserPassEdit(){userPassEditKey=null;renderUserList();}
-async function saveUserPass(key){
+function cancelUserPassEdit_company_unused(){userPassEditKey=null;renderUserList_company_unused();}
+async function saveUserPass_company_unused(key){
   const keyId=String(key).replace(/[^a-zA-Z0-9_-]/g,'_');
   const np=document.getElementById('user-new-pass-'+keyId)?.value||'';
   const nc=document.getElementById('user-new-pass-c-'+keyId)?.value||'';
@@ -4151,40 +4118,26 @@ async function saveUserPass(key){
   const hash=await sha256(np);
   await db.ref('purims/users/'+key).update({hash});
   userPassEditKey=null;
-  renderUserList();
+  renderUserList_company_unused();
   toast(`「${u.username}」のパスワードを変更しました`);
 }
-async function renderUserList(){
+async function renderUserList_company_unused(){
   const snap=await db.ref('purims/users').once('value');
   const users=snap.val()||{};
   const el=document.getElementById('user-list');
+  if(!el)return;
   const entries=Object.entries(users);
   if(!entries.length){el.innerHTML='<div style="font-size:13px;color:var(--mu);margin-bottom:8px">登録ユーザーがいません</div>';return;}
   el.innerHTML=entries.map(([key,u])=>{
     const roleCls=u.role==='admin'?' admin':u.role==='viewer'?' viewer':'';
     const roleLabel=u.role==='admin'?'管理者':u.role==='viewer'?'閲覧専用':'一般';
-    const editing=userPassEditKey===key;
-    const keyJs=String(key).replace(/\\/g,'\\\\').replace(/'/g,'\\\'');
-    const keyId=String(key).replace(/[^a-zA-Z0-9_-]/g,'_');
-    const editBlock=editing?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)"><input type="password" id="user-new-pass-${keyId}" placeholder="新しいパスワード" style="width:100%;padding:6px 8px;margin-bottom:6px;border:1.5px solid var(--bd);border-radius:6px;font-size:12px"><input type="password" id="user-new-pass-c-${keyId}" placeholder="確認（もう一度）" style="width:100%;padding:6px 8px;margin-bottom:6px;border:1.5px solid var(--bd);border-radius:6px;font-size:12px" onkeydown="if(event.key==='Enter')saveUserPass('${keyJs}')"><div id="user-pass-err-${keyId}" style="color:var(--ng);font-size:11px;min-height:14px;margin-bottom:4px"></div><div style="display:flex;gap:6px"><button type="button" onclick="saveUserPass('${keyJs}')" style="flex:1;padding:6px;background:var(--nv);color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer">保存</button><button type="button" onclick="cancelUserPassEdit()" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--bd);border-radius:5px;font-size:12px;cursor:pointer">キャンセル</button></div></div>`:'';
-    return `<div class="user-row" style="flex-direction:column;align-items:stretch"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="user-row-name">${escH(u.username)}</span><span class="user-row-role${roleCls}">${roleLabel}</span><button type="button" class="user-pass-btn" onclick="showUserPassEdit('${keyJs}')">パスワード変更</button><button type="button" class="user-del-btn" onclick="delUser('${keyJs}')">削除</button></div>${editBlock}</div>`;
+    return `<div class="user-row"><span class="user-row-name">${escH(u.username||key)}</span><span class="user-row-role${roleCls}">${roleLabel}</span></div>`;
   }).join('');
 }
-async function addUser_company_path(){
-  const uname=document.getElementById('new-uname').value.trim();
-  const upass=document.getElementById('new-upass').value;
-  const role=(document.getElementById('new-urole')||{value:'user'}).value;
-  if(!uname||!upass){document.getElementById('user-err').textContent='ユーザー名とパスワードを入力してください';return;}
-  const hash=await sha256(upass);
-  await db.ref('purims/users').push({username:uname,hash,role});
-  document.getElementById('new-uname').value='';document.getElementById('new-upass').value='';document.getElementById('new-urole').value='user';
-  document.getElementById('user-err').textContent='';
-  renderUserList();toast('ユーザーを追加しました');
-}
-async function delUser(key){
+async function delUser_company_unused(key){
   if(!confirm('このユーザーを削除しますか？'))return;
   await db.ref('purims/users/'+key).remove();
-  renderUserList();toast('削除しました');
+  renderUserList_company_unused();toast('削除しました');
 }
 async function changeAdminPass_dup(){
   const np=document.getElementById('new-admin-pass').value;
@@ -4369,9 +4322,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   // ズームを復元
   applyZoom();
   pruneExpiredHistory({quiet:true});
-  markOutOfScopeAsBilled();
-  
-  
+  try{loadHistoryKeepSetting();}catch(e){}
+  try{loadBillingMasterSetting();}catch(e){}
 
   // ===== 【修正④】バックアップ警告：localStorage使用（永続化） =====
   window.addEventListener('beforeunload',e=>{
@@ -4379,11 +4331,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       e.preventDefault();e.returnValue='';
     }
   });
-  const remembered=loadNexusSession();
-  if(remembered){
-    currentUser=remembered;
-    loginSuccess();
-  }
 });
 </script>
 </body>
