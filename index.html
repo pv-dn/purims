@@ -423,18 +423,6 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
   </div>
 </div>
 
-<h2 class="sr-only">プリームス伝票発行システム</h2>
-<div id="app">
-<div class="hdr">
-  <div><div class="hdr-s">Purims</div><h1>Primus 伝票発行システム</h1></div>
-  <div class="hdr-d" id="hdr-d"></div>
-  <span class="login-user" id="current-user-display"></span>
-  <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
-  <button id="tab-loginlog" onclick="showLoginLog()" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
-  <button id="tab-masterlog" onclick="showMasterLog()" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">📝 マスタ操作履歴</button>
-  <button onclick="doLogout()" style="margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">ログアウト</button>
-  <button class="exit-btn" onclick="exitApp()">💾 保存して終了</button>
-</div>
 <div id="masterlog-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:8000;display:none">
   <div style="background:#fff;border-radius:12px;padding:28px;width:700px;max-height:85vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
@@ -445,153 +433,6 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
   </div>
 </div>
 
-<!-- 管理者パスワード確認モーダル -->
-<div id="admin-pass-modal" class="admin-pass-modal">
-  <div class="admin-pass-box">
-    <div style="font-size:16px;font-weight:700;color:var(--nv);margin-bottom:18px">🔑 管理者認証</div>
-    <div style="font-size:13px;color:var(--mu);margin-bottom:14px">ユーザー管理に入るには管理者パスワードが必要です。</div>
-    <div style="margin-bottom:10px">
-      <input type="password" id="admin-pass-input" placeholder="管理者パスワードを入力" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;outline:none">
-    </div>
-    <div id="admin-pass-err" style="color:var(--ng);font-size:12px;min-height:18px;margin-bottom:10px"></div>
-    <div style="display:flex;gap:8px">
-      <button onclick="verifyAdminPass()" style="flex:1;padding:9px;background:var(--nv);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">認証</button>
-      <button onclick="closeAdminPassModal()" style="flex:1;padding:9px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:7px;font-size:13px;cursor:pointer">キャンセル</button>
-    </div>
-  </div>
-</div>
-
-<!-- ログイン履歴モーダル -->
-<div id="loginlog-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:8000;display:none">
-  <div style="background:#fff;border-radius:12px;padding:28px;width:700px;max-height:85vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-      <div style="font-size:16px;font-weight:700;color:var(--nv)">🔐 ログイン履歴</div>
-      <button onclick="closeLoginLog()" style="padding:5px 14px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px;font-size:13px;cursor:pointer">閉じる</button>
-    </div>
-    <div id="loginlog-list" style="font-size:13px">読み込み中...</div>
-  </div>
-</div>
-
-
-<div class="tabs">
-  <button class="tab on" onclick="showPanel('slip',this)">伝票発行</button>
-  <button class="tab" onclick="showMasterWithAuth(this)">マスタ管理</button>
-  <button class="tab" onclick="showPanel('history',this)">発行履歴</button>
-  <button class="tab" onclick="showPanel('data',this)">データ</button>
-  <button class="tab" onclick="showPanel('help',this)">使い方・困ったとき</button>
-</div>
-<div class="main">
-
-<!-- SLIP -->
-<div id="panel-slip" class="panel on">
-  <div id="complete-view" style="display:none;padding:16px 20px;overflow-y:auto">
-    <div class="complete-overlay">
-      <div class="complete-icon">✅</div>
-      <div class="complete-title">伝票を発行しました</div>
-      <div class="complete-sub" id="complete-sub"></div>
-      <div class="complete-btns">
-        <button class="btn" onclick="backToInput()">◀ 入力に戻る</button>
-        <button class="btn pri" id="complete-print-btn" onclick="doPrint()">印刷する</button>
-        <button class="btn acc" onclick="resetToSelect()">次の客先へ</button>
-        <button class="btn acc" id="next-client-btn" onclick="goNextClient()" style="display:none"></button>
-      </div>
-    </div>
-  </div>
-  <div id="input-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden;padding:16px 20px 0">
-    <!-- 印刷モード選択バー -->
-    <div id="print-mode-bar" style="display:flex;align-items:center;gap:10px;padding:7px 12px;background:#f0f4fa;border:1px solid #ccd6e8;border-radius:7px;margin-bottom:10px;flex-shrink:0;flex-wrap:wrap">
-      <span style="font-size:12px;color:#555;font-weight:bold;white-space:nowrap">🖨 印刷モード：</span>
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;white-space:nowrap">
-        <input type="radio" name="printMode" value="single" checked onchange="setPrintMode('single')"> 1件ずつ印刷
-      </label>
-      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;white-space:nowrap">
-        <input type="radio" name="printMode" value="batch" onchange="setPrintMode('batch')"> 一括印刷
-      </label>
-      <span id="queue-badge" style="display:none;background:#e74c3c;color:#fff;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:bold;white-space:nowrap">キュー: 0件</span>
-      <button id="batch-print-btn" onclick="doBatchPrint()" style="display:none;background:#27ae60;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;cursor:pointer;font-weight:bold;white-space:nowrap">📋 まとめて印刷</button>
-      <button id="batch-clear-btn" onclick="clearPrintQueue()" style="display:none;background:#aaa;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap">🗑 クリア</button>
-      <span style="margin-left:auto;display:flex;align-items:center;gap:6px;white-space:nowrap">
-        <span style="font-size:12px;color:#555;font-weight:bold">🔤 文字サイズ：</span>
-        <button onclick="changeFontSize(-1)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #ccd6e8;background:#fff;font-size:15px;font-weight:700;cursor:pointer;line-height:1">－</button>
-        <span id="font-size-label" style="font-size:12px;color:#555;min-width:32px;text-align:center">標準</span>
-        <button onclick="changeFontSize(1)" style="width:28px;height:28px;border-radius:50%;border:1.5px solid #ccd6e8;background:#fff;font-size:15px;font-weight:700;cursor:pointer;line-height:1">＋</button>
-      </span>
-    </div>
-    <div class="card" style="display:flex;flex-direction:column;flex:1;overflow:hidden;margin-bottom:0">
-      <div class="ch">
-        <span>客先選択・数量入力</span>
-        <div id="sbtns-top" style="display:none;gap:6px;align-items:center;margin-left:auto">
-          <button class="btn" style="padding:5px 12px;font-size:12px" onclick="resetToSelect()">◀ 客先選択に戻る</button>
-          <button class="btn" style="padding:5px 12px;font-size:12px" onclick="resetQ()">数量クリア</button>
-          <button class="btn acc" style="padding:5px 12px;font-size:12px" onclick="toggleAddArea()">＋ 品目を追加</button>
-          <button class="btn pri" style="padding:5px 12px;font-size:12px" onclick="showPrev()">伝票発行</button>
-        </div>
-      </div>
-      <div class="cb" style="background:var(--w,#fff);border-bottom:1px solid var(--bd);padding-bottom:10px;flex-shrink:0">
-        <div class="sr">
-          <label>客先</label>
-          <select class="cs" id="csel" onchange="onCC()"><option value="">— 客先を選択してください —</option></select>
-        </div>
-        <div class="chips" id="chips" style="display:none">
-          <div class="chip"><div class="lb">次回納品日</div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span class="vl dt" id="nd-v">—</span>
-              <input type="date" id="nd-picker" style="display:none;padding:3px 7px;border:1.5px solid var(--ac);border-radius:5px;font-size:13px;font-weight:600;color:var(--nv);background:var(--w);cursor:pointer" onchange="onNdPick(this)">
-              <button id="nd-cal-btn" onclick="openNdPicker()" style="padding:3px 9px;border-radius:5px;border:1.5px solid var(--ac);background:var(--w);color:var(--nv);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap" title="納品日を手動で変更">📅 変更</button>
-              <button id="nd-reset-btn" onclick="resetNdPicker()" style="display:none;padding:3px 9px;border-radius:5px;border:1.5px solid var(--b2);background:var(--w);color:var(--mu);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap" title="自動計算に戻す">↩ 自動に戻す</button>
-            </div>
-          </div>
-          <div class="chip" id="cyc-chip">
-            <div class="lb">納品サイクル　<span style="font-size:10px;color:var(--ac)" id="cyc-edit-hint">クリックで編集</span></div>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span class="cyc-v" id="cyc-v" onclick="startCyc()" title="クリックして曜日を変更">—</span>
-              <div id="cyc-btn-area" style="display:none;flex-direction:column;gap:6px">
-                <div class="cyc-btn-wrap" id="slip-cyc-btns"></div>
-                <input type="hidden" id="slip-cyc">
-                <div style="display:flex;gap:6px;margin-top:2px">
-                  <button type="button" onclick="saveCycBtns()" style="padding:4px 12px;border-radius:5px;border:none;background:var(--nv);color:#fff;font-size:12px;font-weight:700;cursor:pointer">確定</button>
-                  <button type="button" onclick="cancelCyc()" style="padding:4px 10px;border-radius:5px;border:1px solid var(--b2);background:var(--w);color:var(--mu);font-size:12px;cursor:pointer">キャンセル</button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="chip"><div class="lb">品目数</div><div class="vl" id="icnt">—</div></div>
-        </div>
-      </div>
-      <div style="padding:0 16px 8px;flex:1;overflow:hidden;display:flex;flex-direction:column">
-        <div id="iarea" style="flex:1;overflow:hidden;display:flex;flex-direction:column"><div class="emp">上のプルダウンから客先を選択してください</div></div>
-        <div id="add-item-area" class="add-item-area" style="display:none">
-          <div class="add-item-tabs">
-            <button class="add-item-tab on" onclick="switchAddTab('master',this)">📋 マスタから追加</button>
-            <button class="add-item-tab" onclick="switchAddTab('free',this)">📝 自由入力で追加</button>
-          </div>
-          <div id="add-panel-master" class="add-item-panel on">
-            <select class="add-item-sel" id="master-add-sel"><option value="">— 商品を選択 —</option></select>
-            <input type="number" class="qty" style="width:70px" id="master-add-qty" min="1" value="1" placeholder="数量">
-            <input type="text" style="padding:7px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:12px;background:var(--w);color:var(--tx);width:130px" id="master-add-biko" placeholder="備考（任意）">
-            <button class="btn pri" style="padding:7px 14px;font-size:13px;white-space:nowrap" onclick="addFromMaster()">追加</button>
-          </div>
-          <div id="add-panel-free" class="add-item-panel">
-            <input type="text" class="add-item-inp" id="free-add-name" placeholder="品名を入力" oninput="onFreeNameInput(this)">
-            <input type="number" class="qty" style="width:70px" id="free-add-qty" min="1" value="1" placeholder="数量">
-            <input type="text" style="padding:7px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:12px;background:var(--w);color:var(--tx);width:130px" id="free-add-biko" placeholder="備考（任意）">
-            <button class="btn pri" style="padding:7px 14px;font-size:13px;white-space:nowrap" onclick="addFromFree()">追加</button>
-            <div class="add-item-hint" id="free-match-hint"></div>
-          </div>
-        </div>
-      </div>
-      <div class="brow" id="sbtns" style="display:none">
-        <button class="btn" onclick="resetQ()">数量クリア</button>
-        <button class="btn acc" onclick="toggleAddArea()">＋ 品目を追加</button>
-        <button class="btn pri" onclick="showPrev()">伝票発行</button>
-      </div>
-    </div>
-  
-    <button onclick="closeUserModal()" style="width:100%;margin-top:14px;padding:9px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:7px;font-size:13px;cursor:pointer">閉じる</button>
-  </div>
-</div>
-
-<!-- 管理者パスワード確認モーダル -->
 <div id="master-auth-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9000">
   <div style="background:#fff;border-radius:12px;padding:28px;width:360px">
     <div style="font-size:16px;font-weight:700;color:var(--nv);margin-bottom:8px">🔒 マスタ管理</div>
@@ -607,31 +448,6 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
   </div>
 </div>
 
-
-<div id="admin-pass-modal" class="admin-pass-modal">
-  <div class="admin-pass-box">
-    <div style="font-size:16px;font-weight:700;color:var(--nv);margin-bottom:18px">🔑 管理者認証</div>
-    <div style="font-size:13px;color:var(--mu);margin-bottom:14px">ユーザー管理に入るには管理者パスワードが必要です。</div>
-    <div style="margin-bottom:10px"><input type="password" id="admin-pass-input" placeholder="管理者パスワードを入力" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;outline:none"></div>
-    <div id="admin-pass-err" style="color:var(--ng);font-size:12px;min-height:18px;margin-bottom:10px"></div>
-    <div style="display:flex;gap:8px">
-      <button onclick="verifyAdminPass()" style="flex:1;padding:9px;background:var(--nv);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">認証</button>
-      <button onclick="closeAdminPassModal()" style="flex:1;padding:9px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:7px;font-size:13px;cursor:pointer">キャンセル</button>
-    </div>
-  </div>
-</div>
-
-<!-- ログイン履歴モーダル -->
-<div id="loginlog-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:8000;display:none">
-  <div style="background:#fff;border-radius:12px;padding:28px;width:400px;max-height:85vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-      <div style="font-size:16px;font-weight:700;color:var(--nv)">🔐 ログイン履歴</div>
-      <button onclick="closeLoginLog()" style="padding:5px 14px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px;font-size:13px;cursor:pointer">閉じる</button>
-    </div>
-    <div id="loginlog-list" style="font-size:13px">読み込み中...</div>
-  </div>
-</div>
-
 <h2 class="sr-only">プリームス伝票発行システム</h2>
 <div id="app">
 <div class="hdr">
@@ -640,6 +456,7 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
   <span class="login-user" id="current-user-display"></span>
   <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
   <button onclick="showLoginLog()" id="tab-loginlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
+  <button onclick="showMasterLog()" id="tab-masterlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">📝 マスタ操作履歴</button>
   <button onclick="doLogout()" style="margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">ログアウト</button>
   <button class="exit-btn" onclick="exitApp()">💾 保存して終了</button>
 </div>
@@ -664,9 +481,7 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
   </div>
 </div>
 
-<!-- BILLING PANEL -->
-<div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
-    <!-- SLIP PANEL -->
+<!-- SLIP PANEL -->
 <div id="panel-slip" class="panel on">
   <div id="complete-view" style="display:none;padding:16px 20px;overflow-y:auto">
     <div class="complete-overlay">
@@ -4365,7 +4180,6 @@ const APP_UPDATES=[
   {date:'2026-09-07',type:'fix',text:'請求単価の入力がクラウドに保存されない不具合を修正'},
   {date:'2026-09-02',type:'feat',text:'ユーザー管理で各ユーザーのパスワードを変更できるようにした'},
   {date:'2026-09-02',type:'feat',text:'発行履歴で伝票をチェック選択し、まとめて再印刷できるようにした'},
-  {date:'2026-08-24',type:'fix',text:'ネクサス閲覧を別サイト（pv-dn.github.io/purims-nexus）に分離し、自社アプリと独立してインストールできるようにした'},
   {date:'2026-08-24',type:'fix',text:'自社用PWAの範囲を狭め、ネクサス（/nexus/）を別アプリとしてインストールできるようにした'},
   {date:'2026-08-24',type:'fix',text:'ネクサス専用を /nexus/ に分離し、自社アプリと別々にインストールできるようにした'},
   {date:'2026-08-24',type:'feat',text:'ネクサス専用URLをChrome/Edgeでアプリとしてインストール可能に'},
