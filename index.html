@@ -966,7 +966,6 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
         <option value="3">3か月</option>
         <option value="6" selected>6か月</option>
         <option value="12">12か月</option>
-        <option value="0">無期限</option>
       </select>
     </div>
 
@@ -1083,7 +1082,7 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <div class="help-step"><div class="help-step-num">事務</div><div class="help-step-body"><div class="help-step-title">発行伝票のチェック済み</div><span class="help-tag">請求</span> タブでまず<strong>締め日</strong>（20日〆／25日〆／末日〆）を選び、ミニカレンダー（または請求明細書ビューア左上）の<strong>納品日</strong>をクリックすると、その締めのその日以前を事務確認済みとして記録します。チェック済みは締め日ごとに別管理。「○○〆 チェック済み: 納品日 ○○まで」と表示。カレンダー左側の一覧は、<strong>チェック済みにしたあと</strong>に発行した伝票だけを<strong>発行あり・客先名・納品日</strong>で出します。行のチェックを入れると一覧から消えます（<span class="help-tag">表示中を消す</span>でまとめても消せます）。同じ客先・納品日で新規発行しようとしたとき、チェック済み期間なら警告文にその旨が出ます。</div></div>
       <div class="help-note">💡 <strong>Enter</strong>：数量は次の数量へ、請求単価は次の単価へ（列の縦移動）。品番・備考は通常スキップ（必要なときだけクリック）。</div>
       <div class="help-note">💡 データはクラウド（Firebase）に自動保存されます。別のPCで開いても同じデータが表示されます。</div>
-      <div class="help-note">💡 <strong>発行履歴の保存期間</strong>は<span class="help-tag">発行履歴</span>タブ内で設定できます（初期値6か月・無期限も可、納品日基準）。期間を超えた伝票はアプリ起動・クラウド読み込み時に自動削除されます。必要な分は事前にCSVで保存してください。伝票を<strong>削除</strong>・<strong>発行取消</strong>・期間超過で消したときは、<span class="help-tag">発行履歴</span> の <span class="help-tag">削除履歴</span> タブに記録が残ります（12か月）。誤削除なら「履歴に戻す」で復元できます。</div>
+      <div class="help-note">💡 <strong>発行履歴の保存期間</strong>は<span class="help-tag">発行履歴</span>タブ内で設定できます（3／6／12か月、初期値6か月、納品日基準）。期間を超えた伝票はアプリ起動・クラウド読み込み時に自動削除されます。必要な分は事前にCSVで保存してください。伝票を<strong>削除</strong>・<strong>発行取消</strong>・期間超過で消したときは、<span class="help-tag">発行履歴</span> の <span class="help-tag">削除履歴</span> タブに記録が残ります（12か月）。誤削除なら「履歴に戻す」で復元できます。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-print">
@@ -2097,23 +2096,30 @@ function historyDeliveryDate(h){
 }
 function parseHistDeliveryDate(h){return parseDeliveryDate(historyDeliveryDate(h));}
 let HISTORY_KEEP_MONTHS=6; // 0 = unlimited; synced from settings
+function normalizeHistoryKeepMonths(n){
+  const v=Number(n);
+  if(v===3||v===6||v===12) return v;
+  return 6;
+}
 function getHistoryKeepMonths(){
-  const n=Number(HISTORY_KEEP_MONTHS);
-  return Number.isFinite(n)?n:6;
+  return normalizeHistoryKeepMonths(HISTORY_KEEP_MONTHS);
 }
 function historyRetentionCutoff(){
   const months=getHistoryKeepMonths();
-  if(months<=0) return new Date(0); // prune never matches if isWithin uses >= and we short-circuit
   const d=new Date();d.setHours(0,0,0,0);d.setMonth(d.getMonth()-months);return d;
 }
-function isHistoryRetentionUnlimited(){return getHistoryKeepMonths()<=0;}
+function isHistoryRetentionUnlimited(){return false;}
 async function loadHistoryKeepSetting(){
   try{
     const local=localStorage.getItem('purims_historyKeepMonths');
-    if(local!==null&&local!==''){HISTORY_KEEP_MONTHS=Number(local);}
+    if(local!==null&&local!==''){HISTORY_KEEP_MONTHS=normalizeHistoryKeepMonths(local);}
     const snap=await firebase.database().ref('purims/settings/historyKeepMonths').get();
-    if(snap.exists()){HISTORY_KEEP_MONTHS=Number(snap.val());localStorage.setItem('purims_historyKeepMonths',String(HISTORY_KEEP_MONTHS));}
+    if(snap.exists()){
+      HISTORY_KEEP_MONTHS=normalizeHistoryKeepMonths(snap.val());
+      localStorage.setItem('purims_historyKeepMonths',String(HISTORY_KEEP_MONTHS));
+    }
   }catch(e){console.warn('historyKeepMonths load',e);}
+  HISTORY_KEEP_MONTHS=getHistoryKeepMonths();
   syncHistKeepUi();
 }
 function syncHistKeepUi(){
@@ -2121,15 +2127,13 @@ function syncHistKeepUi(){
   if(sel) sel.value=String(getHistoryKeepMonths());
   const hint=document.getElementById('hist-hint');
   if(hint){
-    const m=getHistoryKeepMonths();
-    const label=m<=0?'無期限':(m+'か月');
-    hint.innerHTML='日付ごとのフォルダの中に発行履歴があります。履歴の保存期間は<strong>'+label+'</strong>（納品日基準）です。';
+    hint.innerHTML='日付ごとのフォルダの中に発行履歴があります。履歴の保存期間は<strong>'+getHistoryKeepMonths()+'か月</strong>（納品日基準）です。';
   }
 }
 async function saveHistoryKeepSetting(){
   const sel=document.getElementById('hist-keep-months');
   if(!sel) return;
-  HISTORY_KEEP_MONTHS=Number(sel.value);
+  HISTORY_KEEP_MONTHS=normalizeHistoryKeepMonths(sel.value);
   localStorage.setItem('purims_historyKeepMonths',String(HISTORY_KEEP_MONTHS));
   try{await firebase.database().ref('purims/settings/historyKeepMonths').set(HISTORY_KEEP_MONTHS);}catch(e){console.warn(e);}
   syncHistKeepUi();
@@ -2173,7 +2177,7 @@ function pruneExpiredHistory(opts){ if(typeof isHistoryRetentionUnlimited==='fun
       .catch(e=>toast('古い履歴の削除に失敗しました: '+e.message,'e'))
       .finally(()=>setTimeout(()=>clearSelfSaving(tok),800));
   }
-  if(!quiet){const m=getHistoryKeepMonths();toast(`保存期間（${m<=0?'無期限':m+'か月'}）を超えた履歴 ${expired.length}件を削除しました`);}
+  if(!quiet)toast(`保存期間（${getHistoryKeepMonths()}か月）を超えた履歴 ${expired.length}件を削除しました`);
   return expired.length;
 }
 const BILLING_DELIVERY_MIN={y:2026,m:8,d:1};
@@ -3420,8 +3424,7 @@ function renderHistory(){
   const byClient=histViewMode==='client';
   if(hint){
     const m=typeof getHistoryKeepMonths==='function'?getHistoryKeepMonths():6;
-    const label=m<=0?'無期限':(m+'か月');
-    hint.innerHTML=(byClient?'客先ごとにまとまっています。フォルダをクリックして開きます。':'月ごとのフォルダの中に発行日があります。フォルダをクリックして開きます。')+' 数量の誤りは「訂正して再発行」から直します。チェックを入れた伝票だけまとめて再印刷できます。履歴の保存期間は<strong>'+label+'</strong>（納品日基準）です。削除すると「削除履歴」タブに記録が残ります。';
+    hint.innerHTML=(byClient?'客先ごとにまとまっています。フォルダをクリックして開きます。':'月ごとのフォルダの中に発行日があります。フォルダをクリックして開きます。')+' 数量の誤りは「訂正して再発行」から直します。チェックを入れた伝票だけまとめて再印刷できます。履歴の保存期間は<strong>'+m+'か月</strong>（納品日基準）です。削除すると「削除履歴」タブに記録が残ります。';
   }
   if(byClient){
     const groups={};
