@@ -1051,47 +1051,26 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <p>伝票発行・履歴確認・マスタ管理を行う配布用アプリです。データはクラウドに自動保存されます。</p>
       <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブ … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">使い方</span></p>
       <div class="help-step"><div class="help-step-num">朝〜夕</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
-      <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで変更できます。</div></div>
+      <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで 3／6／12か月から選べます。</div></div>
       <div class="help-note">💡 データはクラウド（Firebase）に自動保存されます。別のPCで開いても同じデータが表示されます。</div>
-    </div>
-  </div>
-  <div class="help-section-body">
-      <p>伝票は<strong>プリームス</strong>名義、請求明細は<strong>ネクサス</strong>名義です。Excel テンプレート（.xlsm）の取り込みは<strong>不要</strong>（Purims が .xlsx を直接作成します）。</p>
-      <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブの順番 … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">請求</span> → <span class="help-tag">使い方</span>（右端の <span class="help-tag">更新情報</span> で変更履歴を確認できます）</p>
-      <div class="help-step"><div class="help-step-num">朝〜夕</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
-      <div class="help-step"><div class="help-step-num">終了前</div><div class="help-step-body"><div class="help-step-title">請求明細をアプリ内で確認（任意）</div><span class="help-tag">請求</span> タブ → 請求月を指定 → <span class="help-tag">請求明細書を見る</span>。確認後、同じタブで<strong>締め日</strong>を選んでからミニカレンダーの<strong>納品日</strong>をクリックするとチェック済みになります（Excel なしで OK）。</div></div>
-      <div class="help-step"><div class="help-step-num">終了時</div><div class="help-step-body"><div class="help-step-title">請求明細 Excel を出力</div><span class="help-tag">請求</span> または <span class="help-tag">データ</span> タブの <span class="help-tag">未反映→請求明細Excel</span> を押す → <code>purims_meisai_YYYYMMDD.xlsx</code> がダウンロード。客先ごとにシート自動作成。</div></div>
-      <div class="help-step"><div class="help-step-num">必要なら</div><div class="help-step-body"><div class="help-step-title">Excel で保存・印刷</div>ダウンロードした .xlsx を Excel で開く（取り込み操作なし）。印刷または所定フォルダに保存。</div></div>
-      <div class="help-note">💡 <strong>未反映の伝票</strong> … <span class="help-tag">請求</span> タブの <span class="help-tag">未反映分を見る</span> や <span class="help-tag">未反映→請求明細Excel</span> で扱います（本日以前の分も含む）。Excel出力すると反映済みになり、同じ伝票は二重に出力されません。件数は <strong>2026年8月1日以降の納品</strong> のみです。7月以前は初回読み込み時に反映済み扱いになります。</div>
-      <div class="help-note">💡 <strong>押し忘れた場合</strong> … 翌日（または後日）に <span class="help-tag">未反映→請求明細Excel</span> を押せば、未反映分を含む<strong>その請求月の全伝票</strong>がシートに載ります（前回分も消えない）。反映済みフラグは今回の未反映分にだけ付きます。<span class="help-tag">請求</span> タブの <span class="help-tag">請求月Excel出力</span> でも再出力できます。</div>
-      <div class="help-note">💡 <strong>請求額一覧</strong> … <span class="help-tag">請求</span> → <span class="help-tag">請求額一覧を見る</span> で店舗ごとの小計・税・合計を一覧表示。並びは紙の請求一覧表どおり、<strong>締め日のあと店舗番号の若い順</strong>（例: 25日〆は 213→215→234…→287→301→303）。<strong>20日〆</strong>だけ番号なし（楽園など）が先、<strong>25日〆・末日〆</strong>の番号なしは後ろです。締め日の区切りには <strong>20日締め／25日締め／末日締め</strong> の見出し行を入れています。駐車場代は元の客先の直後（茶茶花・楽園町田・穂のほまれは紙の★どおり必ず行を出します）。明細書の左一覧・全店舗印刷・Excel も同じ順。行クリックで明細へ。<span class="help-tag">CSV</span>・<span class="help-tag">Excel</span> の両方で出力できます。</div>
-      <div class="help-note">💡 毎回<strong>新しい Excel ファイル</strong>が作成されます。前日保存したファイルを Purims が自動更新することはありません。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-basic">
     <div class="help-section-hd" onclick="toggleHelp('basic')">📋 伝票発行の詳細<span class="help-toggle" id="help-toggle-basic">▶</span></div>
     <div class="help-section-body">
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">印刷モードを選ぶ</div>画面上部の「🖨 印刷モード」バーで <span class="help-tag">1件ずつ印刷</span> か <span class="help-tag">一括印刷</span> を選びます。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先をプルダウンで選ぶ</div>「客先を選択してください」から届け先を選びます。</div></div>
-      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">数量を入力して伝票発行</div>品目一覧に数量を入力し、<span class="help-tag">伝票発行</span>ボタンを押します。発行しない客先は <span class="help-tag">⏭ 飛ばす</span> で次の客先へ進めます（リストから選び直す必要はありません）。</div></div>
-      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">次の客先へ</div>発行後は <span class="help-tag">▶ 客先名</span> で次へ。<span class="help-tag">客先選択に戻る</span> はリストの先頭からやり直すとき。</div></div>
-      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-body"><div class="help-step-title">間違えたとき</div>発行した伝票は完了画面から取り消せません（印刷後に履歴が消えるのを防ぐため）。数量を直すときは <span class="help-tag">発行履歴</span> を開き <span class="help-tag">訂正して再発行</span>。不要な伝票は履歴の <span class="help-tag">削除</span>（削除履歴に残ります）。</div></div>
-      <div class="help-step"><div class="help-step-num">注意</div><div class="help-step-body"><div class="help-step-title">同じ納品日の再打ち込みは不可</div>同じ客先・同じ納品日の伝票が既にあると、<strong>新規の打ち直し発行はできません</strong>。警告から案内どおり <span class="help-tag">発行履歴</span> → <span class="help-tag">訂正して再発行</span> で数量を直します。訂正すると履歴に「訂正再発行」と日時が残ります。</div></div>
-      <div class="help-step"><div class="help-step-num">履歴</div><div class="help-step-body"><div class="help-step-title">まとめて再印刷</div><span class="help-tag">発行履歴</span>（発行日別は <strong>月 → 日付</strong> のフォルダ）で伝票の行をクリックすると品目の詳細が開きます。伝票左のチェックを入れ → <span class="help-tag">選択した伝票をまとめて印刷</span>。1件だけなら明細内の <span class="help-tag">伝票印刷</span> でも再発行できます。</div></div>
-      <div class="help-note">💡 印刷面は左右2枚。左は「委託洗濯伝票」、右だけ「委託洗濯伝票　(納品控)」です。</div>
-      <div class="help-step"><div class="help-step-num">事務</div><div class="help-step-body"><div class="help-step-title">発行伝票のチェック済み</div><span class="help-tag">請求</span> タブでまず<strong>締め日</strong>（20日〆／25日〆／末日〆）を選び、ミニカレンダー（または請求明細書ビューア左上）の<strong>納品日</strong>をクリックすると、その締めのその日以前を事務確認済みとして記録します。チェック済みは締め日ごとに別管理。「○○〆 チェック済み: 納品日 ○○まで」と表示。カレンダー左側の一覧は、<strong>チェック済みにしたあと</strong>に発行した伝票だけを<strong>発行あり・客先名・納品日</strong>で出します。行のチェックを入れると一覧から消えます（<span class="help-tag">表示中を消す</span>でまとめても消せます）。同じ客先・納品日で新規発行しようとしたとき、チェック済み期間なら警告文にその旨が出ます。</div></div>
-      <div class="help-note">💡 <strong>Enter</strong>：数量は次の数量へ、請求単価は次の単価へ（列の縦移動）。品番・備考は通常スキップ（必要なときだけクリック）。</div>
-      <div class="help-note">💡 データはクラウド（Firebase）に自動保存されます。別のPCで開いても同じデータが表示されます。</div>
-      <div class="help-note">💡 <strong>発行履歴の保存期間</strong>は<span class="help-tag">発行履歴</span>タブ内で設定できます（3／6／12か月、初期値6か月、納品日基準）。期間を超えた伝票はアプリ起動・クラウド読み込み時に自動削除されます。必要な分は事前にCSVで保存してください。伝票を<strong>削除</strong>・<strong>発行取消</strong>・期間超過で消したときは、<span class="help-tag">発行履歴</span> の <span class="help-tag">削除履歴</span> タブに記録が残ります（12か月）。誤削除なら「履歴に戻す」で復元できます。</div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先・数量</div>客先を選び、品目の数量を入力します。納品日はサイクルから自動計算され、必要なら変更できます。</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票発行</div><span class="help-tag">伝票発行</span> を押すと履歴に保存され、印刷できます。同じ客先・同じ納品日は重複発行できず、訂正再発行になります。</div></div>
+      <div class="help-note">💡 発行履歴の保存期間（納品日基準）は <span class="help-tag">発行履歴</span> タブで設定できます。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-print">
     <div class="help-section-hd" onclick="toggleHelp('print')">📄 印刷がうまくいかないとき<span class="help-toggle" id="help-toggle-print">▶</span></div>
     <div class="help-section-body">
-      <div style="font-weight:600;margin-bottom:8px;color:var(--nv)">納品伝票（プリームス）</div>
+      <div style="font-weight:600;margin-bottom:8px;color:var(--nv)">納品伝票</div>
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 伝票が小さく印刷される</div><p>印刷ダイアログの「倍率」を <strong>100%</strong> に設定してください。</p></div>
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 余白が大きすぎる</div><p>印刷ダイアログで「余白」を <strong>「なし」または「最小」</strong> に設定してください。用紙は <strong>B5 横向き</strong> です。</p></div>
-      <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 客先名が長いとき</div><p>客先名は<strong>1行</strong>のまま表示し、長さに応じて文字サイズと字間を調整します（小さくし過ぎない設定）。</p></div>
+      <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 客先名が長いとき</div><p>客先名は<strong>1行</strong>のまま表示し、長さに応じて文字サイズと字間を調整します。</p></div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-master">
@@ -1103,59 +1082,12 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <div class="help-note">💡 マスタ管理を開くときは、ログインパスワードの再入力が必要です。</div>
     </div>
   </div>
-  <div class="help-section-body">
-      <p><span class="help-tag">マスタ管理</span> → 客先編集 で、客先ごとに次を設定します。</p>
-      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">締め日</div>20日〆・25日〆・末日〆から選択。請求月の判定に使います（客先ごとに異なってOK）。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">請求単価</div>各品目の「請求単価」列にまとめて入力（<strong>Enter</strong> で次の単価へ縦移動。品番はクリック時のみ） → 下の <span class="help-tag">請求単価・品目を保存</span> を1回押す。1件ごとに保存する必要はありません。<strong>伝票には表示されません。</strong> 請求明細の画面表示・印刷・Excel に使います。</div></div>
-      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">品目・納品サイクル</div>品目名と納品曜日（月〜日）を客先ごとに登録。<span class="help-tag">マスタから選ぶ</span> では <span class="help-tag">品番順</span>／<span class="help-tag">あいうえお順</span> を切り替えられます（伝票発行の「マスタから追加」も同じ）。</div></div>
-      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">最低保証（必要な客先のみ）</div>月額の税抜最低保証円を入力。請求明細の小計がこれを下回るときは、保証額で請求します（消費税はその上に10%）。空欄は保証なし。</div></div>
-      <div class="help-step"><div class="help-step-num">5</div><div class="help-step-body"><div class="help-step-title">配送費（必要な客先のみ）</div>1回あたりの税抜配送費を入力。請求明細書では<strong>伝票1枚につき1回</strong>「配送費」行が自動加算されます。<strong>伝票の印刷・画面には出ません。</strong> 空欄は加算なし。</div></div>
-      <div class="help-step"><div class="help-step-num">6</div><div class="help-step-body"><div class="help-step-title">包装料（必要な客先のみ）</div>1点あたりの税抜包装料を入力。請求明細書では<strong>その納品の総点数×単価</strong>で「包装料」行が自動加算されます。<strong>伝票の印刷・画面には出ません。</strong> 空欄は加算なし。</div></div>
-      <div class="help-step"><div class="help-step-num">7</div><div class="help-step-body"><div class="help-step-title">駐車場代（必要な客先のみ）</div>「あり」にすると、請求タブの<strong>駐車場代入力</strong>でその客先を選べます。領収書を見て金額を入力（空＝その回なし）。請求では<strong>客先名 駐車場代</strong>として別明細になります。<strong>伝票には出ません。</strong></div></div>
-      <div class="help-warn">⚠️ 請求単価が未設定の品目は、請求明細で 0 円になり警告が出ます。数量があるのに単価がない行は、明細書の単価セルが<strong>黄色</strong>になります（マスタで単価を保存すると消えます）。</div>
-    </div>
-  </div>
-  <div class="help-section-body">
-      <p>Purims がブラウザ内で請求明細書を<strong>直接表示・印刷・Excel出力</strong>します。運用 PC に Excel テンプレート（.xlsm）を置く必要はありません。印刷レイアウトは<strong>プゥル・ヴー伝票アプリと同じ書式</strong>です（ネクサス名義）。</p>
-      <div class="help-step"><div class="help-step-num">駐車場</div><div class="help-step-body"><div class="help-step-title">駐車場代を入力</div>マスタで「駐車場代あり」にした客先は、<span class="help-tag">請求</span> タブの <span class="help-tag">駐車場代入力</span> で客先を選び、領収書を見て金額を入力 → <span class="help-tag">駐車場代を保存</span>。請求明細・請求額一覧では例として <strong>あ</strong>（通常品目）と <strong>あ 駐車場代</strong>（駐車場のみ）の<strong>2枚／2行</strong>になります。駐車場明細書には<strong>金額を入れた日だけ</strong>出ます（空欄＝なしの日は数量も日付も出しません）。行は<strong>単価の安い順</strong>です。紙の★客先（茶茶花・楽園　町田店・穂のほまれ　西新宿店）は金額がなくても駐車場のシート枠は残ります。</div></div>
-      <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">アプリ内で見る</div><span class="help-tag">請求</span> タブ → 請求月を指定 → <span class="help-tag">請求明細書を見る</span>。左の客先一覧は紙の請求一覧表と同じ順（25日〆・末日〆の番号なしは後ろ）。クリックで切り替え。<span class="help-tag">未反映分を見る</span> で Excel 出力前の分も確認できます。</div></div>
-      <div class="help-step"><div class="help-step-num">事務</div><div class="help-step-body"><div class="help-step-title">チェック済みにする</div>請求明細書を確認したら、<span class="help-tag">請求</span> タブ（または明細ビューア左上）で<strong>締め日</strong>を選び → ミニカレンダーの<strong>納品日</strong>をクリック。チェック済みは締め日ごとに分かれます。その締めの納品ありの日は薄い青、チェック済は緑です。カレンダー左側には、<strong>チェック後に発行した分だけ</strong>「発行あり・客先名・納品日」が出ます。確認したら行のチェック（または <span class="help-tag">表示中を消す</span>）で一覧から消せます。</div></div>
-      <div class="help-step"><div class="help-step-num">印刷</div><div class="help-step-body"><div class="help-step-title">明細書を印刷</div>明細表示中に <span class="help-tag">🖨 この客先を印刷</span>（表示中の1店）または <span class="help-tag">🖨 全店舗を印刷</span>（左一覧と同じ紙の順番で全店）。画面上はウィンドウに収まるよう自動で縮小表示します（印刷は実寸）。左の客先一覧は請求額一覧と同じ順で、<strong>20日締め／25日締め／末日締め</strong>の見出し付き。事務チェックは見出しクリックで開閉できます。用紙 <strong>A4 横向き</strong>・倍率 <strong>100%</strong>。</div></div>
-      <div class="help-step"><div class="help-step-num">日次</div><div class="help-step-body"><div class="help-step-title">未反映→請求明細Excel</div>未反映の伝票（押し忘れ分を含む）を対象に、該当客先・請求月のシートを含む Excel を出力。ファイル名例: <code>purims_meisai_20250818.xlsx</code></div></div>
-      <div class="help-step"><div class="help-step-num">月次</div><div class="help-step-body"><div class="help-step-title">請求月Excel出力</div><span class="help-tag">請求</span> または <span class="help-tag">データ</span> タブで年月を指定して再出力。ファイル名例: <code>purims_meisai_202508.xlsx</code></div></div>
-      <div class="help-step"><div class="help-step-num">内容</div><div class="help-step-body"><div class="help-step-title">シート構成</div>シート名は <code>客先名_YYYY年M月</code>。品名・単価・日別数量（最大14日分）・合計数・合計金額・小計・消費税10%・ご請求金額を含みます。<strong>客先マスタに登録した品目は、その月に数量がなくても行として表示</strong>されます（数量マスは空欄）。マスタで配送費・包装料を設定した客先は、それぞれ伝票1枚ごと／総点数分の行が請求明細に追加されます。駐車場代ありの客先は、入力した回だけ「客先名 駐車場代」として別明細になります（いずれも伝票面には出ません）。</div></div>
-      <div class="help-note">💡 週2回程度の発行なら1店舗14伝票以内で問題ありません。14枚を超える客先は警告が出ます。</div>
-      <div class="help-note">💡 品目が20行を超える客先は、画面・印刷とも2枚目以降に分割されます。合計金額は<strong>最終ページ</strong>に表示されます。</div>
-      <div class="help-note">💡 対象は<strong>納品日 2026年8月1日以降</strong>の伝票のみです（7月以前は請求明細に載せません）。</div>
-      <div class="help-note">💡 旧方式（JSON → ネクサス明細書.xlsm 取り込み）も <span class="help-tag">データ</span> タブの「JSON（旧xlsm用）」から利用できます。</div>
-    </div>
-  </div>
   <div class="help-section help-collapsed" id="help-data">
-    <div class="help-section-hd" onclick="toggleHelp('data')">😱 データが消えた・おかしいとき<span class="help-toggle" id="help-toggle-data">▶</span></div>
+    <div class="help-section-hd" onclick="toggleHelp('data')">💾 データが消えた・おかしいとき<span class="help-toggle" id="help-toggle-data">▶</span></div>
     <div class="help-section-body">
       <p><span class="help-tag">データ</span> タブ →「⬇️ 今すぐ読み込む」を押してください。クラウドから復元できる場合がほとんどです。</p>
-      <div class="help-step"><div class="help-step-num">客先</div><div class="help-step-body"><div class="help-step-title">客先がマスタから消えたとき</div><span class="help-tag">データ</span> → <span class="help-tag">消えた客先を履歴から復元</span>。発行履歴に残っている客先名をマスタへ戻せます（品目は履歴から拾います）。</div></div>
+      <div class="help-step"><div class="help-step-num">客先</div><div class="help-step-body"><div class="help-step-title">客先がマスタから消えたとき</div><span class="help-tag">データ</span> → <span class="help-tag">消えた客先を履歴から復元</span>。発行履歴に残っている客先名をマスタへ戻せます。</div></div>
       <div class="help-warn">⚠️ それでも解決しない場合はJSONバックアップから復元してください。</div>
-    </div>
-  </div>
-  <div class="help-section-body">
-      <p>ネクサス担当者に<strong>専用URLとパスワード（閲覧専用）</strong>を伝えるだけで、請求明細書・請求額一覧を自分で確認・印刷してもらえます。Excelファイルのメール添付は不要になります。</p>
-      <div class="help-step"><div class="help-step-num">特徴</div><div class="help-step-body"><div class="help-step-title">閲覧専用アカウントでできること</div>
-        <span class="help-tag">請求</span> タブのみ表示（<span class="help-tag">請求明細書を見る</span>・<span class="help-tag">請求額一覧を見る</span>）。<span class="help-tag">事務チェック</span>・<span class="help-tag">駐車場代入力</span>・<span class="help-tag">Excel出力</span>・<span class="help-tag">未反映分を見る</span>・使い方・伝票発行・マスタ管理・データは非表示です。
-      </div></div>
-      <div class="help-step"><div class="help-step-num">設定</div><div class="help-step-body"><div class="help-step-title">アカウントの追加方法</div>
-        管理者でログイン → ヘッダー右上の <span class="help-tag">👥 ユーザー管理</span> → ユーザー名・パスワードを入力し、ロールを「<strong>閲覧専用（請求のみ）</strong>」に選択 → <span class="help-tag">追加</span>
-      </div></div>
-      <div class="help-step"><div class="help-step-num">共有</div><div class="help-step-body"><div class="help-step-title">ネクサスへ伝える内容</div>
-        URL: <code>https://pv-dn.github.io/purims-nexus/</code><br>パスワード: 設定したもの（例: <code>nexus1234</code>）
-      </div></div>
-      <div class="help-note">💡 閲覧専用ユーザーがログインしても、自社のデータが書き換わることはありません（読み取り専用の動作）。</div>
-      <div class="help-step"><div class="help-step-num">ｲﾝｽﾄ</div><div class="help-step-body"><div class="help-step-title">アプリとしてインストール</div>
-        <strong>https://pv-dn.github.io/purims-nexus/</strong> を Chrome / Edge で開く → アドレスバー右の <strong>インストール</strong>（または ⋮ →「アプリをインストール」／「ページをアプリとしてインストール」）。ショートカット名は「ネクサス請求」、アイコンは薄いピンクのプゥル・ヴーロゴです。<br>
-        自社用（primussystem）とは別サイトなので、自社アプリが入っていてもインストールできます。
-      </div></div>
-      <div class="help-note">💡 ネクサス専用URLでは、ログイン後30日間は再入力なしで利用できます（ログアウトすると再入力が必要です）。ブラウザのタブアイコンはプゥル・ヴーロゴ＋薄いピンク背景で、自社用と見分けられます。</div>
-      <div class="help-note">💡 パスワードはユーザー管理で変更・削除できます（各ユーザーの <span class="help-tag">パスワード変更</span>）。</div>
     </div>
   </div>
 </div>
