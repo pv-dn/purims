@@ -1000,25 +1000,6 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       </div>
     </div>
   </div>
-  <div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
-    <div style="padding:14px 16px;font-size:13px;color:var(--mu);line-height:1.8">
-      伝票（プリームス）の発行履歴から、<strong style="color:var(--tx)">ネクサス請求明細 .xlsx</strong> を出力します（Excel を開いて取り込む必要はありません）。<br>
-      単価はマスタの「請求単価」列を使います（伝票には出しません）。客先ごとにシートが自動作成されます。<br>
-      <span style="color:#854f0b;font-weight:600">対象は納品日 2026年8月1日以降です（7月以前は請求明細に載せません）。発行履歴のアプリ内保存は<strong>6か月</strong>です。</span>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
-        <button onclick="exportSampleBilling()" style="padding:8px 16px;background:#fff;color:#854f0b;border:1.5px solid #854f0b;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">🖨 印刷見本を出力</button>
-      </div>
-      <div style="margin-top:12px;padding:10px 12px;background:#faf8f5;border-radius:8px;border:1px solid #e8dfd0;font-size:13px;color:var(--tx)">
-        <strong>アプリ内で見る</strong> … 上部タブの <strong>請求</strong> から請求明細書・請求額一覧を表示できます（Excel不要）。
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-          </div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
-        <button onclick="exportMeisaiJSON()" style="padding:8px 14px;background:var(--s);color:var(--mu);border:1px solid var(--b2);border-radius:6px;font-size:12px;cursor:pointer">JSON（旧xlsm用）</button>
-        <span style="font-size:12px;color:var(--mu)">請求月は「請求」タブで指定します</span>
-      </div>
-    </div>
-  </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
     <div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden">
       <div class="ch">データ書き出し</div>
@@ -1068,6 +1049,14 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
   <div class="help-section" id="help-daily">
     <div class="help-section-hd" onclick="toggleHelp('daily')">🗓 日常の運用（1日の流れ）<span class="help-toggle" id="help-toggle-daily">▼</span></div>
     <div class="help-section-body">
+      <p>伝票発行・履歴確認・マスタ管理を行う配布用アプリです。データはクラウドに自動保存されます。</p>
+      <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブ … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">使い方</span></p>
+      <div class="help-step"><div class="help-step-num">朝〜夕</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
+      <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで変更できます。</div></div>
+      <div class="help-note">💡 データはクラウド（Firebase）に自動保存されます。別のPCで開いても同じデータが表示されます。</div>
+    </div>
+  </div>
+  <div class="help-section-body">
       <p>伝票は<strong>プリームス</strong>名義、請求明細は<strong>ネクサス</strong>名義です。Excel テンプレート（.xlsm）の取り込みは<strong>不要</strong>（Purims が .xlsx を直接作成します）。</p>
       <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブの順番 … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">請求</span> → <span class="help-tag">使い方</span>（右端の <span class="help-tag">更新情報</span> で変更履歴を確認できます）</p>
       <div class="help-step"><div class="help-step-num">朝〜夕</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
@@ -1104,16 +1093,18 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 伝票が小さく印刷される</div><p>印刷ダイアログの「倍率」を <strong>100%</strong> に設定してください。</p></div>
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 余白が大きすぎる</div><p>印刷ダイアログで「余白」を <strong>「なし」または「最小」</strong> に設定してください。用紙は <strong>B5 横向き</strong> です。</p></div>
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 客先名が長いとき</div><p>客先名は<strong>1行</strong>のまま表示し、長さに応じて文字サイズと字間を調整します（小さくし過ぎない設定）。</p></div>
-      <div style="font-weight:600;margin:16px 0 8px;color:#5c3d1e">請求明細書（ネクサス）</div>
-      <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 レイアウトが崩れる・小さくなる</div><p>用紙の向きを <strong>A4 横向き</strong>、倍率を <strong>100%</strong> にしてください。<span class="help-tag">請求</span> → 明細表示 → <span class="help-tag">この客先を印刷</span> から開くと、プゥル・ヴー伝票と同じ書式で印刷されます。</p></div>
-      <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 印刷画面が真っ白</div><p>ポップアップブロックを解除してください。Chrome での印刷が最も安定しています。</p></div>
-      <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 品目が1枚に収まらない</div><p>1ページあたり最大 <strong>20品目</strong> です。超える場合は自動で2枚目以降に分割され、<strong>ご請求金額は最終ページ</strong>に表示されます。</p></div>
-      <div class="help-note">💡 請求明細の見本データで Excel を試す場合は、<span class="help-tag">データ</span> タブの <span class="help-tag">印刷見本Excelを出力</span>（実データではありません）。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-master">
     <div class="help-section-hd" onclick="toggleHelp('master')">⚙️ 最初に一度だけ（マスタ設定）<span class="help-toggle" id="help-toggle-master">▶</span></div>
     <div class="help-section-body">
+      <p><span class="help-tag">マスタ管理</span> → 客先編集 で、客先ごとに次を設定します。</p>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">締め日</div>20日〆・25日〆・末日〆から選択（客先ごとに異なってOK）。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">品目・納品サイクル</div>品目名と納品曜日（月〜日）を客先ごとに登録。<span class="help-tag">マスタから選ぶ</span> では <span class="help-tag">品番順</span>／<span class="help-tag">あいうえお順</span> を切り替えられます。</div></div>
+      <div class="help-note">💡 マスタ管理を開くときは、ログインパスワードの再入力が必要です。</div>
+    </div>
+  </div>
+  <div class="help-section-body">
       <p><span class="help-tag">マスタ管理</span> → 客先編集 で、客先ごとに次を設定します。</p>
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">締め日</div>20日〆・25日〆・末日〆から選択。請求月の判定に使います（客先ごとに異なってOK）。</div></div>
       <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">請求単価</div>各品目の「請求単価」列にまとめて入力（<strong>Enter</strong> で次の単価へ縦移動。品番はクリック時のみ） → 下の <span class="help-tag">請求単価・品目を保存</span> を1回押す。1件ごとに保存する必要はありません。<strong>伝票には表示されません。</strong> 請求明細の画面表示・印刷・Excel に使います。</div></div>
@@ -1125,9 +1116,7 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <div class="help-warn">⚠️ 請求単価が未設定の品目は、請求明細で 0 円になり警告が出ます。数量があるのに単価がない行は、明細書の単価セルが<strong>黄色</strong>になります（マスタで単価を保存すると消えます）。</div>
     </div>
   </div>
-  <div class="help-section help-collapsed" id="help-billing">
-    <div class="help-section-hd" onclick="toggleHelp('billing')">📄 請求明細書（確認・Excel・印刷）<span class="help-toggle" id="help-toggle-billing">▶</span></div>
-    <div class="help-section-body">
+  <div class="help-section-body">
       <p>Purims がブラウザ内で請求明細書を<strong>直接表示・印刷・Excel出力</strong>します。運用 PC に Excel テンプレート（.xlsm）を置く必要はありません。印刷レイアウトは<strong>プゥル・ヴー伝票アプリと同じ書式</strong>です（ネクサス名義）。</p>
       <div class="help-step"><div class="help-step-num">駐車場</div><div class="help-step-body"><div class="help-step-title">駐車場代を入力</div>マスタで「駐車場代あり」にした客先は、<span class="help-tag">請求</span> タブの <span class="help-tag">駐車場代入力</span> で客先を選び、領収書を見て金額を入力 → <span class="help-tag">駐車場代を保存</span>。請求明細・請求額一覧では例として <strong>あ</strong>（通常品目）と <strong>あ 駐車場代</strong>（駐車場のみ）の<strong>2枚／2行</strong>になります。駐車場明細書には<strong>金額を入れた日だけ</strong>出ます（空欄＝なしの日は数量も日付も出しません）。行は<strong>単価の安い順</strong>です。紙の★客先（茶茶花・楽園　町田店・穂のほまれ　西新宿店）は金額がなくても駐車場のシート枠は残ります。</div></div>
       <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">アプリ内で見る</div><span class="help-tag">請求</span> タブ → 請求月を指定 → <span class="help-tag">請求明細書を見る</span>。左の客先一覧は紙の請求一覧表と同じ順（25日〆・末日〆の番号なしは後ろ）。クリックで切り替え。<span class="help-tag">未反映分を見る</span> で Excel 出力前の分も確認できます。</div></div>
@@ -1150,9 +1139,7 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <div class="help-warn">⚠️ それでも解決しない場合はJSONバックアップから復元してください。</div>
     </div>
   </div>
-  <div class="help-section help-collapsed" id="help-nexus">
-    <div class="help-section-hd" onclick="toggleHelp('nexus')">🔗 ネクサスへの閲覧URL共有<span class="help-toggle" id="help-toggle-nexus">▶</span></div>
-    <div class="help-section-body">
+  <div class="help-section-body">
       <p>ネクサス担当者に<strong>専用URLとパスワード（閲覧専用）</strong>を伝えるだけで、請求明細書・請求額一覧を自分で確認・印刷してもらえます。Excelファイルのメール添付は不要になります。</p>
       <div class="help-step"><div class="help-step-num">特徴</div><div class="help-step-body"><div class="help-step-title">閲覧専用アカウントでできること</div>
         <span class="help-tag">請求</span> タブのみ表示（<span class="help-tag">請求明細書を見る</span>・<span class="help-tag">請求額一覧を見る</span>）。<span class="help-tag">事務チェック</span>・<span class="help-tag">駐車場代入力</span>・<span class="help-tag">Excel出力</span>・<span class="help-tag">未反映分を見る</span>・使い方・伝票発行・マスタ管理・データは非表示です。
@@ -1178,7 +1165,7 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
 </div><!-- /#app -->
 
 <!-- 請求明細閲覧 -->
-<div id="meisai-viewer">
+<div id="meisai-viewer" style="display:none!important">
   <div class="meisai-viewer-box">
     <div class="meisai-viewer-hd">
       <h2>📄 請求明細書</h2>
