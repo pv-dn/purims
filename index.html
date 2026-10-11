@@ -356,14 +356,19 @@ select.cs:focus{outline:none;border-color:var(--ac)}
   @page{margin:10mm 3mm 3mm 3mm;size:B5 landscape}
 }
 
-/* 配布版: 請求関連UI非表示 */
-#ni-price, #e-minCharge, #nc-minCharge,
+/* 配布版: 請求画面は常に非表示 */
 #panel-billing,#meisai-viewer,#billing-check-section,#parking-fee-section,
 #billing-excel-section,#meisai-check-wrap,#billing-pending-view-btn,
-[id^="e-parking"],[id^="nc-parking"],#e-minCharge,#nc-minCharge,
-#e-deliveryFee,#nc-deliveryFee,#e-packagingFee,#nc-packagingFee,
-label[for="e-parking-enabled"], #mitems-billing-hint,
 .billing-only, #billing-panel-hint { display:none !important; }
+
+/* 請求系マスタ項目（締め日・最低保証・配送費・包装料・駐車場代）: 大元OFF時は隠す */
+body:not(.billing-master-on) .billing-master-field { display:none !important; }
+body:not(.billing-master-on) #ni-price,
+body:not(.billing-master-on) #mitems-save-bar,
+body:not(.billing-master-on) #mitems-tbl th:nth-child(4),
+body:not(.billing-master-on) #mitems-tbl td:nth-child(4),
+body:not(.billing-master-on) th.billing-master-field,
+body:not(.billing-master-on) td.billing-master-field { display:none !important; }
 
 </style>
 
@@ -631,28 +636,28 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">グループ</label>
               <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:180px" id="e-grp"></select>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">締め日</label>
               <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="e-closing">
                 <option value="">未設定</option><option value="20日〆">20日〆</option><option value="25日〆">25日〆</option><option value="末日〆">末日〆</option>
               </select>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">最低保証</label>
               <input type="number" min="0" step="1" style="width:140px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="e-mincharge" placeholder="なし">
               <span style="font-size:12px;color:var(--mu)">円（税抜・月額）未設定は保証なし</span>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">配送費</label>
               <input type="number" min="0" step="1" style="width:140px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="e-delivery-fee" placeholder="なし">
               <span style="font-size:12px;color:var(--mu)">円／回（税抜）伝票1枚につき請求明細へ自動加算。伝票面には出ません</span>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">包装料</label>
               <input type="number" min="0" step="1" style="width:140px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="e-packaging-fee" placeholder="なし">
               <span style="font-size:12px;color:var(--mu)">円／点（税抜）納品の総点数×単価を請求明細へ。伝票面には出ません</span>
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+            <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">駐車場代</label>
               <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);cursor:pointer">
                 <input type="checkbox" id="e-parking-enabled" style="width:16px;height:16px">あり（請求を分ける・領収書確認後に金額入力）
@@ -705,28 +710,28 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">グループ</label>
             <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:180px" id="nc-grp"></select>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">締め日</label>
             <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="nc-closing">
               <option value="">未設定</option><option value="20日〆">20日〆</option><option value="25日〆">25日〆</option><option value="末日〆">末日〆</option>
             </select>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">最低保証</label>
             <input type="number" min="0" step="1" style="width:140px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="nc-mincharge" placeholder="なし">
             <span style="font-size:12px;color:var(--mu)">円（税抜・月額）</span>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">配送費</label>
             <input type="number" min="0" step="1" style="width:140px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="nc-delivery-fee" placeholder="なし">
             <span style="font-size:12px;color:var(--mu)">円／回（請求明細のみ）</span>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">包装料</label>
             <input type="number" min="0" step="1" style="width:140px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)" id="nc-packaging-fee" placeholder="なし">
             <span style="font-size:12px;color:var(--mu)">円／点（請求明細のみ・総点数×）</span>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+          <div class="billing-master-field" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">駐車場代</label>
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx);cursor:pointer">
               <input type="checkbox" id="nc-parking-enabled" style="width:16px;height:16px">あり
@@ -811,6 +816,22 @@ label[for="e-parking-enabled"], #mitems-billing-hint,
       <div style="display:flex;gap:8px;margin-top:10px">
         <button onclick="fbSave()" style="padding:7px 16px;background:#1a5276;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">⬆️ 今すぐ保存</button>
         <button onclick="fbLoad()" style="padding:7px 16px;background:#1a5276;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">⬇️ 今すぐ読み込む</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
+    <div class="ch" style="background:#5c3d1e">⚙️ 表示設定</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--mu);line-height:1.7">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:600;color:var(--tx);margin-bottom:4px">請求系マスタ項目</div>
+          <div style="font-size:12px">締め日・最低保証・配送費・包装料・駐車場代（および請求単価）をマスタ画面に表示します。使わない場合はOFFのままにしてください。</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--tx);cursor:pointer;white-space:nowrap;background:var(--s);padding:8px 12px;border-radius:8px;border:1px solid var(--bd)">
+          <input type="checkbox" id="billing-master-toggle" onchange="saveBillingMasterSetting()" style="width:18px;height:18px">
+          <span id="billing-master-toggle-label">OFF</span>
+        </label>
       </div>
     </div>
   </div>
@@ -1183,7 +1204,7 @@ function fillGrpSel(id,cur){const s=document.getElementById(id);if(!s)return;con
 function nxtDel(cyc){if(!cyc)return null;const m={月:1,火:2,水:3,木:4,金:5,土:6,日:0};const tw=new Date().getDay();let min=99;for(const c of cyc){if(m[c]!==undefined){const d=(m[c]-tw+7)%7;if(d<min)min=d;}}if(min===99)return null;const r=new Date();r.setDate(r.getDate()+min);return r;}
 function fmtD(d){if(!d)return'—';return fmtDateStr(d);}
 function nextPCode(){let max=0;DB.products.forEach(p=>{const m=p.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});Object.values(DB.clients).forEach(cl=>{(cl.items||[]).forEach(it=>{const m=it.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});});return 'P'+String(max+1).padStart(3,'0');}
-function init(){ try{loadHistoryKeepSetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').innerHTML=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日<br>${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();}
+function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').innerHTML=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日<br>${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();}
 function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.style.borderLeftColor=type==='e'?'#c0392b':'var(--ac)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
 
 // ===== 伝票発行 =====
@@ -1856,6 +1877,40 @@ function historyRetentionCutoff(){
   const d=new Date();d.setHours(0,0,0,0);d.setMonth(d.getMonth()-months);return d;
 }
 function isHistoryRetentionUnlimited(){return false;}
+
+let BILLING_MASTER_FIELDS=false; // 大元ON/OFF（初期OFF）
+function isBillingMasterEnabled(){return !!BILLING_MASTER_FIELDS;}
+function syncBillingMasterUi(){
+  document.body.classList.toggle('billing-master-on', isBillingMasterEnabled());
+  const cb=document.getElementById('billing-master-toggle');
+  if(cb) cb.checked=isBillingMasterEnabled();
+  const lab=document.getElementById('billing-master-toggle-label');
+  if(lab) lab.textContent=isBillingMasterEnabled()?'ON':'OFF';
+}
+try{if(document.body)syncBillingMasterUi();}catch(e){}
+async function loadBillingMasterSetting(){
+  try{
+    const local=localStorage.getItem('purims_billingMasterFields');
+    if(local==='1'||local==='true') BILLING_MASTER_FIELDS=true;
+    else if(local==='0'||local==='false') BILLING_MASTER_FIELDS=false;
+    const snap=await firebase.database().ref('purims/settings/billingMasterFields').get();
+    if(snap.exists()){
+      const v=snap.val();
+      BILLING_MASTER_FIELDS=v===true||v===1||v==='1'||v==='true';
+      localStorage.setItem('purims_billingMasterFields', BILLING_MASTER_FIELDS?'1':'0');
+    }
+  }catch(e){console.warn('billingMasterFields load',e);}
+  syncBillingMasterUi();
+}
+async function saveBillingMasterSetting(){
+  const cb=document.getElementById('billing-master-toggle');
+  BILLING_MASTER_FIELDS=!!(cb&&cb.checked);
+  localStorage.setItem('purims_billingMasterFields', BILLING_MASTER_FIELDS?'1':'0');
+  try{await firebase.database().ref('purims/settings/billingMasterFields').set(BILLING_MASTER_FIELDS);}catch(e){console.warn(e);}
+  syncBillingMasterUi();
+  toast(BILLING_MASTER_FIELDS?'請求系マスタ項目を表示します':'請求系マスタ項目を非表示にしました');
+}
+
 async function loadHistoryKeepSetting(){
   try{
     const local=localStorage.getItem('purims_historyKeepMonths');
@@ -3724,6 +3779,7 @@ async function doLogin(){
     if(typeof loginSuccess==='function'){try{loginSuccess();}catch(e){console.warn(e);}}
     else if(typeof fbStartListeners==='function'){try{fbStartListeners();}catch(e){}}
     await loadHistoryKeepSetting();
+    await loadBillingMasterSetting();
     syncHistKeepUi();
     if(typeof pruneExpiredHistory==='function') pruneExpiredHistory({quiet:true});
     if(typeof pruneDeletedHistory==='function') pruneDeletedHistory({quiet:true});
