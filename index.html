@@ -438,6 +438,33 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   </div>
 </div>
 
+<!-- 管理者パスワード確認モーダル -->
+<div id="admin-pass-modal" class="admin-pass-modal">
+  <div class="admin-pass-box">
+    <div style="font-size:16px;font-weight:700;color:var(--nv);margin-bottom:18px">🔑 管理者認証</div>
+    <div style="font-size:13px;color:var(--mu);margin-bottom:14px">ユーザー管理に入るには管理者パスワードが必要です。</div>
+    <div style="margin-bottom:10px">
+      <input type="password" id="admin-pass-input" placeholder="管理者パスワードを入力" style="width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:14px;outline:none">
+    </div>
+    <div id="admin-pass-err" style="color:var(--ng);font-size:12px;min-height:18px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="verifyAdminPass()" style="flex:1;padding:9px;background:var(--nv);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer">認証</button>
+      <button onclick="closeAdminPassModal()" style="flex:1;padding:9px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:7px;font-size:13px;cursor:pointer">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ログイン履歴モーダル -->
+<div id="loginlog-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;z-index:8000;display:none">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:700px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div style="font-size:16px;font-weight:700;color:var(--nv)">🔐 ログイン履歴</div>
+      <button onclick="closeLoginLog()" style="padding:5px 14px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px;font-size:13px;cursor:pointer">閉じる</button>
+    </div>
+    <div id="loginlog-list" style="font-size:13px">読み込み中...</div>
+  </div>
+</div>
+
 <div id="master-auth-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9000">
   <div style="background:#fff;border-radius:12px;padding:28px;width:360px">
     <div style="font-size:16px;font-weight:700;color:var(--nv);margin-bottom:8px">🔒 マスタ管理</div>
@@ -4015,11 +4042,10 @@ document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key===
 function loginSuccess(){
   resetRoleUi();
   document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('current-user-display').textContent=currentUser.username+'さん';
-  if(currentUser.role==='admin'){
-    document.getElementById('user-mgr-btn').style.display='inline-block';
-    document.getElementById('tab-loginlog').style.display='inline-block';
-  }
+  document.getElementById('current-user-display').textContent=currentUser.username+(currentUser.isAdmin?' 👑':'');
+  ['tab-loginlog','tab-masterlog'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='inline-block';});
+  const umBtn=document.getElementById('user-mgr-btn');
+  if(umBtn) umBtn.style.display=(currentUser.isAdmin||currentUser.role==='admin')?'inline-block':'none';
   if(currentUser.role==='viewer'||isNexusMode()){
     applyViewerUi();
     saveNexusSession(currentUser);
@@ -4094,7 +4120,7 @@ async function verifyAdminPass_company_unused(){
   if(adminHash&&hash===adminHash){closeAdminPassModal();openUserModal();}
   else document.getElementById('admin-pass-err').textContent='管理者パスワードが違います';
 }
-document.getElementById('admin-pass-input').addEventListener('keydown',e=>{if(e.key==='Enter')verifyAdminPass();});
+(function(){const el=document.getElementById('admin-pass-input');if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')verifyAdminPass();});})();
 
 function openUserModal(){
   document.getElementById('user-modal').classList.remove('hidden');
