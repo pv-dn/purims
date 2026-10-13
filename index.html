@@ -925,7 +925,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-body">
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">印刷モードを選ぶ</div>画面上部の「🖨 印刷モード」バーで <span class="help-tag">1件ずつ印刷</span> か <span class="help-tag">一括印刷</span> を選びます。</div></div>
       <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先・数量</div>客先を選び、品目の数量を入力します。納品日はサイクルから自動計算され、必要なら変更できます。</div></div>
-      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票発行</div><span class="help-tag">伝票発行</span> を押すと履歴に保存され、印刷できます。同じ客先・同じ納品日は重複発行できず、訂正再発行になります。</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票発行</div><span class="help-tag">伝票発行</span> を押すと履歴に保存され、印刷できます。同じ客先・同じ納品日が既にあるときは確認が出ます（おすすめは訂正再発行。必要なら同じ納品日で新規発行も可）。</div></div>
       <div class="help-note">💡 発行履歴の保存期間（納品日基準）は <span class="help-tag">発行履歴</span> タブで設定できます。</div>
     </div>
   </div>
@@ -1388,10 +1388,14 @@ function showPrev(){
   const sameDayHist=findHistByClientDelivery(curC,ds);
   if(sameDayHist&&(!correctingHist||!histIdEq(sameDayHist.id,correctingHist.id))){
     const checkedNote=isHistDeliveryChecked(sameDayHist)?'\n※チェック済み期間の伝票です':'';
-    const go=confirm('同じ客先・同じ納品日の伝票が既にあります。\n新しく打ち直しての発行はできません。\n\n客先: '+curC+'\n納品日: '+ds+(sameDayHist.date?'\n（既存の発行日: '+sameDayHist.date+'）':'')+checkedNote+'\n\n発行履歴から訂正して再発行しますか？');
-    if(go)startHistCorrect(sameDayHist.id);
-    else toast('発行をキャンセルしました。訂正は発行履歴から行ってください');
-    return;
+    const baseMsg='同じ客先・同じ納品日の伝票が既にあります。\n\n客先: '+curC+'\n納品日: '+ds+(sameDayHist.date?'\n（既存の発行日: '+sameDayHist.date+'）':'')+checkedNote;
+    // 1) 訂正再発行するか
+    const goCorrect=confirm(baseMsg+'\n\n【おすすめ】発行履歴の伝票を訂正して再発行しますか？\n\nOK＝訂正して再発行\nキャンセル＝別の操作を選ぶ');
+    if(goCorrect){startHistCorrect(sameDayHist.id);return;}
+    // 2) それでも同じ納品日で新規発行するか（二重発行の確認）
+    const goNew=confirm(baseMsg+'\n\n同じ納品日で、新しい伝票として発行しますか？\n履歴にもう1件追加されます。\n\nOK＝新規発行する\nキャンセル＝発行しない');
+    if(!goNew){toast('発行をキャンセルしました');return;}
+    // goNew=true ならロックを通過して通常の新規発行へ進む
   }
   const isCorrection=!!correctingHist;
   document.getElementById('print-area').innerHTML=slipHTML;
@@ -3034,7 +3038,7 @@ function renderProducts(){const q=(document.getElementById('prod-search')?.value
 function updProd(i,f,v){if(DB.products[i])DB.products[i][f]=v.trim();persistLocal();}
 function delProd(i){if(!confirm(`「${DB.products[i]?.code} ${DB.products[i]?.name}」を削除しますか？`))return;DB.products.splice(i,1);persist();renderProducts();setNPCode();toast('削除しました');}
 function setNPCode(){document.getElementById('np-code').placeholder=nextPCode()+' (自動)';document.getElementById('np-code').value='';}
-function addProduct(){const code=document.getElementById('np-code').value.trim()||nextPCode();const name=document.getElementById('np-name').value.trim();if(!name){toast('品目名を入力してください','e');return;}if(DB.products.find(p=>p.code===code)){toast(`品番 ${code} は既に存在します`,'e');return;}DB.products.push({code,name});document.getElementById('np-name').value='';persist();renderProducts();setNPCode();toast(`「${name}」（${code}）を追加しました`);}
+function addProduct(){const code=document.getElementById('np-code').value.trim()||nextPCode();const name=document.getElementById('np-name').value.trim();if(!name){toast('品目名を入力してください','e');return;}if(DB.products.find(p=>p.name===name)){toast('同じ品目名は既に登録されています','e');return;}if(DB.products.find(p=>p.code===code)){toast(`品番 ${code} は既に存在します`,'e');return;}DB.products.push({code,name});document.getElementById('np-name').value='';persist();renderProducts();setNPCode();toast(`「${name}」（${code}）を追加しました`);}
 
 // ===== 発行履歴 =====
 let histFolderCollapsed={};
