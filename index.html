@@ -3959,6 +3959,15 @@ async function verifyMasterAuth(){
     });
   }catch(e){}
 }
+function formatAuthLogTime(entry, key){
+  const raw=(entry&&(entry.at||entry.loginAt||entry.time||entry.ts))||'';
+  let d=raw?new Date(raw):null;
+  if(!d||isNaN(d.getTime())){
+    const n=Number(key);
+    if(n>1e11) d=new Date(n);
+  }
+  return (d&&!isNaN(d.getTime()))?d.toLocaleString('ja-JP'):'—';
+}
 function showMasterLog(){
   const m=document.getElementById('masterlog-modal');
   firebase.database().ref('purims_masterlog').orderByKey().limitToLast(100).get().then(snap=>{
@@ -3966,9 +3975,9 @@ function showMasterLog(){
     const el=document.getElementById('masterlog-list');
     if(!el) return;
     if(!snap.exists()){el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:8px">履歴がありません</div>';return;}
-    const logs=[]; snap.forEach(c=>logs.push(c.val())); logs.reverse();
+    const logs=[]; snap.forEach(c=>logs.push({key:c.key, ...(c.val()||{})})); logs.reverse();
     el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#1a2744;color:#fff"><th style="padding:8px 12px;text-align:left">日時</th><th style="padding:8px 12px;text-align:left">ユーザー</th></tr></thead><tbody>'
-      +logs.map((l,i)=>{const dt=new Date(l.at||l.loginAt||'').toLocaleString('ja-JP');const bg=i%2?'#f0f1f3':'#fff';return `<tr style="background:${bg}"><td style="padding:8px 12px">${dt}</td><td style="padding:8px 12px;font-weight:600">${l.username||''}</td></tr>`;}).join('')
+      +logs.map((l,i)=>{const dt=formatAuthLogTime(l,l.key);const bg=i%2?'#f0f1f3':'#fff';return `<tr style="background:${bg}"><td style="padding:8px 12px">${dt}</td><td style="padding:8px 12px;font-weight:600">${l.username||''}</td></tr>`;}).join('')
       +'</tbody></table>';
   }).catch(e=>{if(m)m.style.display='flex'; const el=document.getElementById('masterlog-list'); if(el) el.innerHTML='読み込み失敗: '+e.message;});
 }
@@ -3980,9 +3989,9 @@ function showLoginLog(){
     const el=document.getElementById('loginlog-list');
     if(!el) return;
     if(!snap.exists()){el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:8px">ログイン履歴がありません</div>';return;}
-    const logs=[]; snap.forEach(c=>logs.push(c.val())); logs.reverse();
+    const logs=[]; snap.forEach(c=>logs.push({key:c.key, ...(c.val()||{})})); logs.reverse();
     el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#1a2744;color:#fff"><th style="padding:8px 12px;text-align:left">日時</th><th style="padding:8px 12px;text-align:left">ユーザー名</th></tr></thead><tbody>'
-      +logs.map((l,i)=>{const dt=new Date(l.loginAt).toLocaleString('ja-JP');const bg=i%2?'#f0f1f3':'#fff';return `<tr style="background:${bg}"><td style="padding:8px 12px">${dt}</td><td style="padding:8px 12px;font-weight:600">${l.username||''}</td></tr>`;}).join('')
+      +logs.map((l,i)=>{const dt=formatAuthLogTime(l,l.key);const bg=i%2?'#f0f1f3':'#fff';return `<tr style="background:${bg}"><td style="padding:8px 12px">${dt}</td><td style="padding:8px 12px;font-weight:600">${l.username||''}</td></tr>`;}).join('')
       +'</tbody></table>';
   });
 }
