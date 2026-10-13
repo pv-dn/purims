@@ -1,7 +1,7 @@
 {
-  "name": "Primus 伝票発行システム",
-  "short_name": "Purims",
-  "description": "プリームス伝票発行システム",
+  "name": "株式会社Nexus　伝票発行システム",
+  "short_name": "Nexus伝票",
+  "description": "株式会社ネクサス様向け伝票発行システム",
   "start_url": "/purims/",
   "scope": "/purims/",
   "display": "standalone",

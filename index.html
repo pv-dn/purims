@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<title>Primus 伝票発行システム</title>
+<title>株式会社Nexus　伝票発行システム</title>
 <meta name="theme-color" content="#1a2744">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:va
 h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 #app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .hdr{background:var(--nv);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;border-bottom:3px solid var(--ac);flex-shrink:0}
-.hdr-s{font-size:10px;letter-spacing:3px;opacity:.55;text-transform:uppercase}
+.hdr-s{font-size:10px;letter-spacing:1px;opacity:.55}
 .hdr h1{font-size:17px;font-weight:700;letter-spacing:.5px}
 .hdr-actions{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap}
 .hdr-d{font-size:11px;opacity:.8;text-align:right;line-height:1.3;color:rgba(255,255,255,.85);white-space:nowrap}
@@ -484,10 +484,10 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   </div>
 </div>
 
-<h2 class="sr-only">プリームス伝票発行システム</h2>
+<h2 class="sr-only">株式会社Nexus　伝票発行システム</h2>
 <div id="app">
 <div class="hdr">
-  <div><div class="hdr-s">Purims</div><h1>Primus 伝票発行システム</h1></div>
+  <div><div class="hdr-s">株式会社Nexus</div><h1>Primus 伝票発行システム</h1></div>
   <div class="hdr-actions">
     <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
     <button onclick="showLoginLog()" id="tab-loginlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
@@ -919,7 +919,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="help-section" id="help-daily">
     <div class="help-section-hd" onclick="toggleHelp('daily')">🗓 日常の運用（1日の流れ）<span class="help-toggle" id="help-toggle-daily">▼</span></div>
     <div class="help-section-body">
-      <p>伝票発行・履歴確認・マスタ管理を行う配布用アプリです。データはクラウドに自動保存されます。</p>
+      <p>伝票発行・履歴確認・マスタ管理を行うアプリです。データはクラウドに自動保存されます。</p>
       <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブ … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">使い方</span></p>
       <div class="help-step"><div class="help-step-num">朝〜夕</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
       <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで 3／6／12か月から選べます。</div></div>
