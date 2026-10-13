@@ -254,7 +254,7 @@ select.cs:focus{outline:none;border-color:var(--ac)}
 #login-screen{position:fixed;inset:0;background:var(--nv);display:flex;align-items:center;justify-content:center;z-index:9999}
 #login-screen.hidden{display:none}
 .login-box{background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.25)}
-.login-logo{font-size:11px;letter-spacing:3px;color:var(--mu);text-transform:uppercase;margin-bottom:6px}
+.login-logo{font-size:11px;letter-spacing:1px;color:var(--mu);margin-bottom:6px}
 .login-title{font-size:20px;font-weight:700;color:var(--nv);margin-bottom:24px}
 .login-field{margin-bottom:14px}
 .login-field label{display:block;font-size:12px;font-weight:600;color:var(--mu);margin-bottom:5px}
@@ -263,6 +263,10 @@ select.cs:focus{outline:none;border-color:var(--ac)}
 .login-btn{width:100%;padding:11px;background:var(--nv);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .15s}
 .login-btn:hover{opacity:.85}
 .login-err{color:var(--ng);font-size:12px;margin-top:8px;min-height:18px;text-align:center}
+.login-build{margin-top:18px;padding-top:14px;border-top:1px solid #e8ecf2;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-build-badge{display:inline-flex;align-items:center;gap:7px;padding:4px 10px;border-radius:999px;background:#f3f6fb;border:1px solid #dce3ef;font-size:10px;letter-spacing:.04em;color:#6b7a94;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.login-build-badge b{font-weight:700;color:var(--nv);letter-spacing:.12em;font-size:9px}
+.login-build-badge span{opacity:.9}
 .login-user{font-size:12px;color:rgba(255,255,255,.9);white-space:nowrap}
 #user-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:8000}
 #user-modal.hidden{display:none}
@@ -373,7 +377,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
 <!-- ログイン画面 -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">Purims</div>
+    <div class="login-logo">株式会社Nexus</div>
     <div class="login-title">Primus 伝票発行システム</div>
     <div class="login-field">
       <label>パスワード</label>
@@ -381,7 +385,9 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     </div>
     <button class="login-btn" onclick="doLogin()">ログイン</button>
     <div class="login-err" id="login-err"></div>
-    <div style="margin-top:14px;font-size:11px;opacity:.45;text-align:center">build 2026-08-21c</div>
+    <div class="login-build">
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.14</span></div>
+    </div>
   </div>
 </div>
 
