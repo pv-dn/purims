@@ -22,7 +22,9 @@ h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,
 .hdr{background:var(--nv);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;border-bottom:3px solid var(--ac);flex-shrink:0}
 .hdr-s{font-size:10px;letter-spacing:3px;opacity:.55;text-transform:uppercase}
 .hdr h1{font-size:17px;font-weight:700;letter-spacing:.5px}
-.hdr-d{margin-left:auto;font-size:12px;opacity:.75;text-align:right;line-height:1.4}
+.hdr-actions{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap}
+.hdr-d{font-size:11px;opacity:.8;text-align:right;line-height:1.3;color:rgba(255,255,255,.85);white-space:nowrap}
+.tabs-meta{margin-left:auto;display:flex;align-items:center;gap:12px;padding:0 4px 0 8px}
 .exit-btn{margin-left:16px;padding:7px 16px;background:var(--ng);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:opacity .15s;flex-shrink:0}
 .exit-btn:hover{opacity:.85}
 .admin-pass-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9000}
@@ -31,7 +33,7 @@ h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,
 .tab{padding:9px 18px;color:rgba(255,255,255,.6);cursor:pointer;font-size:13px;font-weight:500;border:none;background:none;transition:all .15s}
 .tab:hover{color:#fff;background:rgba(255,255,255,.07)}
 .tab.on{color:var(--al);background:rgba(200,153,42,.12);border-bottom:2px solid var(--al)}
-.tab-updates{margin-left:auto;padding:9px 16px;color:rgba(255,255,255,.75);cursor:pointer;font-size:12px;font-weight:600;border:none;background:none;white-space:nowrap;border-left:1px solid rgba(255,255,255,.12)}
+.tab-updates{margin-left:0;padding:9px 16px;color:rgba(255,255,255,.75);cursor:pointer;font-size:12px;font-weight:600;border:none;background:none;white-space:nowrap;border-left:1px solid rgba(255,255,255,.12)}
 .tab-updates:hover{color:#fff;background:rgba(255,255,255,.1)}
 #updates-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:8800;padding:16px}
 #updates-modal.open{display:flex}
@@ -261,7 +263,7 @@ select.cs:focus{outline:none;border-color:var(--ac)}
 .login-btn{width:100%;padding:11px;background:var(--nv);color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .15s}
 .login-btn:hover{opacity:.85}
 .login-err{color:var(--ng);font-size:12px;margin-top:8px;min-height:18px;text-align:center}
-.login-user{font-size:12px;color:rgba(255,255,255,.8);margin-left:8px}
+.login-user{font-size:12px;color:rgba(255,255,255,.9);white-space:nowrap}
 #user-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:8000}
 #user-modal.hidden{display:none}
 .user-modal-box{background:#fff;border-radius:12px;padding:28px;width:480px;max-height:80vh;overflow-y:auto}
@@ -480,21 +482,25 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
 <div id="app">
 <div class="hdr">
   <div><div class="hdr-s">Purims</div><h1>Primus 伝票発行システム</h1></div>
-  <div class="hdr-d" id="hdr-d"></div>
-  <span class="login-user" id="current-user-display"></span>
-  <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
-  <button onclick="showLoginLog()" id="tab-loginlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
-  <button onclick="showMasterLog()" id="tab-masterlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">📝 マスタ操作履歴</button>
-  <button onclick="doLogout()" style="margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">ログアウト</button>
-  <button class="exit-btn" onclick="exitApp()">💾 保存して終了</button>
+  <div class="hdr-actions">
+    <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
+    <button onclick="showLoginLog()" id="tab-loginlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
+    <button onclick="showMasterLog()" id="tab-masterlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">📝 マスタ操作履歴</button>
+    <button onclick="doLogout()" style="margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">ログアウト</button>
+    <button class="exit-btn" onclick="exitApp()">💾 保存して終了</button>
+  </div>
 </div>
 <div class="tabs">
   <button id="tab-slip" class="tab on" onclick="showPanel('slip',this)">伝票発行</button>
   <button id="tab-history" class="tab" onclick="showPanel('history',this)">発行履歴</button>
   <button id="tab-master" class="tab" onclick="showMasterWithAuth(this)">マスタ管理</button>
   <button id="tab-data" class="tab" onclick="showPanel('data',this)">データ</button>
-<button id="tab-help" class="tab" onclick="showPanel('help',this)">使い方・困ったとき</button>
-  <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
+  <button id="tab-help" class="tab" onclick="showPanel('help',this)">使い方・困ったとき</button>
+  <div class="tabs-meta">
+    <span class="login-user" id="current-user-display"></span>
+    <div class="hdr-d" id="hdr-d"></div>
+    <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
+  </div>
 </div>
 <div class="main">
 
@@ -1237,7 +1243,7 @@ function fillGrpSel(id,cur){const s=document.getElementById(id);if(!s)return;con
 function nxtDel(cyc){if(!cyc)return null;const m={月:1,火:2,水:3,木:4,金:5,土:6,日:0};const tw=new Date().getDay();let min=99;for(const c of cyc){if(m[c]!==undefined){const d=(m[c]-tw+7)%7;if(d<min)min=d;}}if(min===99)return null;const r=new Date();r.setDate(r.getDate()+min);return r;}
 function fmtD(d){if(!d)return'—';return fmtDateStr(d);}
 function nextPCode(){let max=0;DB.products.forEach(p=>{const m=p.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});Object.values(DB.clients).forEach(cl=>{(cl.items||[]).forEach(it=>{const m=it.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});});return 'P'+String(max+1).padStart(3,'0');}
-function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').innerHTML=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日<br>${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();}
+function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();}
 function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.style.borderLeftColor=type==='e'?'#c0392b':'var(--ac)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
 
 // ===== 伝票発行 =====
@@ -4248,7 +4254,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   else applyOfficeChrome();
   load();
   const now=new Date();
-  document.getElementById('hdr-d').innerHTML=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日<br>${WD[now.getDay()]}曜日`;
+  document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;
   fillSel('csel');fillSel('msel');
   fillGrpSel('e-grp');fillGrpSel('nc-grp');
   renderProducts();renderHistory();renderGroups();renderClientGrpList();
