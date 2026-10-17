@@ -972,13 +972,13 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <span>📖 使い方・困ったときのガイド</span>
     <button class="btn" style="font-size:12px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="helpExpandAll()">すべて開く</button>
   </div></div>
-  <div class="help-section" id="help-daily">
-    <div class="help-section-hd" onclick="toggleHelp('daily')">🗓 日常の運用（1日の流れ）<span class="help-toggle" id="help-toggle-daily">▼</span></div>
+  <div class="help-section help-collapsed" id="help-daily">
+    <div class="help-section-hd" onclick="toggleHelp('daily')">🗓 日常の運用（1日の流れ）<span class="help-toggle" id="help-toggle-daily">▶</span></div>
     <div class="help-section-body">
       <p>伝票発行・履歴確認・マスタ管理を行うアプリです。データはクラウドに自動保存されます。</p>
       <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブ … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">使い方</span></p>
-      <div class="help-step"><div class="help-step-num">朝〜夕</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
-      <div class="help-step"><div class="help-step-num">確認</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで 3／6／12か月から選べます。</div></div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで 3／6／12か月から選べます。</div></div>
       <div class="help-note">💡 データはクラウド（Firebase）に自動保存されます。別のPCで開いても同じデータが表示されます。</div>
     </div>
   </div>
@@ -1017,8 +1017,8 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-hd" onclick="toggleHelp('data')">💾 データが消えた・おかしいとき<span class="help-toggle" id="help-toggle-data">▶</span></div>
     <div class="help-section-body">
       <p><span class="help-tag">データ</span> タブ →「⬇️ 今すぐ読み込む」を押してください。クラウドから復元できる場合がほとんどです。</p>
-      <div class="help-step"><div class="help-step-num">設定</div><div class="help-step-body"><div class="help-step-title">伝票の会社名・連絡先を変える</div><span class="help-tag">データ</span> →「伝票フッターの会社名」で会社名・住所・TEL・FAX・メール・ホームページを編集して<strong>保存</strong>。おすすめは週1のJSONバックアップも同タブから。</div></div>
-      <div class="help-step"><div class="help-step-num">客先</div><div class="help-step-body"><div class="help-step-title">客先がマスタから消えたとき</div><span class="help-tag">データ</span> → <span class="help-tag">消えた客先を履歴から復元</span>。発行履歴に残っている客先名をマスタへ戻せます。</div></div>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">伝票の会社名・連絡先を変える</div><span class="help-tag">データ</span> →「伝票フッターの会社名」で会社名・住所・TEL・FAX・メール・ホームページを編集して<strong>保存</strong>。おすすめは週1のJSONバックアップも同タブから。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先がマスタから消えたとき</div><span class="help-tag">データ</span> → <span class="help-tag">消えた客先を履歴から復元</span>。発行履歴に残っている客先名をマスタへ戻せます。</div></div>
       <div class="help-warn">⚠️ それでも解決しない場合はJSONバックアップから復元してください。</div>
     </div>
   </div>
