@@ -174,7 +174,7 @@ select.cs:focus{outline:none;border-color:var(--ac)}
 .s-footer-space{height:57px}
 .s-footer-company{flex:38;padding:3px 6px;display:flex;flex-direction:column;justify-content:center}
 .s-footer-company-name{font-size:17px;font-weight:700;margin-bottom:3px}
-.s-footer-company-info{font-size:8px;color:#444;line-height:1.7;white-space:nowrap}
+.s-footer-company-info{font-size:7.5px;color:#444;line-height:1.45;white-space:normal;word-break:break-all}
 .slip-page-break{display:none}
 .m-tabs{display:flex;gap:0;border-bottom:2px solid var(--b2);margin-bottom:16px}
 .m-tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--mu);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
@@ -883,15 +883,27 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       </div>
       <div style="border-top:1px solid var(--bd);padding-top:14px">
         <div style="font-weight:600;color:var(--tx);margin-bottom:4px">伝票フッターの会社名</div>
-        <div style="font-size:12px;margin-bottom:10px">印刷される伝票の右下に出る会社名・住所・電話です。クラウドに保存され、全PCで共通になります。</div>
+        <div style="font-size:12px;margin-bottom:10px">印刷される伝票の右下に出る会社情報です。空欄の項目は印刷に出ません。クラウドに保存され、全PCで共通になります。</div>
         <div style="display:flex;flex-direction:column;gap:8px;max-width:560px">
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">
-            会社名
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">会社名
             <input id="slip-co-name" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;color:var(--tx);background:var(--w)" placeholder="例: 株式会社ネクサス">
           </label>
-          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">
-            住所・TELなど
-            <input id="slip-co-info" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="例: 〒xxx-xxxx　住所　TEL：00-0000-0000">
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">住所
+            <input id="slip-co-address" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="例: 〒xxx-xxxx　住所">
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">TEL
+              <input id="slip-co-tel" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="例: 046-267-9228">
+            </label>
+            <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">FAX
+              <input id="slip-co-fax" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="任意">
+            </label>
+          </div>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">メール
+            <input id="slip-co-email" type="email" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="任意">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">ホームページ
+            <input id="slip-co-homepage" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="任意（例: https://…）">
           </label>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button type="button" class="btn pri" style="padding:7px 14px;font-size:13px" onclick="saveSlipCompanySetting()">保存</button>
@@ -1475,9 +1487,9 @@ function clientNameStyle(name){
   else{fs=12.5;ls=-0.05;}
   return`font-size:${fs}px;white-space:nowrap;letter-spacing:${ls}em`;
 }
-function buildUnit(items,client,ds,pg,tp,titleExtra){const pgLabel=tp>1?`${pg}/${tp}ページ`:'';const cns=clientNameStyle(client);const title='委託洗濯伝票'+(titleExtra||'');const rows=Array.from({length:ROWS},(_,i)=>{const it=items[i];return`<div class="s-tr"><div class="s-td td-name">${it?it.name:''}</div><div class="s-td td-qty">${it&&it.qty?it.qty:''}</div><div class="s-td td-biko" style="font-size:10px">${it&&it.biko?it.biko:''}</div></div>`;}).join('');return`<div class="slip-unit">${pgLabel?`<div style="font-size:7px;color:#999;text-align:right;margin-bottom:1px">${pgLabel}</div>`:''}<div class="s-title">${title}</div><div class="s-head"><div class="s-client-area"><span class="s-client-name" style="${cns}">${escH(client)}</span><span class="s-sama">様</span></div><div class="s-date-area"><span class="s-date-label">納品日</span><span class="s-date-val">${ds}</span></div></div><div class="s-table-wrap"><div class="s-thead"><div class="s-thead-cell" style="flex:62">品　　　名</div><div class="s-thead-cell" style="flex:16">数　量</div><div class="s-thead-cell" style="flex:22">備　　　考</div></div><div class="s-tbody">${rows}</div></div><div class="s-footer"><div class="s-footer-left"><div class="s-footer-cell"><div class="s-footer-label">確認印</div><div class="s-footer-space"></div></div><div class="s-footer-cell"><div class="s-footer-label">ルート番号</div><div class="s-footer-space"></div></div><div class="s-footer-cell"><div class="s-footer-label">記号</div><div class="s-footer-space"></div></div></div><div class="s-footer-company"><div class="s-footer-company-name">${escH(SLIP_COMPANY.name)}</div><div class="s-footer-company-info">${escH(SLIP_COMPANY.info)}</div></div></div></div>`;}
+function buildUnit(items,client,ds,pg,tp,titleExtra){const pgLabel=tp>1?`${pg}/${tp}ページ`:'';const cns=clientNameStyle(client);const title='委託洗濯伝票'+(titleExtra||'');const rows=Array.from({length:ROWS},(_,i)=>{const it=items[i];return`<div class="s-tr"><div class="s-td td-name">${it?it.name:''}</div><div class="s-td td-qty">${it&&it.qty?it.qty:''}</div><div class="s-td td-biko" style="font-size:10px">${it&&it.biko?it.biko:''}</div></div>`;}).join('');return`<div class="slip-unit">${pgLabel?`<div style="font-size:7px;color:#999;text-align:right;margin-bottom:1px">${pgLabel}</div>`:''}<div class="s-title">${title}</div><div class="s-head"><div class="s-client-area"><span class="s-client-name" style="${cns}">${escH(client)}</span><span class="s-sama">様</span></div><div class="s-date-area"><span class="s-date-label">納品日</span><span class="s-date-val">${ds}</span></div></div><div class="s-table-wrap"><div class="s-thead"><div class="s-thead-cell" style="flex:62">品　　　名</div><div class="s-thead-cell" style="flex:16">数　量</div><div class="s-thead-cell" style="flex:22">備　　　考</div></div><div class="s-tbody">${rows}</div></div><div class="s-footer"><div class="s-footer-left"><div class="s-footer-cell"><div class="s-footer-label">確認印</div><div class="s-footer-space"></div></div><div class="s-footer-cell"><div class="s-footer-label">ルート番号</div><div class="s-footer-space"></div></div><div class="s-footer-cell"><div class="s-footer-label">記号</div><div class="s-footer-space"></div></div></div><div class="s-footer-company"><div class="s-footer-company-name">${escH(SLIP_COMPANY.name)}</div><div class="s-footer-company-info">${slipCompanyInfoHtml()}</div></div></div></div>`;}
 function buildSlipHTML(items,client,ds){const chunks=[];for(let i=0;i<items.length;i+=ROWS)chunks.push(items.slice(i,i+ROWS));const tp=chunks.length;return chunks.map((chunk,pi)=>`<div class="slip-page-wrap"><div class="slip-row" style="flex:1">${buildUnit(chunk,client,ds,pi+1,tp,'')}${buildUnit(chunk,client,ds,pi+1,tp,'　(納品控)')}</div></div>`+(pi<tp-1?'<div class="slip-page-break"></div>':'')).join('');}
-function openPrintWindow(html){let ov=document.getElementById('print-overlay');if(!ov){ov=document.createElement('div');ov.id='print-overlay';ov.style.cssText='display:none;position:static;background:#fff;font-family:\'游ゴシック\',sans-serif;color:#000';document.body.appendChild(ov);}const printCSS='<style>*{box-sizing:border-box;margin:0;padding:0}.slip-page-wrap{width:100%;height:170mm;display:flex;flex-direction:column;background:#fff;color:#000;page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid;overflow:hidden;transform:scale(0.93);transform-origin:center center}.slip-page-wrap:last-child{page-break-after:avoid;break-after:avoid}.slip-row{display:grid;grid-template-columns:1fr 1fr;gap:10mm;flex:1;border-bottom:1.5px solid #444;min-height:0}.slip-row:last-child{border-bottom:none}.slip-unit{display:flex;flex-direction:column;padding:6px 10px;min-height:0;overflow:hidden}.s-title{font-size:16px;text-align:center;padding:4px 0 3px;border-bottom:2px solid #222;margin-bottom:3px;letter-spacing:2px;font-weight:400;flex-shrink:0}.s-head{display:flex;align-items:stretch;border:1px solid #555;margin-bottom:2px;flex-shrink:0}.s-client-area{display:flex;align-items:flex-end;flex:1;border-right:1px solid #555;padding:4px 4px 5px;min-height:51px}.s-client-name{border-bottom:1.5px solid #222;flex:1;padding-bottom:1px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2;font-weight:600}.s-sama{font-size:13px;padding-left:3px;white-space:nowrap;align-self:flex-end}.s-date-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 4px;white-space:nowrap;width:22%}.s-date-label{font-size:8px;color:#555;margin-bottom:1px}.s-date-val{font-size:11px;font-weight:600}.s-table-wrap{flex:1;display:flex;flex-direction:column;min-height:0;border:1px solid #555;overflow:hidden}.s-thead{display:flex;background:#f2f2f2;border-bottom:1.5px solid #555;flex-shrink:0}.s-thead-cell{font-size:10px;padding:3px 2px;text-align:center;letter-spacing:1px;font-weight:400;border-right:1px solid #888;overflow:hidden}.s-thead-cell:last-child{border-right:none}.s-tbody{flex:1;display:flex;flex-direction:column;overflow:hidden}.s-tr{display:flex;flex:1;border-bottom:1px solid #ccc;min-height:0}.s-tr:last-child{border-bottom:none}.s-td{border-right:1px solid #ccc;overflow:hidden;white-space:nowrap;display:flex;align-items:center;padding:0 3px;min-height:0}.s-td:last-child{border-right:none}.s-td.td-name{font-size:12px;flex:62}.s-td.td-qty{font-size:12px;font-weight:700;justify-content:center;border-left:1px solid #777;border-right:1px solid #777;flex:16}.s-td.td-biko{flex:22}.s-footer{display:flex;border:1px solid #555;border-top:none;flex-shrink:0}.s-footer-left{display:flex;flex:62;border-right:1px solid #555}.s-footer-cell{flex:1;border-right:1px solid #555;padding:1px 3px;display:flex;flex-direction:column}.s-footer-cell:last-child{border-right:none}.s-footer-label{font-size:7px;color:#666}.s-footer-space{height:57px}.s-footer-company{flex:38;padding:3px 6px;display:flex;flex-direction:column;justify-content:center}.s-footer-company-name{font-size:17px;font-weight:700;margin-bottom:3px}.s-footer-company-info{font-size:8px;color:#444;line-height:1.7;white-space:nowrap}@page{margin:10mm 3mm 3mm 3mm;size:B5 landscape}</style>';ov.innerHTML=printCSS+html;ov.style.display='block';// 件数に応じて待機時間を調整（1件200ms + ページ数×50ms）
+function openPrintWindow(html){let ov=document.getElementById('print-overlay');if(!ov){ov=document.createElement('div');ov.id='print-overlay';ov.style.cssText='display:none;position:static;background:#fff;font-family:\'游ゴシック\',sans-serif;color:#000';document.body.appendChild(ov);}const printCSS='<style>*{box-sizing:border-box;margin:0;padding:0}.slip-page-wrap{width:100%;height:170mm;display:flex;flex-direction:column;background:#fff;color:#000;page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid;overflow:hidden;transform:scale(0.93);transform-origin:center center}.slip-page-wrap:last-child{page-break-after:avoid;break-after:avoid}.slip-row{display:grid;grid-template-columns:1fr 1fr;gap:10mm;flex:1;border-bottom:1.5px solid #444;min-height:0}.slip-row:last-child{border-bottom:none}.slip-unit{display:flex;flex-direction:column;padding:6px 10px;min-height:0;overflow:hidden}.s-title{font-size:16px;text-align:center;padding:4px 0 3px;border-bottom:2px solid #222;margin-bottom:3px;letter-spacing:2px;font-weight:400;flex-shrink:0}.s-head{display:flex;align-items:stretch;border:1px solid #555;margin-bottom:2px;flex-shrink:0}.s-client-area{display:flex;align-items:flex-end;flex:1;border-right:1px solid #555;padding:4px 4px 5px;min-height:51px}.s-client-name{border-bottom:1.5px solid #222;flex:1;padding-bottom:1px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2;font-weight:600}.s-sama{font-size:13px;padding-left:3px;white-space:nowrap;align-self:flex-end}.s-date-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 4px;white-space:nowrap;width:22%}.s-date-label{font-size:8px;color:#555;margin-bottom:1px}.s-date-val{font-size:11px;font-weight:600}.s-table-wrap{flex:1;display:flex;flex-direction:column;min-height:0;border:1px solid #555;overflow:hidden}.s-thead{display:flex;background:#f2f2f2;border-bottom:1.5px solid #555;flex-shrink:0}.s-thead-cell{font-size:10px;padding:3px 2px;text-align:center;letter-spacing:1px;font-weight:400;border-right:1px solid #888;overflow:hidden}.s-thead-cell:last-child{border-right:none}.s-tbody{flex:1;display:flex;flex-direction:column;overflow:hidden}.s-tr{display:flex;flex:1;border-bottom:1px solid #ccc;min-height:0}.s-tr:last-child{border-bottom:none}.s-td{border-right:1px solid #ccc;overflow:hidden;white-space:nowrap;display:flex;align-items:center;padding:0 3px;min-height:0}.s-td:last-child{border-right:none}.s-td.td-name{font-size:12px;flex:62}.s-td.td-qty{font-size:12px;font-weight:700;justify-content:center;border-left:1px solid #777;border-right:1px solid #777;flex:16}.s-td.td-biko{flex:22}.s-footer{display:flex;border:1px solid #555;border-top:none;flex-shrink:0}.s-footer-left{display:flex;flex:62;border-right:1px solid #555}.s-footer-cell{flex:1;border-right:1px solid #555;padding:1px 3px;display:flex;flex-direction:column}.s-footer-cell:last-child{border-right:none}.s-footer-label{font-size:7px;color:#666}.s-footer-space{height:57px}.s-footer-company{flex:38;padding:3px 6px;display:flex;flex-direction:column;justify-content:center}.s-footer-company-name{font-size:17px;font-weight:700;margin-bottom:3px}.s-footer-company-info{font-size:7.5px;color:#444;line-height:1.45;white-space:normal;word-break:break-all}@page{margin:10mm 3mm 3mm 3mm;size:B5 landscape}</style>';ov.innerHTML=printCSS+html;ov.style.display='block';// 件数に応じて待機時間を調整（1件200ms + ページ数×50ms）
   const pageCount=(html.match(/slip-page-wrap/g)||[]).length;
   const waitMs=Math.max(300, 200 + pageCount*50);
   setTimeout(()=>{
@@ -2108,19 +2120,65 @@ async function saveBillingMasterSetting(){
   toast(BILLING_MASTER_FIELDS?'請求系マスタ項目を表示します':'請求系マスタ項目を非表示にしました');
 }
 
-const DEFAULT_SLIP_COMPANY={name:'株式会社プリームス',info:'〒113-0034　東京都文京区湯島1-12-4　小宮ビル３Ｆ　TEL：03-6240-1905'};
-let SLIP_COMPANY={name:DEFAULT_SLIP_COMPANY.name,info:DEFAULT_SLIP_COMPANY.info};
+const DEFAULT_SLIP_COMPANY={
+  name:'株式会社プリームス',
+  address:'〒113-0034　東京都文京区湯島1-12-4　小宮ビル３Ｆ',
+  tel:'03-6240-1905',
+  fax:'',
+  email:'',
+  homepage:''
+};
+let SLIP_COMPANY=normalizeSlipCompany(DEFAULT_SLIP_COMPANY);
 function normalizeSlipCompany(v){
   const o=(v&&typeof v==='object')?v:{};
   const name=String(o.name!=null?o.name:DEFAULT_SLIP_COMPANY.name).trim()||DEFAULT_SLIP_COMPANY.name;
-  const info=String(o.info!=null?o.info:DEFAULT_SLIP_COMPANY.info).trim()||DEFAULT_SLIP_COMPANY.info;
-  return{name,info};
+  let address=String(o.address!=null?o.address:'').trim();
+  let tel=String(o.tel!=null?o.tel:'').trim();
+  let fax=String(o.fax!=null?o.fax:'').trim();
+  let email=String(o.email!=null?o.email:'').trim();
+  let homepage=String(o.homepage!=null?o.homepage:'').trim();
+  // 旧形式（info 1行）からの移行
+  const legacy=String(o.info!=null?o.info:'').trim();
+  if(legacy&&!address&&!tel&&!fax&&!email&&!homepage){
+    const m=legacy.match(/TEL[：:]\s*([0-9\-ー＋+()（）\s]+)/i);
+    if(m){
+      tel=m[1].replace(/\s+/g,'').trim();
+      address=legacy.replace(m[0],'').replace(/\s+/g,' ').trim();
+    }else address=legacy;
+  }
+  return{name,address,tel,fax,email,homepage};
+}
+function slipCompanyInfoHtml(){
+  const o=normalizeSlipCompany(SLIP_COMPANY);
+  const lines=[];
+  if(o.address)lines.push(o.address);
+  const contact=[];
+  if(o.tel)contact.push('TEL：'+o.tel);
+  if(o.fax)contact.push('FAX：'+o.fax);
+  if(contact.length)lines.push(contact.join('　'));
+  if(o.email)lines.push(o.email);
+  if(o.homepage)lines.push(o.homepage);
+  return lines.map(l=>escH(l)).join('<br>');
 }
 function syncSlipCompanyUi(){
-  const n=document.getElementById('slip-co-name');
-  const i=document.getElementById('slip-co-info');
-  if(n)n.value=SLIP_COMPANY.name||'';
-  if(i)i.value=SLIP_COMPANY.info||'';
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  set('slip-co-name',SLIP_COMPANY.name);
+  set('slip-co-address',SLIP_COMPANY.address);
+  set('slip-co-tel',SLIP_COMPANY.tel);
+  set('slip-co-fax',SLIP_COMPANY.fax);
+  set('slip-co-email',SLIP_COMPANY.email);
+  set('slip-co-homepage',SLIP_COMPANY.homepage);
+}
+function readSlipCompanyFromUi(){
+  const g=id=>(document.getElementById(id)?.value||'').trim();
+  return normalizeSlipCompany({
+    name:g('slip-co-name'),
+    address:g('slip-co-address'),
+    tel:g('slip-co-tel'),
+    fax:g('slip-co-fax'),
+    email:g('slip-co-email'),
+    homepage:g('slip-co-homepage')
+  });
 }
 async function loadSlipCompanySetting(){
   try{
@@ -2136,18 +2194,16 @@ async function loadSlipCompanySetting(){
   syncSlipCompanyUi();
 }
 async function saveSlipCompanySetting(){
-  const nameEl=document.getElementById('slip-co-name');
-  const infoEl=document.getElementById('slip-co-info');
-  SLIP_COMPANY=normalizeSlipCompany({name:nameEl?nameEl.value:'',info:infoEl?infoEl.value:''});
+  SLIP_COMPANY=readSlipCompanyFromUi();
   localStorage.setItem('purims_slipCompany',JSON.stringify(SLIP_COMPANY));
   try{await firebase.database().ref('purims/settings/slipCompany').set(SLIP_COMPANY);}catch(e){console.warn(e);}
   syncSlipCompanyUi();
   const ok=document.getElementById('slip-co-saved');
   if(ok){ok.style.display='inline';setTimeout(()=>{ok.style.display='none';},1800);}
-  toast('伝票の会社名を保存しました');
+  toast('伝票の会社情報を保存しました');
 }
 async function resetSlipCompanySetting(){
-  if(!confirm('伝票フッターの会社名を初期値に戻しますか？'))return;
+  if(!confirm('伝票フッターの会社情報を初期値に戻しますか？'))return;
   SLIP_COMPANY=normalizeSlipCompany(DEFAULT_SLIP_COMPANY);
   syncSlipCompanyUi();
   await saveSlipCompanySetting();
@@ -4431,6 +4487,7 @@ function closeLoginLog_dup(){document.getElementById('loginlog-modal').style.dis
 
 /* 更新情報（新しいものを上に追加） type: 'feat'=機能更新 / 'fix'=バグ修正 */
 const APP_UPDATES=[
+  {date:'2026-10-17',type:'feat',text:'伝票右下の会社情報にFAX・メール・ホームページ欄を追加（空欄は印刷に出ない）'},
   {date:'2026-10-17',type:'feat',text:'伝票右下の会社名・住所を、データタブから変更できるようにした（クラウド共有）'},
   {date:'2026-10-17',type:'feat',text:'漢字品目も読みで頭文字検索（例: 和帽子→わ）。読み欄（任意）で上書き可'},
   {date:'2026-10-17',type:'fix',text:'品目の頭文字絞り込みをボタン列からプルダウンに変更（場所を取らない）'},
