@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>株式会社ネクサス様　伝票発行アプリ　スタート・運用ガイド</title>
+<style>
+  :root { --nv:#4169E1; --mu:#555; --bd:#ddd; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    color: #222; line-height: 1.55; max-width: 920px; margin: 0 auto;
+    padding: 24px 28px 48px; font-size: 13px;
+  }
+  h1 { font-size: 22px; color: var(--nv); margin: 0 0 8px; }
+  h2 {
+    font-size: 15px; color: #fff; background: var(--nv);
+    padding: 8px 12px; margin: 26px 0 10px; border-radius: 6px;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 13.5px; color: var(--nv); margin: 14px 0 6px; page-break-after: avoid; }
+  p, li { margin: 3px 0; }
+  ul, ol { padding-left: 1.25em; margin: 6px 0 10px; }
+  .meta { color: var(--mu); margin-bottom: 14px; }
+  .shot {
+    display: block; width: 100%; max-height: 380px;
+    object-fit: contain; object-position: top;
+    border: 1px solid var(--bd); border-radius: 6px;
+    margin: 8px 0 12px; background: #f7f7f7; page-break-inside: avoid;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 12.5px; }
+  th, td { border: 1px solid var(--bd); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #f0f2f6; width: 28%; }
+  .check li { list-style: none; margin-left: -0.3em; }
+  .toolbar {
+    position: sticky; top: 0; z-index: 10; background: #fff;
+    border-bottom: 1px solid var(--bd); padding: 10px 0 12px; margin: -8px 0 16px;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .toolbar button {
+    background: var(--nv); color: #fff; border: none; border-radius: 6px;
+    padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .toolbar span { color: var(--mu); font-size: 12px; }
+  @media print {
+    .toolbar { display: none !important; }
+    body { padding: 0; max-width: none; font-size: 11px; }
+    .shot { max-height: 300px; }
+  }
+  @page { margin: 12mm 10mm; size: A4 portrait; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">🖨 印刷する</button>
+    <span>A4縦推奨。ダイアログが出たら印刷してください。</span>
+  </div>
+
+  <h1>株式会社ネクサス様　伝票発行アプリ　スタート・運用ガイド</h1>
+  <div class="meta">対象：株式会社ネクサス様　伝票発行アプリ<br>URL：〔例：https://pv-dn.github.io/purims/ 〕</div>
+  <p>導入当日〜日常運用を、画面つきで説明します。</p>
+
+  <h2>1. はじめに</h2>
+  <p><strong>できること：</strong>伝票発行・印刷／履歴・訂正再発行／客先・品目マスタ／クラウド保存</p>
+  <p><strong>含まれないもの：</strong>請求・見積・領収、大規模レイアウト変更（別相談）</p>
+  <p><strong>Firebaseとは：</strong>Googleのインターネット上のデータ置き場。客先・品目・履歴をここに保存し、別PCでも同じデータを使える。普段はアプリだけでよく、管理画面は不要。</p>
+  <p><strong>データの置き場所：</strong>導入当初は提供者側のFirebase（御社の登録不要・URL＋ログインで利用可）。後日、御社のFirebaseへ移管可（時期・費用は都度相談）。保険としてデータタブのJSONバックアップを定期保存。</p>
+
+  <h2>2. ログイン画面</h2>
+  <img class="shot" src="images/01-login.png" alt="ログイン">
+  <table>
+    <tr><th>パスワード</th><td>利用者ごとのログイン用</td></tr>
+    <tr><th>ログイン</th><td>押すとアプリが開く</td></tr>
+  </table>
+  <p>手順：URLを開く → パスワード入力 → <strong>ログイン</strong></p>
+  <p><strong>初期パスワード：</strong>デフォルトで登録されているユーザーのパスワードは <code>admin1234</code> です。導入後は、必要に応じてユーザー管理から変更してください。</p>
+
+  <h2>3. 導入当日チェックリスト</h2>
+  <h3>A. 開けること</h3>
+  <ul class="check">
+    <li>□ URLをブックマーク（またはアプリインストール）</li>
+    <li>□ ログインできる　□ 自分の名前が出る</li>
+  </ul>
+  <h3>B. 最初に決めること</h3>
+  <ul class="check">
+    <li>□ 管理者パスワード　□ 利用者アカウント</li>
+    <li>□ 履歴保存期間（推奨6か月）　□ 請求系マスタは原則OFF</li>
+  </ul>
+  <h3>C. マスタ／D. 印刷</h3>
+  <ul class="check">
+    <li>□ 客先・品目・サイクル登録　□ テスト発行〜印刷</li>
+    <li>□ 用紙 B5横　□ 倍率100%　□ 余白なし／最小</li>
+  </ul>
+
+  <h2>4. 伝票発行（トップ）</h2>
+  <img class="shot" src="images/02-slip.png" alt="伝票発行トップ">
+  <table>
+    <tr><th>印刷モード</th><td>1件ずつ／一括</td></tr>
+    <tr><th>客先プルダウン</th><td>ここから開始</td></tr>
+    <tr><th>表示±</th><td>画面の拡大縮小（印刷サイズとは別）</td></tr>
+    <tr><th>タブ右端</th><td>ログイン名 → 日付 → 更新情報</td></tr>
+  </table>
+
+  <h2>5. 伝票発行（数量入力）</h2>
+  <img class="shot" src="images/02b-slip-input.png" alt="数量入力">
+  <table>
+    <tr><th>客先</th><td>選んだ届け先</td></tr>
+    <tr><th>次回納品日</th><td>サイクルから自動。「変更」で指定可</td></tr>
+    <tr><th>納品サイクル</th><td>納品曜日。クリックで編集可</td></tr>
+    <tr><th>品番／品名</th><td>マスタから出る一覧</td></tr>
+    <tr><th>数量</th><td>本日の出荷数を入力</td></tr>
+    <tr><th>備考</th><td>任意メモ</td></tr>
+    <tr><th>＋品目を追加</th><td>今日だけの追加品目</td></tr>
+    <tr><th>伝票発行</th><td>履歴保存 → 完了画面へ</td></tr>
+  </table>
+  <ol>
+    <li>客先を選ぶ</li>
+    <li>数量を入れる</li>
+    <li>必要なら納品日を変更</li>
+    <li><strong>伝票発行</strong>を押す</li>
+    <li>完了画面で客先・納品日・品目数・合計点数を確認</li>
+    <li><strong>印刷する</strong> → ブラウザの印刷画面で紙のイメージを確認してから印刷</li>
+  </ol>
+  <img class="shot" src="images/02c-print-preview.png" alt="印刷プレビュー">
+  <p><strong>印刷の目安（右側の設定）</strong>　用紙：B5　／　余白：なし　／　倍率：100%（小さく出るとき）</p>
+  <p>※アプリ内に紙面プレビュー専用画面はありません。伝票の見た目はこの印刷画面で確認します。</p>
+  <h3>同一納品日ロック（重要）</h3>
+  <p><strong>同じ客先 × 同じ納品日</strong> の伝票が履歴に既にあるとき、発行ボタンを押すと確認が2回出ます。</p>
+  <p><strong>1回目（おすすめ）</strong>「訂正して再発行しますか？」</p>
+  <ul>
+    <li><strong>OK</strong> … 既存の履歴を直して出し直す（数量ミスなどの修正向き）</li>
+    <li><strong>キャンセル</strong> … 次の確認へ</li>
+  </ul>
+  <p><strong>2回目</strong>「同じ納品日で、新しい伝票として発行しますか？」</p>
+  <ul>
+    <li><strong>OK</strong> … 同じ納品日でもう1件、新規発行する（履歴が2件になる）</li>
+    <li><strong>キャンセル</strong> … 発行しない</li>
+  </ul>
+  <p>基本は訂正再発行。どうしても同じ納品日で別伝票が必要なときだけ、2回目で新規発行を選んでください。</p>
+
+  <h2>6. 発行履歴</h2>
+  <img class="shot" src="images/03-history.png" alt="発行履歴">
+  <table>
+    <tr><th>発行日別／客先別／削除履歴</th><td>見方の切り替え</td></tr>
+    <tr><th>検索</th><td>客先・品目・日付で絞り込み</td></tr>
+    <tr><th>保存期間</th><td>3／6／12か月</td></tr>
+    <tr><th>フォルダ</th><td>月→日付。クリックで開く</td></tr>
+    <tr><th>チェック</th><td>選んだ伝票だけまとめて再印刷</td></tr>
+    <tr><th>訂正して再発行</th><td>数量ミスなどを直して同じ履歴を更新</td></tr>
+  </table>
+
+  <h2>7. マスタ管理（入るとき）</h2>
+  <img class="shot" src="images/04-master-auth.png" alt="マスタ認証">
+  <p>ログインと同じパスワードを入れ、<strong>認証</strong>を押します。</p>
+
+  <h2>8. マスタ：客先を選ぶ</h2>
+  <img class="shot" src="images/05-master.png" alt="マスタ客先選択">
+  <table>
+    <tr><th>客先・品目管理</th><td>普段いちばん使う</td></tr>
+    <tr><th>グループ管理</th><td>ルートなどのまとめ</td></tr>
+    <tr><th>商品コード一覧</th><td>品目マスタ全体</td></tr>
+    <tr><th>既存客先の編集</th><td>いまある客先を直す</td></tr>
+    <tr><th>＋新規客先を追加</th><td>新しい届け先を作る</td></tr>
+  </table>
+
+  <h2>9. マスタ：基本情報の編集</h2>
+  <img class="shot" src="images/05b-master-edit.png" alt="基本情報">
+  <table>
+    <tr><th>客先名</th><td>届け先の表示名</td></tr>
+    <tr><th>納品サイクル</th><td>月〜日の丸。納品曜日をON</td></tr>
+    <tr><th>グループ</th><td>伝票の「ルート番号」欄にグループ名が出る</td></tr>
+    <tr><th>記号</th><td>伝票の「記号」欄に印刷（任意）</td></tr>
+    <tr><th>変更を保存</th><td>押さないと基本情報は反映されない</td></tr>
+  </table>
+  <p>※締め日・配送費などは「請求系マスタ項目」がONのときだけ表示。伝票だけならOFFのままでOK。</p>
+
+  <h2>10. マスタ：品目の管理</h2>
+  <img class="shot" src="images/05c-master-items.png" alt="品目管理">
+  <table>
+    <tr><th>マスタから選ぶ</th><td>商品コード一覧から追加</td></tr>
+    <tr><th>自由入力</th><td>その場で品名を追加</td></tr>
+    <tr><th>一覧</th><td>この客先の伝票に出る品目</td></tr>
+    <tr><th>削除／≡</th><td>外す／ドラッグで順番変更</td></tr>
+  </table>
+  <p><strong>ポイント：</strong>ここに登録した品目が、伝票発行の数量入力表に出ます。</p>
+
+  <h2>11. マスタ：新規客先</h2>
+  <img class="shot" src="images/05d-master-new.png" alt="新規客先">
+  <ol>
+    <li>＋新規客先を追加</li>
+    <li>客先名・サイクルなどを入れて追加</li>
+    <li>既存客先の編集に戻り、品目を付ける</li>
+  </ol>
+
+  <h2>12. マスタ：商品コード一覧</h2>
+  <img class="shot" src="images/05e-master-products.png" alt="商品コード">
+  <p>全社共通の品目マスタ。「マスタから選ぶ」の元データです。</p>
+  <table>
+    <tr><th>新しい品目名 → ＋商品を追加</th><td><strong>品目名だけ入れればOK。品番は自動</strong>（P001, P002…）</td></tr>
+    <tr><th>品番欄</th><td>空のままで大丈夫。通常は自動で十分</td></tr>
+    <tr><th>一覧の品番・品目名</th><td>クリックしてその場で編集できる</td></tr>
+  </table>
+  <p><strong>注意：</strong>すでに登録済みの品目（完全同名）を登録しようとすると、警告が出て追加できません。同じ名前を二重に増やさないための仕組みです。</p>
+
+  <h2>13. データタブ</h2>
+  <img class="shot" src="images/06-data.png" alt="データ">
+  <table>
+    <tr><th>今すぐ保存／読み込む</th><td>手動クラウド同期</td></tr>
+    <tr><th>請求系マスタ項目</th><td>初期はOFF推奨</td></tr>
+    <tr><th>伝票フッターの会社名</th><td>会社名・住所・TEL／FAX／メール／ホームページ（空欄は印刷に出ない）</td></tr>
+    <tr><th>JSONバックアップ</th><td>緊急用の全データ退避（週1おすすめ）。後日のクラウド移管・復旧にも使える</td></tr>
+    <tr><th>消えた客先を復元</th><td>履歴にあるのにマスタに無い客先を戻す</td></tr>
+  </table>
+
+  <h2>14. ユーザー管理（管理者と一般）</h2>
+  <p>ユーザーの追加・削除は <strong>管理者だけ</strong> ができます。</p>
+  <table>
+    <tr><th></th><th>管理者</th><th>一般ユーザー</th></tr>
+    <tr><td>伝票発行・履歴・印刷・マスタ・データ</td><td>○</td><td>○</td></tr>
+    <tr><td>ユーザー管理ボタン</td><td>○（表示される）</td><td>×（出ない）</td></tr>
+    <tr><td>ユーザー追加・削除／管理者パス変更</td><td>○</td><td>×</td></tr>
+    <tr><td>名前の表示</td><td>名前＋👑</td><td>名前のみ</td></tr>
+  </table>
+  <p>※ログイン用パスワードと、ユーザー管理に入る <strong>管理者パスワード</strong> は別物です。</p>
+  <img class="shot" src="images/08-user-auth.png" alt="管理者認証">
+  <p>管理者でログイン → ユーザー管理 → 管理者パスワードで認証。</p>
+  <img class="shot" src="images/08b-user-mgmt.png" alt="ユーザー管理">
+  <table>
+    <tr><th>ユーザー一覧</th><td>管理者／一般の表示、削除</td></tr>
+    <tr><th>新規追加</th><td>ユーザー名・パスワード。「管理者にする」にチェックで管理者</td></tr>
+    <tr><th>管理者パスワード変更</th><td>ユーザー管理に入るためのパスワード</td></tr>
+  </table>
+  <p><strong>おすすめ：</strong>責任者＝管理者1名。現場は一般で作る。管理者パスワードはむやみに共有しない。</p>
+  <p>ヘッダーの<strong>ログイン履歴</strong>で、誰がいつ入ったかも確認できます。</p>
+  <img class="shot" src="images/08c-loginlog.png" alt="ログイン履歴">
+
+  <h2>15. 使い方タブ</h2>
+  <img class="shot" src="images/07-help.png" alt="使い方">
+  <p>迷ったらアプリ内のここを開きます。</p>
+
+  <h2>16. 日常の流れ</h2>
+  <ol>
+    <li>ログイン</li>
+    <li>伝票発行で客先選択 → 数量入力</li>
+    <li>伝票発行 → 印刷</li>
+    <li>終わり前に発行履歴を確認</li>
+  </ol>
+
+  <h2>17. 印刷トラブル</h2>
+  <table>
+    <tr><th>小さく出る</th><td>倍率100%</td></tr>
+    <tr><th>余白が大きい</th><td>余白なし／最小</td></tr>
+    <tr><th>用紙が違う</th><td>B5・横向き</td></tr>
+  </table>
+
+  <h2>18. サポート</h2>
+  <p>期間中OK：操作質問／不具合／軽い運用相談</p>
+  <p>別見積：大きな機能追加／レイアウト大幅変更／請求・見積・領収</p>
+  <p>連絡先：株式会社プゥル・ヴー　担当 善方　TEL 046-267-9228　mobile 090-2906-8227</p>
+
+  <h2>19. 導入完了サイン</h2>
+  <table>
+    <tr><td>URL・ログイン</td><td>□</td><td>管理者／一般の違い</td><td>□</td></tr>
+    <tr><td>ユーザー追加</td><td>□</td><td>伝票入力</td><td>□</td></tr>
+    <tr><td>マスタ登録</td><td>□</td><td>テスト発行・印刷</td><td>□</td></tr>
+    <tr><td>同一納品日ロック</td><td>□</td><td>ガイド受領</td><td>□</td></tr>
+  </table>
+  <p>日付：　　年　　月　　日　／　利用者：　　　　　提供者：　　　　　</p>
+
+  <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script>
+</body>
+</html>

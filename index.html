@@ -988,6 +988,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">印刷モードを選ぶ</div>画面上部の「🖨 印刷モード」バーで <span class="help-tag">1件ずつ印刷</span> か <span class="help-tag">一括印刷</span> を選びます。</div></div>
       <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先・数量</div>客先を選び、品目の数量を入力します。納品日はサイクルから自動計算され、必要なら変更できます。</div></div>
       <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票発行</div><span class="help-tag">伝票発行</span> を押すと履歴に保存され、印刷できます。同じ客先・同じ納品日が既にあるときは確認が出ます（おすすめは訂正再発行。必要なら同じ納品日で新規発行も可）。</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">伝票右下に出るもの</div><strong>ルート番号</strong>＝客先のグループ名、<strong>記号</strong>＝客先マスタの「記号」、右側＝会社名など（<span class="help-tag">データ</span> タブで変更）。</div></div>
       <div class="help-note">💡 発行履歴の保存期間（納品日基準）は <span class="help-tag">発行履歴</span> タブで設定できます。</div>
     </div>
   </div>
@@ -998,6 +999,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 伝票が小さく印刷される</div><p>印刷ダイアログの「倍率」を <strong>100%</strong> に設定してください。</p></div>
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 余白が大きすぎる</div><p>印刷ダイアログで「余白」を <strong>「なし」または「最小」</strong> に設定してください。用紙は <strong>B5 横向き</strong> です。</p></div>
       <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 客先名が長いとき</div><p>客先名は<strong>1行</strong>のまま表示し、長さに応じて文字サイズと字間を調整します。</p></div>
+      <div style="margin-bottom:14px"><div style="font-weight:600;margin-bottom:4px">🔸 ルート番号・記号・会社名が出ない／違う</div><p><strong>ルート番号</strong>は客先の<strong>グループ</strong>名です（未設定なら空欄）。<strong>記号</strong>は客先マスタの「記号」欄です。<strong>会社名・住所・TEL／FAX／メール／ホームページ</strong>は <span class="help-tag">データ</span> →「伝票フッターの会社名」で変更・保存してください（空欄の項目は印刷に出ません）。</p></div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-master">
@@ -1005,7 +1007,9 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-body">
       <p><span class="help-tag">マスタ管理</span> → 客先編集 で、客先ごとに品目と納品サイクルを設定します。</p>
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">品目・納品サイクル</div>品目名と納品曜日（月〜日）を客先ごとに登録。<span class="help-tag">マスタから選ぶ</span>・伝票の <span class="help-tag">マスタから追加</span>・商品コード一覧では、<span class="help-tag">品番順</span>／<span class="help-tag">あいうえお順</span> と、<span class="help-tag">頭文字</span> プルダウン（あ・か・さ…／A・B・C…）で絞り込めます。漢字の品目も読みで判定します（例: 和帽子→<strong>わ</strong>、白衣→は）。一覧に無い読みのときは、商品コード一覧の<strong>読み</strong>欄（任意）にひらがな等を入れるとその頭文字で出ます。</div></div>
-      <div class="help-note">💡 締め日・最低保証・配送費・包装料・駐車場代など請求向け項目は、<span class="help-tag">データ</span> タブの「請求系マスタ項目」をONにしたときだけ表示されます（初期はOFF）。伝票右下の会社名も <span class="help-tag">データ</span> →「伝票フッターの会社名」で変更できます。</div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">グループと記号</div><strong>グループ</strong>を付けると、伝票の<strong>ルート番号</strong>欄にそのグループ名が出ます。<strong>記号</strong>（任意）を客先ごとに入力すると、伝票の<strong>記号</strong>欄に印刷されます。新規客先追加でも同じ項目があります。</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票に出す会社情報</div><span class="help-tag">データ</span> →「伝票フッターの会社名」で、会社名・住所・TEL・FAX・メール・ホームページを設定できます。空欄は印刷に出ません。クラウドに保存され全PCで共通です。</div></div>
+      <div class="help-note">💡 締め日・最低保証・配送費・包装料・駐車場代など請求向け項目は、<span class="help-tag">データ</span> タブの「請求系マスタ項目」をONにしたときだけ表示されます（初期はOFF）。</div>
       <div class="help-note">💡 マスタ管理を開くときは、ログインパスワードの再入力が必要です。</div>
     </div>
   </div>
@@ -1013,6 +1017,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-hd" onclick="toggleHelp('data')">💾 データが消えた・おかしいとき<span class="help-toggle" id="help-toggle-data">▶</span></div>
     <div class="help-section-body">
       <p><span class="help-tag">データ</span> タブ →「⬇️ 今すぐ読み込む」を押してください。クラウドから復元できる場合がほとんどです。</p>
+      <div class="help-step"><div class="help-step-num">設定</div><div class="help-step-body"><div class="help-step-title">伝票の会社名・連絡先を変える</div><span class="help-tag">データ</span> →「伝票フッターの会社名」で会社名・住所・TEL・FAX・メール・ホームページを編集して<strong>保存</strong>。おすすめは週1のJSONバックアップも同タブから。</div></div>
       <div class="help-step"><div class="help-step-num">客先</div><div class="help-step-body"><div class="help-step-title">客先がマスタから消えたとき</div><span class="help-tag">データ</span> → <span class="help-tag">消えた客先を履歴から復元</span>。発行履歴に残っている客先名をマスタへ戻せます。</div></div>
       <div class="help-warn">⚠️ それでも解決しない場合はJSONバックアップから復元してください。</div>
     </div>
