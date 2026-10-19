@@ -89,6 +89,78 @@ async function main() {
     await shot(page, '02b-slip-input');
   }
 
+  // 印刷プレビュー（伝票右下の会社名が見える状態・ダイアログは出さない）
+  const coName = await page.evaluate(() => {
+    try {
+      window.print = () => {};
+      const h = (DB.history || []).find((x) => x && x.items && x.items.length);
+      let html = '';
+      if (h && typeof buildSlipHTML === 'function') {
+        const ds =
+          (typeof historyDeliveryDate === 'function' ? historyDeliveryDate(h) : '') ||
+          h.deliveryDate ||
+          '';
+        html = buildSlipHTML(h.items, h.client, ds);
+      } else if (client && typeof buildSlipHTML === 'function') {
+        const items = (DB.clients[client]?.items || [])
+          .slice(0, 2)
+          .map((it, i) => ({ ...it, qty: i === 0 ? 1 : 0 }))
+          .filter((it) => it.qty);
+        html = buildSlipHTML(
+          items.length ? items : [{ name: 'Tシャツ', qty: 1 }],
+          client,
+          '2026年10月17日'
+        );
+      }
+      if (!html) return '';
+      let ov = document.getElementById('print-overlay');
+      if (!ov) {
+        ov = document.createElement('div');
+        ov.id = 'print-overlay';
+        ov.style.cssText =
+          "display:none;position:static;background:#fff;font-family:'游ゴシック',sans-serif;color:#000";
+        document.body.appendChild(ov);
+      }
+      if (typeof openPrintWindow === 'function') {
+        openPrintWindow(html);
+      } else {
+        ov.innerHTML = html;
+        ov.style.display = 'block';
+      }
+      return (typeof SLIP_COMPANY !== 'undefined' && SLIP_COMPANY && SLIP_COMPANY.name) || '';
+    } catch (e) {
+      console.error(e);
+      return '';
+    }
+  });
+  console.log('slip company', coName || '(none)');
+  await page.waitForTimeout(500);
+  // 紙面が見えるよう白背景でオーバーレイ全体を撮る
+  await page.evaluate(() => {
+    const ov = document.getElementById('print-overlay');
+    if (!ov) return;
+    ov.style.display = 'block';
+    ov.style.position = 'fixed';
+    ov.style.inset = '0';
+    ov.style.zIndex = '99999';
+    ov.style.overflow = 'auto';
+    ov.style.background = '#fff';
+    ov.style.padding = '12px';
+  });
+  await page.waitForTimeout(300);
+  await shot(page, '02c-print-preview');
+  await page.evaluate(() => {
+    const ov = document.getElementById('print-overlay');
+    if (ov) {
+      ov.style.display = 'none';
+      ov.style.position = 'static';
+      ov.style.inset = '';
+      ov.style.zIndex = '';
+      ov.style.overflow = '';
+      ov.style.padding = '';
+    }
+  });
+
   // 発行履歴
   await page.locator('#tab-history').click();
   await page.waitForTimeout(800);
