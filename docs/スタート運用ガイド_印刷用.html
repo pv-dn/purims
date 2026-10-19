@@ -14,10 +14,10 @@
   h1 { font-size: 22px; color: var(--nv); margin: 0 0 8px; }
   h2 {
     font-size: 15px; color: #fff; background: var(--nv);
-    padding: 8px 12px; margin: 26px 0 10px; border-radius: 6px;
-    page-break-after: avoid;
+    padding: 8px 12px; margin: 0 0 10px; border-radius: 6px;
+    break-after: avoid; page-break-after: avoid;
   }
-  h3 { font-size: 13.5px; color: var(--nv); margin: 14px 0 6px; page-break-after: avoid; }
+  h3 { font-size: 13.5px; color: var(--nv); margin: 14px 0 6px; break-after: avoid; page-break-after: avoid; }
   p, li { margin: 3px 0; }
   ul, ol { padding-left: 1.25em; margin: 6px 0 10px; }
   .meta { color: var(--mu); margin-bottom: 14px; }
@@ -25,12 +25,20 @@
     display: block; width: 100%; max-height: 380px;
     object-fit: contain; object-position: top;
     border: 1px solid var(--bd); border-radius: 6px;
-    margin: 8px 0 12px; background: #f7f7f7; page-break-inside: avoid;
+    margin: 8px 0 12px; background: #f7f7f7;
+    break-inside: avoid; page-break-inside: avoid;
   }
-  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 12.5px; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 12.5px;
+    break-inside: avoid; page-break-inside: avoid;
+  }
   th, td { border: 1px solid var(--bd); padding: 6px 8px; text-align: left; vertical-align: top; }
   th { background: #f0f2f6; width: 28%; }
   .check li { list-style: none; margin-left: -0.3em; }
+  /* 節ごと：見出しがページ末に残らない／キリのいい章立てで改ページ */
+  .sec { margin: 22px 0 8px; break-inside: auto; }
+  .sec.keep { break-inside: avoid; page-break-inside: avoid; }
+  .sec.break { break-before: page; page-break-before: always; }
   .toolbar {
     position: sticky; top: 0; z-index: 10; background: #fff;
     border-bottom: 1px solid var(--bd); padding: 10px 0 12px; margin: -8px 0 16px;
@@ -44,7 +52,9 @@
   @media print {
     .toolbar { display: none !important; }
     body { padding: 0; max-width: none; font-size: 11px; }
-    .shot { max-height: 300px; }
+    .shot { max-height: 240px; }
+    h2 { margin-top: 0; }
+    p, li { orphans: 3; widows: 3; }
   }
   @page { margin: 12mm 10mm; size: A4 portrait; }
 </style>
@@ -52,19 +62,22 @@
 <body>
   <div class="toolbar">
     <button type="button" onclick="window.print()">🖨 印刷する</button>
-    <span>A4縦推奨。ダイアログが出たら印刷してください。</span>
+    <span>A4縦推奨。章の区切りでページが分かれるよう調整済み。プレビューで確認してから印刷してください。</span>
   </div>
 
   <h1>株式会社ネクサス様　伝票発行アプリ　スタート・運用ガイド</h1>
   <div class="meta">対象：株式会社ネクサス様　伝票発行アプリ<br>URL：〔例：https://pv-dn.github.io/purims/ 〕</div>
   <p>導入当日〜日常運用を、画面つきで説明します。</p>
 
+  <section class="sec keep">
   <h2>1. はじめに</h2>
   <p><strong>できること：</strong>伝票発行・印刷／履歴・訂正再発行／客先・品目マスタ／クラウド保存</p>
   <p><strong>含まれないもの（別相談・オプション）：</strong>請求タブ（フル）はオプション（税別10,000円・見積に明記時のみ）。見積書・領収書、大規模レイアウト変更は都度見積</p>
   <p><strong>Firebaseとは：</strong>Googleのインターネット上のデータ置き場。客先・品目・履歴をここに保存し、別PCでも同じデータを使える。普段はアプリだけでよく、管理画面は不要。</p>
   <p><strong>データの置き場所：</strong>導入当初は提供者側のFirebase（御社の登録不要・URL＋ログインで利用可）。後日、御社のFirebaseへ移管可（時期・費用は都度相談）。保険としてデータタブのJSONバックアップを定期保存。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>2. ログイン画面</h2>
   <img class="shot" src="images/01-login.png" alt="ログイン">
   <table>
@@ -73,7 +86,9 @@
   </table>
   <p>手順：URLを開く → パスワード入力 → <strong>ログイン</strong></p>
   <p><strong>初期パスワード：</strong>デフォルトで登録されているユーザーのパスワードは <code>admin1234</code> です。導入後は、必要に応じてユーザー管理から変更してください。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>3. 導入当日チェックリスト</h2>
   <h3>A. 開けること</h3>
   <ul class="check">
@@ -91,7 +106,9 @@
     <li>□ 客先・品目・サイクル登録　□ 必要ならグループ（ルート番号）・記号　□ テスト発行〜印刷</li>
     <li>□ 用紙 B5横　□ 倍率100%　□ 余白なし／最小</li>
   </ul>
+  </section>
 
+  <section class="sec break">
   <h2>4. 伝票発行（トップ）</h2>
   <img class="shot" src="images/02-slip.png" alt="伝票発行トップ">
   <table>
@@ -100,7 +117,9 @@
     <tr><th>表示±</th><td>画面の拡大縮小（印刷サイズとは別）</td></tr>
     <tr><th>タブ右端</th><td>ログイン名 → 日付 → 更新情報</td></tr>
   </table>
+  </section>
 
+  <section class="sec">
   <h2>5. 伝票発行（数量入力）</h2>
   <img class="shot" src="images/02b-slip-input.png" alt="数量入力">
   <table>
@@ -137,7 +156,9 @@
     <li><strong>キャンセル</strong> … 発行しない</li>
   </ul>
   <p>基本は訂正再発行。どうしても同じ納品日で別伝票が必要なときだけ、2回目で新規発行を選んでください。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>6. 発行履歴</h2>
   <img class="shot" src="images/03-history.png" alt="発行履歴">
   <table>
@@ -148,11 +169,15 @@
     <tr><th>チェック</th><td>選んだ伝票だけまとめて再印刷</td></tr>
     <tr><th>訂正して再発行</th><td>数量ミスなどを直して同じ履歴を更新</td></tr>
   </table>
+  </section>
 
+  <section class="sec break keep">
   <h2>7. マスタ管理（入るとき）</h2>
   <img class="shot" src="images/04-master-auth.png" alt="マスタ認証">
   <p>ログインと同じパスワードを入れ、<strong>認証</strong>を押します。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>8. マスタ：客先を選ぶ</h2>
   <img class="shot" src="images/05-master.png" alt="マスタ客先選択">
   <table>
@@ -162,7 +187,9 @@
     <tr><th>既存客先の編集</th><td>いまある客先を直す</td></tr>
     <tr><th>＋新規客先を追加</th><td>新しい届け先を作る</td></tr>
   </table>
+  </section>
 
+  <section class="sec keep">
   <h2>9. マスタ：基本情報の編集</h2>
   <img class="shot" src="images/05b-master-edit.png" alt="基本情報">
   <table>
@@ -174,7 +201,9 @@
   </table>
   <p>※締め日・配送費などは「請求系マスタ項目」がONのときだけ表示。伝票だけならOFFのままでOK。</p>
   <p>※伝票右下の会社名・住所・TEL／FAX／メール／ホームページは <strong>データ</strong> タブの「伝票フッターの会社名」で変更します。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>10. マスタ：品目の管理</h2>
   <img class="shot" src="images/05c-master-items.png" alt="品目管理">
   <table>
@@ -186,7 +215,9 @@
     <tr><th>削除／≡</th><td>外す／ドラッグで順番変更</td></tr>
   </table>
   <p><strong>ポイント：</strong>ここに登録した品目が、伝票発行の数量入力表に出ます。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>11. マスタ：新規客先</h2>
   <img class="shot" src="images/05d-master-new.png" alt="新規客先">
   <ol>
@@ -194,7 +225,9 @@
     <li>客先名・サイクルを入れる。必要ならグループ（ルート番号）・記号も</li>
     <li>既存客先の編集に戻り、品目を付ける</li>
   </ol>
+  </section>
 
+  <section class="sec keep">
   <h2>12. マスタ：商品コード一覧</h2>
   <img class="shot" src="images/05e-master-products.png" alt="商品コード">
   <p>全社共通の品目マスタ。「マスタから選ぶ」の元データです。</p>
@@ -206,7 +239,9 @@
     <tr><th>一覧の品番・品目名・読み</th><td>クリックしてその場で編集できる</td></tr>
   </table>
   <p><strong>注意：</strong>すでに登録済みの品目（完全同名）を登録しようとすると、警告が出て追加できません。同じ名前を二重に増やさないための仕組みです。</p>
+  </section>
 
+  <section class="sec break keep">
   <h2>13. データタブ</h2>
   <img class="shot" src="images/06-data.png" alt="データ">
   <table>
@@ -216,7 +251,9 @@
     <tr><th>JSONバックアップ</th><td>緊急用の全データ退避（週1おすすめ）。後日のクラウド移管・復旧にも使える</td></tr>
     <tr><th>消えた客先を復元</th><td>履歴にあるのにマスタに無い客先を戻す</td></tr>
   </table>
+  </section>
 
+  <section class="sec break">
   <h2>14. ユーザー管理（管理者と一般）</h2>
   <p>ユーザーの追加・削除は <strong>管理者だけ</strong> ができます。</p>
   <table>
@@ -238,11 +275,15 @@
   <p><strong>おすすめ：</strong>責任者＝管理者1名。現場は一般で作る。管理者パスワードはむやみに共有しない。</p>
   <p>ヘッダーの<strong>ログイン履歴</strong>で、誰がいつ入ったかも確認できます。</p>
   <img class="shot" src="images/08c-loginlog.png" alt="ログイン履歴">
+  </section>
 
+  <section class="sec break keep">
   <h2>15. 使い方タブ</h2>
   <img class="shot" src="images/07-help.png" alt="使い方">
   <p>迷ったらアプリ内のここを開きます。各見出しは最初は閉じています。知りたいところだけ開いてください（「すべて開く」もあります）。</p>
+  </section>
 
+  <section class="sec keep">
   <h2>16. 日常の流れ</h2>
   <ol>
     <li>ログイン</li>
@@ -250,7 +291,9 @@
     <li>伝票発行 → 印刷</li>
     <li>終わり前に発行履歴を確認</li>
   </ol>
+  </section>
 
+  <section class="sec keep">
   <h2>17. 印刷トラブル</h2>
   <table>
     <tr><th>小さく出る</th><td>倍率100%</td></tr>
@@ -260,12 +303,16 @@
     <tr><th>記号が出ない／違う</th><td>客先マスタの記号欄を確認</td></tr>
     <tr><th>会社名・TELなどが違う</th><td>データ →「伝票フッターの会社名」で保存（空欄は印刷に出ない）</td></tr>
   </table>
+  </section>
 
+  <section class="sec keep">
   <h2>18. サポート</h2>
   <p>期間中OK：操作質問／不具合／軽い運用相談</p>
   <p>別見積：大きな機能追加／レイアウト大幅変更／請求・見積・領収</p>
   <p>連絡先：株式会社プゥル・ヴー　担当 善方　TEL 046-267-9228　mobile 090-2906-8227</p>
+  </section>
 
+  <section class="sec keep">
   <h2>19. 導入完了サイン</h2>
   <table>
     <tr><td>URL・ログイン</td><td>□</td><td>管理者／一般の違い</td><td>□</td></tr>
@@ -274,6 +321,7 @@
     <tr><td>同一納品日ロック</td><td>□</td><td>ガイド受領</td><td>□</td></tr>
   </table>
   <p>日付：　　年　　月　　日　／　利用者：　　　　　提供者：　　　　　</p>
+  </section>
 
   <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),400));</script>
 </body>
