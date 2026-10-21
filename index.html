@@ -393,7 +393,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       一般: <code>staff1234</code>
     </div>
     <div class="login-build">
-      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo2</span></div>
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo3</span></div>
     </div>
   </div>
 </div>
@@ -4388,9 +4388,22 @@ async function verifyMasterAuth(){
   if(errEl) errEl.textContent='';
   if(!password){if(errEl)errEl.textContent='パスワードを入力してください';return;}
   const hash = await hashPassword(password);
-  const snap=await firebase.database().ref(FB_USERS+'/'+currentUser.username+'/passwordHash').get();
-  if(!snap.exists()||snap.val()!==hash){
-    if(errEl) errEl.textContent='パスワードが違います';
+  let ok=false;
+  if(IS_DEMO){
+    // デモは Firebase なしで、ログイン時と同じパスワードを照合
+    const expect = currentUser.username==='staff' ? await hashPassword('staff1234') : await hashPassword('demo1234');
+    ok = (hash===expect);
+  }else{
+    try{
+      const snap=await firebase.database().ref(FB_USERS+'/'+currentUser.username+'/passwordHash').get();
+      ok = !!(snap.exists()&&snap.val()===hash);
+    }catch(e){
+      if(errEl) errEl.textContent='認証に失敗しました: '+e.message;
+      return;
+    }
+  }
+  if(!ok){
+    if(errEl) errEl.textContent=IS_DEMO?'パスワードが違います（ログインと同じ: demo1234）':'パスワードが違います';
     return;
   }
   closeMasterAuthModal();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261021-demo2';
+const CACHE_NAME = 'purims-v20261021-demo3';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {
