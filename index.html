@@ -387,6 +387,11 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     </div>
     <button class="login-btn" onclick="doLogin()">ログイン</button>
     <div class="login-err" id="login-err"></div>
+    <div id="demo-login-hint" class="hidden" style="margin-top:14px;padding:10px 12px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;font-size:12px;color:#9a3412;line-height:1.55">
+      <b>お試しログイン</b><br>
+      管理者: <code>demo1234</code><br>
+      一般: <code>staff1234</code>
+    </div>
     <div class="login-build">
       <div class="login-build-badge"><b>BUILD</b><span>2026.10.14</span></div>
     </div>
@@ -1086,6 +1091,50 @@ firebase.initializeApp({
     appId: "1:721627985179:web:db1066eb92e9a1633c8fbe"
   });
 
+// ===== 環境分離（本番 / お試しデモ） =====
+// デモURL: https://pv-dn.github.io/purims-demo/
+const IS_DEMO=/\/purims-demo(\/|$)/i.test(location.pathname)||/(?:^|[?&])demo=1(?:&|$)/.test(location.search);
+const FB_APP=IS_DEMO?'purims_demo':'purims';
+const FB_USERS=IS_DEMO?'purims_demo_users':'purims_users';
+const FB_ADMIN_PASS=IS_DEMO?'purims_demo_admin_pass':'purims_admin_pass';
+const FB_ADMIN_PASS2=IS_DEMO?'purims_demo_admin_pass2':'purims_admin_pass2';
+const FB_LOGINLOG=IS_DEMO?'purims_demo_loginlog':'purims_loginlog';
+const FB_MASTERLOG=IS_DEMO?'purims_demo_masterlog':'purims_masterlog';
+function lsKey(k){return (IS_DEMO?'purims_demo_':'purims_')+k;}
+function applyDemoChrome(){
+  if(!IS_DEMO)return;
+  document.title='【デモ】'+document.title.replace(/^【デモ】/,'');
+  let ban=document.getElementById('demo-banner');
+  if(!ban){
+    ban=document.createElement('div');
+    ban.id='demo-banner';
+    ban.style.cssText='background:#b45309;color:#fff;text-align:center;padding:8px 12px;font-size:13px;font-weight:700;letter-spacing:.02em';
+    ban.textContent='⚠ お試し（デモ）環境です。データは本番と別です。自由に触って大丈夫です。';
+    const app=document.getElementById('app');
+    if(app&&app.parentNode)app.parentNode.insertBefore(ban,app);
+    else document.body.insertBefore(ban,document.body.firstChild);
+  }
+  const hs=document.querySelector('.hdr-s');
+  if(hs&&!hs.textContent.includes('デモ'))hs.textContent=hs.textContent+'　【デモ】';
+  const hint=document.getElementById('demo-login-hint');
+  if(hint)hint.classList.remove('hidden');
+}
+async function ensureDemoSeedUsers(){
+  if(!IS_DEMO)return;
+  try{
+    const snap=await firebase.database().ref(FB_USERS).get();
+    const users=snap.exists()?snap.val():null;
+    const keys=users?Object.keys(users).filter(u=>!u.startsWith('_')):[];
+    if(keys.length)return;
+    const adminHash=await hashPassword('demo1234');
+    const staffHash=await hashPassword('staff1234');
+    const now=new Date().toISOString();
+    await firebase.database().ref(FB_USERS+'/demo').set({passwordHash:adminHash,isAdmin:true,createdAt:now});
+    await firebase.database().ref(FB_USERS+'/staff').set({passwordHash:staffHash,isAdmin:false,createdAt:now});
+    console.log('[demo] seeded users demo/staff');
+  }catch(e){console.warn('ensureDemoSeedUsers',e);}
+}
+
 // ===== 請求機能は配布版では無効 =====
 
 // auto stubs for renamed billing funcs
@@ -1197,7 +1246,7 @@ cycles:{"SCAPES THE SUITE":"水土","楽園　町田店":"火木土","楽園　�
 
 let DB={clients:{},cycles:{},products:[],groups:[],clientGroups:{},clientOrder:{},closing:{},minCharge:{},deliveryFee:{},packagingFee:{},parkingEnabled:{},slipCheckedThrough:'',slipCheckedThroughByClosing:{},slipCheckedAtByClosing:{},slipIssuedAckIds:{},history:[],historyDeleted:[]};
 let curC=null,qtys={},bikos={},extraItems=[],editC=null,lastSlip=null,openHistId=null,customDeliveryDate=null;
-let printMode=localStorage.getItem('purims_printmode')||'single',printQueue=[];
+let printMode=localStorage.getItem(lsKey('printmode'))||'single',printQueue=[];
 let _issueSession=null,_lastAppliedSavedAt=null,_selfSaveTokens=new Set();
 let _correctingHistId=null;
 
@@ -1270,13 +1319,13 @@ function startHistCorrect(id){
   toast('履歴から読み込みました。数量を直して「伝票発行」で訂正再発行してください');
 }
 function parseYMD(s){const p=String(s||'').split(/[\/\-]/).map(Number);if(p.length<3||p.some(n=>isNaN(n)))return 0;return new Date(p[0],p[1]-1,p[2]).getTime();}
-function loadLocalHistory(){try{const h=localStorage.getItem('purims_h');if(h){const arr=JSON.parse(h);if(Array.isArray(arr)){DB.history=arr;}}}catch(e){}DB.history=DB.history||[];try{const d=localStorage.getItem('purims_h_deleted');if(d){const arr=JSON.parse(d);if(Array.isArray(arr)){DB.historyDeleted=arr;}}}catch(e){}DB.historyDeleted=DB.historyDeleted||[];}
-function persistHistoryLocal(){localStorage.setItem('purims_h',JSON.stringify(DB.history||[]));}
-function persistDeletedHistoryLocal(){localStorage.setItem('purims_h_deleted',JSON.stringify(DB.historyDeleted||[]));}
+function loadLocalHistory(){try{const h=localStorage.getItem(lsKey('h'));if(h){const arr=JSON.parse(h);if(Array.isArray(arr)){DB.history=arr;}}}catch(e){}DB.history=DB.history||[];try{const d=localStorage.getItem(lsKey('h_deleted'));if(d){const arr=JSON.parse(d);if(Array.isArray(arr)){DB.historyDeleted=arr;}}}catch(e){}DB.historyDeleted=DB.historyDeleted||[];}
+function persistHistoryLocal(){localStorage.setItem(lsKey('h'),JSON.stringify(DB.history||[]));}
+function persistDeletedHistoryLocal(){localStorage.setItem(lsKey('h_deleted'),JSON.stringify(DB.historyDeleted||[]));}
 
 function load(){
   try{
-    const saved=localStorage.getItem('purims_v14');
+    const saved=localStorage.getItem(lsKey('v14'));
     if(saved){const d=JSON.parse(saved);if(d.clients&&Object.keys(d.clients).length){DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};DB.products=d.products&&d.products.length?d.products:JSON.parse(JSON.stringify(INIT_PRODUCTS));DB.groups=d.groups&&d.groups.length?d.groups:JSON.parse(JSON.stringify(INIT_GROUPS));DB.clientGroups=d.clientGroups||JSON.parse(JSON.stringify(INIT_CLIENT_GROUPS));DB.clientOrder=d.clientOrder||{};loadLocalHistory();if(ensurePaperParkingFlags())persistDraft();return;}}
   }catch(e){}
   DB.clients=JSON.parse(JSON.stringify(INIT_DATA.clients));DB.cycles=JSON.parse(JSON.stringify(INIT_DATA.cycles));DB.products=JSON.parse(JSON.stringify(INIT_PRODUCTS));DB.groups=JSON.parse(JSON.stringify(INIT_GROUPS));DB.clientGroups=JSON.parse(JSON.stringify(INIT_CLIENT_GROUPS));DB.history=[];
@@ -1284,7 +1333,7 @@ function load(){
   if(ensurePaperParkingFlags())persistDraft();
 }
 function persistDraft(){
-  localStorage.setItem('purims_v14',JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
+  localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
 }
 function persistLocal(){
   persistDraft();
@@ -1429,16 +1478,16 @@ function sortedProductsForPick(excludeCodes){
   }
   return list;
 }
-let masterPickSort=(function(){try{const v=localStorage.getItem('purims_master_pick_sort');return v==='name'?'name':'code';}catch(e){return'code';}})();
-let masterPickInitial=(function(){try{return localStorage.getItem('purims_master_pick_initial')||'';}catch(e){return'';}})();
+let masterPickSort=(function(){try{const v=localStorage.getItem(lsKey('master_pick_sort'));return v==='name'?'name':'code';}catch(e){return'code';}})();
+let masterPickInitial=(function(){try{return localStorage.getItem(lsKey('master_pick_initial'))||'';}catch(e){return'';}})();
 function setMasterPickSort(mode){
   masterPickSort=mode==='name'?'name':'code';
-  try{localStorage.setItem('purims_master_pick_sort',masterPickSort);}catch(e){}
+  try{localStorage.setItem(lsKey('master_pick_sort'),masterPickSort);}catch(e){}
   refreshMasterPickViews();
 }
 function setMasterPickInitial(key){
   masterPickInitial=key||'';
-  try{localStorage.setItem('purims_master_pick_initial',masterPickInitial);}catch(e){}
+  try{localStorage.setItem(lsKey('master_pick_initial'),masterPickInitial);}catch(e){}
   refreshMasterPickViews();
 }
 function refreshMasterPickViews(){
@@ -1547,10 +1596,10 @@ function openPrintWindow(html){let ov=document.getElementById('print-overlay');i
     });
   },waitMs);}
 function doPrint(){const html=document.getElementById('print-area').innerHTML;if(!html){toast('印刷データがありません','e');return;}if(printMode==='batch'){const fp=_issueSession?_issueSession.fp:(lastSlip?slipFingerprint(lastSlip.client,lastSlip.deliveryDate,lastSlip.items):'');if(fp&&printQueue.some(q=>q.fp===fp)){toast('既にキューに入っています');const btn=document.getElementById('complete-print-btn');if(btn){btn.textContent='✅ キューに追加済み';btn.disabled=true;btn.style.opacity='0.6';}return;}const label=lastSlip?lastSlip.client+' '+lastSlip.deliveryDate:'伝票';printQueue.push({html,label,fp});if(_issueSession)_issueSession.queued=true;updateQueueBadge();toast('📋 キューに追加しました（'+printQueue.length+'件）');const btn=document.getElementById('complete-print-btn');if(btn){btn.textContent='✅ キューに追加済み';btn.disabled=true;btn.style.opacity='0.6';}}else{openPrintWindow(html);}}
-function setPrintMode(mode){printMode=mode;localStorage.setItem('purims_printmode',mode);const badge=document.getElementById('queue-badge');const pb=document.getElementById('batch-print-btn');const cb=document.getElementById('batch-clear-btn');if(mode==='batch'){badge.style.display='inline-block';pb.style.display='inline-block';cb.style.display='inline-block';updateQueueBadge();}else{badge.style.display='none';pb.style.display='none';cb.style.display='none';}}
+function setPrintMode(mode){printMode=mode;localStorage.setItem(lsKey('printmode'),mode);const badge=document.getElementById('queue-badge');const pb=document.getElementById('batch-print-btn');const cb=document.getElementById('batch-clear-btn');if(mode==='batch'){badge.style.display='inline-block';pb.style.display='inline-block';cb.style.display='inline-block';updateQueueBadge();}else{badge.style.display='none';pb.style.display='none';cb.style.display='none';}}
 function updateQueueBadge(){const b=document.getElementById('queue-badge');if(b)b.textContent='キュー: '+printQueue.length+'件';}
 const ZOOM_STEPS=[70,80,90,100,110,120,130,150];
-let zoomIdx=ZOOM_STEPS.indexOf(parseInt(localStorage.getItem('purims_zoom')||'100'));
+let zoomIdx=ZOOM_STEPS.indexOf(parseInt(localStorage.getItem(lsKey('zoom'))||'100'));
 if(zoomIdx<0)zoomIdx=3;
 function applyZoom(){
   const z=ZOOM_STEPS[zoomIdx];
@@ -1570,7 +1619,7 @@ function applyZoom(){
   // cbdgバッジ
   document.querySelectorAll('.iarea-body .cbdg').forEach(el=>{el.style.fontSize=Math.round(11*z/100)+'px';});
   const lbl=document.getElementById('zoom-label');if(lbl)lbl.textContent=z+'%';
-  localStorage.setItem('purims_zoom',z);
+  localStorage.setItem(lsKey('zoom'),z);
   setTimeout(fitIareaBody,50);
 }
 function changeZoom(dir){zoomIdx=Math.max(0,Math.min(ZOOM_STEPS.length-1,zoomIdx+dir));applyZoom();}
@@ -1709,7 +1758,7 @@ function exportCSV(){const hist=DB.history;if(!hist||!hist.length){toast('発行
 function dlFile(c,f,t){const b=new Blob([t==='text/csv'?'\uFEFF'+c:c],{type:t+';charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f;a.click();URL.revokeObjectURL(a.href);}
 function dlCSV(type){const td=fileDate();if(type==='clients'){let rows=[['客先名','品番','品目名','納品サイクル','グループ']];Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja')).forEach(c=>{const cyc=DB.cycles[c]||'';const g=getClientGroup(c);(DB.clients[c].items||[]).forEach(it=>rows.push([c,it.code,it.name,cyc,g?g.name:'']));});dlFile(rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),`purims_master_${td}.csv`,'text/csv');toast('マスタCSVをダウンロードしました');}else if(type==='history'){let rows=[['発行日','客先名','納品日','品番','品目名','数量','合計']];DB.history.forEach(h=>{h.items.forEach((it,i)=>rows.push([h.date,h.client,h.deliveryDate,it.code,it.name,it.qty,i===0?h.total:'']));});dlFile(rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),`purims_history_${td}.csv`,'text/csv');toast('履歴CSVをダウンロードしました');}}
 function dlJSON(){const td=fileDate();dlFile(JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder||{},closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{},history:DB.history||[],historyDeleted:DB.historyDeleted||[],slipCompany:SLIP_COMPANY,exportedAt:new Date().toISOString()},null,2),`purims_backup_${td}.json`,'application/json');
-localStorage.setItem('purims_backed_up','1');toast('JSONバックアップをダウンロードしました');}
+localStorage.setItem(lsKey('backed_up'),'1');toast('JSONバックアップをダウンロードしました');}
 
 function parseClosingDay(s){if(!s)return 0;if(String(s).includes('20'))return 20;if(String(s).includes('25'))return 25;if(String(s).includes('末'))return 99;return 0;}
 /** 請求一覧の締め日順: 20日 → 25日 → 末日（未設定含む） */
@@ -2145,14 +2194,14 @@ function syncBillingMasterUi(){
 try{if(document.body)syncBillingMasterUi();}catch(e){}
 async function loadBillingMasterSetting(){
   try{
-    const local=localStorage.getItem('purims_billingMasterFields');
+    const local=localStorage.getItem(lsKey('billingMasterFields'));
     if(local==='1'||local==='true') BILLING_MASTER_FIELDS=true;
     else if(local==='0'||local==='false') BILLING_MASTER_FIELDS=false;
-    const snap=await firebase.database().ref('purims/settings/billingMasterFields').get();
+    const snap=await firebase.database().ref(FB_APP+'/settings/billingMasterFields').get();
     if(snap.exists()){
       const v=snap.val();
       BILLING_MASTER_FIELDS=v===true||v===1||v==='1'||v==='true';
-      localStorage.setItem('purims_billingMasterFields', BILLING_MASTER_FIELDS?'1':'0');
+      localStorage.setItem(lsKey('billingMasterFields'), BILLING_MASTER_FIELDS?'1':'0');
     }
   }catch(e){console.warn('billingMasterFields load',e);}
   syncBillingMasterUi();
@@ -2160,8 +2209,8 @@ async function loadBillingMasterSetting(){
 async function saveBillingMasterSetting(){
   const cb=document.getElementById('billing-master-toggle');
   BILLING_MASTER_FIELDS=!!(cb&&cb.checked);
-  localStorage.setItem('purims_billingMasterFields', BILLING_MASTER_FIELDS?'1':'0');
-  try{await firebase.database().ref('purims/settings/billingMasterFields').set(BILLING_MASTER_FIELDS);}catch(e){console.warn(e);}
+  localStorage.setItem(lsKey('billingMasterFields'), BILLING_MASTER_FIELDS?'1':'0');
+  try{await firebase.database().ref(FB_APP+'/settings/billingMasterFields').set(BILLING_MASTER_FIELDS);}catch(e){console.warn(e);}
   syncBillingMasterUi();
   toast(BILLING_MASTER_FIELDS?'請求系マスタ項目を表示します':'請求系マスタ項目を非表示にしました');
 }
@@ -2233,12 +2282,12 @@ function readSlipCompanyFromUi(){
 }
 async function loadSlipCompanySetting(){
   try{
-    const local=localStorage.getItem('purims_slipCompany');
+    const local=localStorage.getItem(lsKey('slipCompany'));
     if(local){try{SLIP_COMPANY=normalizeSlipCompany(JSON.parse(local));}catch(e){}}
-    const snap=await firebase.database().ref('purims/settings/slipCompany').get();
+    const snap=await firebase.database().ref(FB_APP+'/settings/slipCompany').get();
     if(snap.exists()){
       SLIP_COMPANY=normalizeSlipCompany(snap.val());
-      localStorage.setItem('purims_slipCompany',JSON.stringify(SLIP_COMPANY));
+      localStorage.setItem(lsKey('slipCompany'),JSON.stringify(SLIP_COMPANY));
     }
   }catch(e){console.warn('slipCompany load',e);}
   SLIP_COMPANY=normalizeSlipCompany(SLIP_COMPANY);
@@ -2246,8 +2295,8 @@ async function loadSlipCompanySetting(){
 }
 async function saveSlipCompanySetting(){
   SLIP_COMPANY=readSlipCompanyFromUi();
-  localStorage.setItem('purims_slipCompany',JSON.stringify(SLIP_COMPANY));
-  try{await firebase.database().ref('purims/settings/slipCompany').set(SLIP_COMPANY);}catch(e){console.warn(e);}
+  localStorage.setItem(lsKey('slipCompany'),JSON.stringify(SLIP_COMPANY));
+  try{await firebase.database().ref(FB_APP+'/settings/slipCompany').set(SLIP_COMPANY);}catch(e){console.warn(e);}
   syncSlipCompanyUi();
   const ok=document.getElementById('slip-co-saved');
   if(ok){ok.style.display='inline';setTimeout(()=>{ok.style.display='none';},1800);}
@@ -2262,12 +2311,12 @@ async function resetSlipCompanySetting(){
 
 async function loadHistoryKeepSetting(){
   try{
-    const local=localStorage.getItem('purims_historyKeepMonths');
+    const local=localStorage.getItem(lsKey('historyKeepMonths'));
     if(local!==null&&local!==''){HISTORY_KEEP_MONTHS=normalizeHistoryKeepMonths(local);}
-    const snap=await firebase.database().ref('purims/settings/historyKeepMonths').get();
+    const snap=await firebase.database().ref(FB_APP+'/settings/historyKeepMonths').get();
     if(snap.exists()){
       HISTORY_KEEP_MONTHS=normalizeHistoryKeepMonths(snap.val());
-      localStorage.setItem('purims_historyKeepMonths',String(HISTORY_KEEP_MONTHS));
+      localStorage.setItem(lsKey('historyKeepMonths'),String(HISTORY_KEEP_MONTHS));
     }
   }catch(e){console.warn('historyKeepMonths load',e);}
   HISTORY_KEEP_MONTHS=getHistoryKeepMonths();
@@ -2285,8 +2334,8 @@ async function saveHistoryKeepSetting(){
   const sel=document.getElementById('hist-keep-months');
   if(!sel) return;
   HISTORY_KEEP_MONTHS=normalizeHistoryKeepMonths(sel.value);
-  localStorage.setItem('purims_historyKeepMonths',String(HISTORY_KEEP_MONTHS));
-  try{await firebase.database().ref('purims/settings/historyKeepMonths').set(HISTORY_KEEP_MONTHS);}catch(e){console.warn(e);}
+  localStorage.setItem(lsKey('historyKeepMonths'),String(HISTORY_KEEP_MONTHS));
+  try{await firebase.database().ref(FB_APP+'/settings/historyKeepMonths').set(HISTORY_KEEP_MONTHS);}catch(e){console.warn(e);}
   syncHistKeepUi();
   pruneExpiredHistory({quiet:false});
   renderHistory();
@@ -3193,7 +3242,7 @@ function focusNextEnterField(from){
   return false;
 }
 function importCSV(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const lines=ev.target.result.replace(/\r/g,'').split('\n').filter(l=>l.trim());const nc={};const ncy={};lines.slice(1).forEach(line=>{const cols=line.split(',').map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());if(cols.length<3||!cols[0])return;const[client,code,name,cyc]=cols;if(!nc[client])nc[client]={items:[]};if(name)nc[client].items.push({code:code||'P000',name});if(cyc)ncy[client]=cyc;});if(!Object.keys(nc).length){toast('読み込めるデータがありませんでした','e');return;}if(!confirm(`${Object.keys(nc).length}件の客先データをインポートします。続けますか？`))return;Object.assign(DB.clients,nc);Object.assign(DB.cycles,ncy);persist();fillSel('csel');fillSel('msel');toast(`${Object.keys(nc).length}件をインポートしました`);}catch(err){toast('CSVの読み込みに失敗しました','e');}e.target.value='';};r.readAsText(file,'UTF-8');}
-function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!d.clients){toast('フォーマットが違います','e');return;}if(!confirm('バックアップから全データを復元します。続けますか？'))return;DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};if(d.products&&d.products.length)DB.products=d.products;if(d.groups&&d.groups.length)DB.groups=d.groups;if(d.clientGroups)DB.clientGroups=d.clientGroups;if(d.clientOrder)DB.clientOrder=d.clientOrder;if(d.closing)DB.closing=d.closing;if(d.minCharge)DB.minCharge=d.minCharge;if(d.deliveryFee)DB.deliveryFee=d.deliveryFee;if(d.packagingFee)DB.packagingFee=d.packagingFee;if(d.parkingEnabled)DB.parkingEnabled=d.parkingEnabled;if(d.slipCheckedThrough!=null)DB.slipCheckedThrough=d.slipCheckedThrough||'';if(d.slipCheckedThroughByClosing)DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing;if(d.slipCheckedAtByClosing)DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing;if(d.slipIssuedAckIds)DB.slipIssuedAckIds=d.slipIssuedAckIds;if(d.slipCompany){SLIP_COMPANY=normalizeSlipCompany(d.slipCompany);localStorage.setItem('purims_slipCompany',JSON.stringify(SLIP_COMPANY));try{firebase.database().ref('purims/settings/slipCompany').set(SLIP_COMPANY);}catch(e){}syncSlipCompanyUi();}if(Array.isArray(d.history)){DB.history=d.history;persistHistoryLocal();if(currentUser){const obj={};DB.history.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref('purims/history').set(obj).catch(e=>toast('履歴の復元に失敗しました: '+e.message,'e'));}}if(Array.isArray(d.historyDeleted)){DB.historyDeleted=d.historyDeleted;persistDeletedHistoryLocal();if(currentUser){const obj={};DB.historyDeleted.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref('purims/historyDeleted').set(obj).catch(e=>toast('削除履歴の復元に失敗しました: '+e.message,'e'));}}persist();fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();const pruned=pruneExpiredHistory({quiet:true});const skipped=markOutOfScopeAsBilled();const parts=[];if(pruned)parts.push(`保存期間超過 ${pruned}件削除`);if(skipped)parts.push(`7月以前 ${skipped}件を請求対象外`);toast(parts.length?`${Object.keys(DB.clients).length}件を復元しました（${parts.join('、')}）`:`${Object.keys(DB.clients).length}件を復元しました`);}catch(err){toast('JSONの読み込みに失敗しました','e');}e.target.value='';};r.readAsText(file,'UTF-8');}
+function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!d.clients){toast('フォーマットが違います','e');return;}if(!confirm('バックアップから全データを復元します。続けますか？'))return;DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};if(d.products&&d.products.length)DB.products=d.products;if(d.groups&&d.groups.length)DB.groups=d.groups;if(d.clientGroups)DB.clientGroups=d.clientGroups;if(d.clientOrder)DB.clientOrder=d.clientOrder;if(d.closing)DB.closing=d.closing;if(d.minCharge)DB.minCharge=d.minCharge;if(d.deliveryFee)DB.deliveryFee=d.deliveryFee;if(d.packagingFee)DB.packagingFee=d.packagingFee;if(d.parkingEnabled)DB.parkingEnabled=d.parkingEnabled;if(d.slipCheckedThrough!=null)DB.slipCheckedThrough=d.slipCheckedThrough||'';if(d.slipCheckedThroughByClosing)DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing;if(d.slipCheckedAtByClosing)DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing;if(d.slipIssuedAckIds)DB.slipIssuedAckIds=d.slipIssuedAckIds;if(d.slipCompany){SLIP_COMPANY=normalizeSlipCompany(d.slipCompany);localStorage.setItem(lsKey('slipCompany'),JSON.stringify(SLIP_COMPANY));try{firebase.database().ref(FB_APP+'/settings/slipCompany').set(SLIP_COMPANY);}catch(e){}syncSlipCompanyUi();}if(Array.isArray(d.history)){DB.history=d.history;persistHistoryLocal();if(currentUser){const obj={};DB.history.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref(FB_APP+'/history').set(obj).catch(e=>toast('履歴の復元に失敗しました: '+e.message,'e'));}}if(Array.isArray(d.historyDeleted)){DB.historyDeleted=d.historyDeleted;persistDeletedHistoryLocal();if(currentUser){const obj={};DB.historyDeleted.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref(FB_APP+'/historyDeleted').set(obj).catch(e=>toast('削除履歴の復元に失敗しました: '+e.message,'e'));}}persist();fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();const pruned=pruneExpiredHistory({quiet:true});const skipped=markOutOfScopeAsBilled();const parts=[];if(pruned)parts.push(`保存期間超過 ${pruned}件削除`);if(skipped)parts.push(`7月以前 ${skipped}件を請求対象外`);toast(parts.length?`${Object.keys(DB.clients).length}件を復元しました（${parts.join('、')}）`:`${Object.keys(DB.clients).length}件を復元しました`);}catch(err){toast('JSONの読み込みに失敗しました','e');}e.target.value='';};r.readAsText(file,'UTF-8');}
 
 // ===== マスタ管理 =====
 function showPanel(id,btn){
@@ -3710,9 +3759,9 @@ function clearSelfSaving(tok){
 
 async function migrateLegacyFlatHistoryIfNeeded(){
   try{
-    const histSnap=await firebase.database().ref('purims/history').limitToFirst(1).get();
+    const histSnap=await firebase.database().ref(FB_APP+'/history').limitToFirst(1).get();
     if(histSnap.exists()) return; // already per-id
-    const flat=await firebase.database().ref('purims').get();
+    const flat=await firebase.database().ref(FB_APP).get();
     if(!flat.exists()) return;
     const v=flat.val();
     // Old shape: purims = {clients,...,history:[...]}
@@ -3720,31 +3769,31 @@ async function migrateLegacyFlatHistoryIfNeeded(){
       const updates={};
       v.history.forEach(h=>{
         if(!h||h.id==null) return;
-        updates['purims/history/'+String(h.id)] = h;
+        updates[FB_APP+'/history/'+String(h.id)] = h;
       });
       const data={};
       ['clients','cycles','products','groups','clientGroups','clientOrder','closing'].forEach(k=>{
         if(v[k]!==undefined) data[k]=v[k];
       });
-      if(Object.keys(data).length) updates['purims/data']=data;
+      if(Object.keys(data).length) updates[FB_APP+'/data']=data;
       await firebase.database().ref().update(updates);
       console.log('Migrated legacy flat history', v.history.length);
     } else if(v && v.clients && !v.history){
       // might already be data-only at root — copy to purims/data if missing
-      const dataSnap=await firebase.database().ref('purims/data').get();
+      const dataSnap=await firebase.database().ref(FB_APP+'/data').get();
       if(!dataSnap.exists()){
         const data={};
         ['clients','cycles','products','groups','clientGroups','clientOrder','closing'].forEach(k=>{
           if(v[k]!==undefined) data[k]=v[k];
         });
-        if(Object.keys(data).length) await firebase.database().ref('purims/data').set(data);
+        if(Object.keys(data).length) await firebase.database().ref(FB_APP+'/data').set(data);
       }
     }
   }catch(e){console.warn('migrateLegacyFlatHistoryIfNeeded',e);}
 }
 
-function histPath(id){return 'purims/history/'+String(id);}
-function histDeletedPath(id){return 'purims/historyDeleted/'+String(id);}
+function histPath(id){return FB_APP+'/history/'+String(id);}
+function histDeletedPath(id){return FB_APP+'/historyDeleted/'+String(id);}
 
 /** Firebase は undefined を拒否するため、保存前に除去する */
 function sanitizeForFirebase(obj){
@@ -3824,7 +3873,7 @@ function fbSave(){
   const tok=markSelfSaving();
   // undefined（例: 請求単価クリア）を残すと Firebase 全体が失敗するためサニタイズ
   const master=sanitizeForFirebase({clients:packClientsForFirebase(DB.clients),cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder||{},closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{},savedAt:new Date().toISOString(),saveId:tok});
-  return db.ref('purims/data').transaction(current=>{
+  return db.ref(FB_APP+'/data').transaction(current=>{
     if(current&&current.savedAt&&_lastAppliedSavedAt&&current.savedAt!==_lastAppliedSavedAt){
       return; // 他PCが先に更新 → abort
     }
@@ -3867,7 +3916,7 @@ function fbDeleteHistoryEntry(id){
 function fbClearHistory(){
   if(!currentUser)return;
   const tok=markSelfSaving();
-  db.ref('purims/history').remove()
+  db.ref(FB_APP+'/history').remove()
     .catch(e=>toast('履歴クリア失敗: '+e.message,'e'))
     .finally(()=>setTimeout(()=>clearSelfSaving(tok),800));
 }
@@ -3924,7 +3973,7 @@ function migrateHistoryIfNeeded(raw){
     obj[String(h.id)]=h;
   });
   const tok=markSelfSaving();
-  return db.ref('purims/history').set(obj)
+  return db.ref(FB_APP+'/history').set(obj)
     .then(()=>obj)
     .catch(()=>raw)
     .finally(()=>setTimeout(()=>clearSelfSaving(tok),800));
@@ -3945,7 +3994,7 @@ function fbApplyData(d,history,historyDeleted){
     DB.historyDeleted=parseDeletedHistory(historyDeleted);
     persistDeletedHistoryLocal();
   }
-  localStorage.setItem('purims_v14',JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
+  localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
   fillSel("csel",curC);fillSel("msel",editC);fillGrpSel("e-grp");fillGrpSel("nc-grp");
   renderProducts();renderHistory();renderGroups();renderClientGrpList();
   const pruned=pruneExpiredHistory({quiet:true});
@@ -3959,9 +4008,9 @@ function fbApplyData(d,history,historyDeleted){
 function fbLoad(){
   fbStopListeners();
   Promise.all([
-    db.ref("purims/data").once("value"),
-    db.ref("purims/history").once("value"),
-    db.ref("purims/historyDeleted").once("value")
+    db.ref(FB_APP+'/data').once("value"),
+    db.ref(FB_APP+'/history').once("value"),
+    db.ref(FB_APP+'/historyDeleted').once("value")
   ]).then(async ([snapD,snapH,snapDel])=>{
     const d=snapD.val();
     if(!d||!d.clients){toast("クラウドにデータがありません","e");return;}
@@ -3979,9 +4028,9 @@ function fbLoad(){
 async function fbStartListeners(){
   try{await migrateLegacyFlatHistoryIfNeeded();}catch(e){console.warn(e);}
   fbStopListeners();
-  const refData=db.ref("purims/data");
-  const refHist=db.ref("purims/history");
-  const refDel=db.ref("purims/historyDeleted");
+  const refData=db.ref(FB_APP+'/data');
+  const refHist=db.ref(FB_APP+'/history');
+  const refDel=db.ref(FB_APP+'/historyDeleted');
   let skipData=true,skipHist=true,skipDel=true;
   setTimeout(()=>{skipData=false;},2000);
   setTimeout(()=>{skipHist=false;},2000);
@@ -3994,7 +4043,7 @@ async function fbStartListeners(){
     DB.groups=d.groups&&d.groups.length?d.groups:DB.groups;
     DB.clientGroups=d.clientGroups||{};DB.clientOrder=d.clientOrder||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
     _lastAppliedSavedAt=d.savedAt||_lastAppliedSavedAt;
-    localStorage.setItem('purims_v14',JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
+    localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
     fillSel("csel",curC);fillSel("msel",editC);fillGrpSel("e-grp");fillGrpSel("nc-grp");
     renderProducts();renderGroups();renderClientGrpList();
     toast("☁️ 他のPCでマスタが更新されました");
@@ -4028,9 +4077,9 @@ function fbStopListeners(){
 
 // ===== 認証・ユーザー管理 =====
 let currentUser=null;
-const ADMIN_HASH_KEY='purims_admin_hash';
+const ADMIN_HASH_KEY=lsKey('admin_hash');
 const APP_MODE=new URLSearchParams(location.search).get('mode')==='nexus'?'nexus':'default';
-const NEXUS_SESSION_KEY='purims_nexus_session_v1';
+const NEXUS_SESSION_KEY=lsKey('nexus_session_v1');
 const NEXUS_SESSION_DAYS=30;
 
 function _disabled_isNexusMode(){return APP_MODE==='nexus';}
@@ -4102,7 +4151,7 @@ async function getAdminHash(){
     if(!firebase.auth().currentUser){
       try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
     }
-    const snap=await db.ref('purims/adminHash').once('value');
+    const snap=await db.ref(FB_APP+'/adminHash').once('value');
     const h=snap.val();
     if(h){localStorage.setItem(ADMIN_HASH_KEY,h);return h;}
   }catch(e){}
@@ -4118,11 +4167,11 @@ async function hashPassword(password){
 }
 const INITIAL_ADMIN_PASS_HASH = '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92';
 async function getAdminPassHash(){
-  const snap = await firebase.database().ref('purims_admin_pass').get();
+  const snap = await firebase.database().ref(FB_ADMIN_PASS).get();
   return snap.exists() ? snap.val() : INITIAL_ADMIN_PASS_HASH;
 }
 async function getAdminPassHash2(){
-  const snap = await firebase.database().ref('purims_admin_pass2').get();
+  const snap = await firebase.database().ref(FB_ADMIN_PASS2).get();
   return snap.exists() ? snap.val() : null;
 }
 async function doLogin(){
@@ -4135,7 +4184,7 @@ async function doLogin(){
     if(!firebase.auth().currentUser){
       try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
     }
-    const snap = await firebase.database().ref('purims_users').get();
+    const snap = await firebase.database().ref(FB_USERS).get();
     if(!snap.exists()){if(errEl)errEl.textContent='ユーザーが登録されていません';return;}
     const users = snap.val();
     const matched = Object.keys(users).find(u=>users[u].passwordHash===hash);
@@ -4143,7 +4192,7 @@ async function doLogin(){
     const user = users[matched];
     currentUser = {username: matched, isAdmin: !!(user.isAdmin||user.role==='admin'), role: user.isAdmin||user.role==='admin'?'admin':'user'};
     if(!matched.startsWith('_')){
-      firebase.database().ref('purims_loginlog/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});
+      firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});
     }
     const loginScreen=document.getElementById('login-screen');
     if(loginScreen) loginScreen.classList.add('hidden');
@@ -4189,7 +4238,7 @@ async function addUser(){
   if(errEl) errEl.textContent='';
   if(!username||!password){if(errEl)errEl.textContent='ユーザー名とパスワードを入力してください';return;}
   const hash = await hashPassword(password);
-  await firebase.database().ref('purims_users/'+username).set({passwordHash:hash,isAdmin,createdAt:new Date().toISOString()});
+  await firebase.database().ref(FB_USERS+'/'+username).set({passwordHash:hash,isAdmin,createdAt:new Date().toISOString()});
   document.getElementById('new-uname').value='';
   document.getElementById('new-upass').value='';
   if(document.getElementById('new-uadmin')) document.getElementById('new-uadmin').checked=false;
@@ -4199,12 +4248,12 @@ async function addUser(){
 function deleteUser(username){
   if(username===currentUser.username){toast('自分自身は削除できません','e');return;}
   if(!confirm('ユーザー「'+username+'」を削除しますか？'))return;
-  firebase.database().ref('purims_users/'+username).set(null)
+  firebase.database().ref(FB_USERS+'/'+username).set(null)
     .then(()=>{toast('削除しました');loadUserList();})
     .catch(e=>toast('削除失敗: '+e.message,'e'));
 }
 function loadUserList(){
-  firebase.database().ref('purims_users').get().then(snap=>{
+  firebase.database().ref(FB_USERS).get().then(snap=>{
     const listEl = document.getElementById('user-list');
     if(!listEl) return;
     if(!snap.exists()){listEl.innerHTML='<div style="color:var(--mu);font-size:13px">ユーザーがいません</div>';return;}
@@ -4251,7 +4300,7 @@ async function changeAdminPass(){
   if(newPass.length < 4){errEl.textContent='4文字以上で設定してください';return;}
   if(newPass !== confirm){errEl.textContent='確認用パスワードが一致しません';return;}
   const hash = await hashPassword(newPass);
-  firebase.database().ref('purims_admin_pass').set(hash)
+  firebase.database().ref(FB_ADMIN_PASS).set(hash)
     .then(()=>{
       document.getElementById('new-admin-pass').value='';
       document.getElementById('new-admin-pass-confirm').value='';
@@ -4269,7 +4318,7 @@ async function changeAdminPass2(){
   if(newPass.length < 4){errEl.textContent='4文字以上で設定してください';return;}
   if(newPass !== confirm){errEl.textContent='確認用パスワードが一致しません';return;}
   const hash = await hashPassword(newPass);
-  firebase.database().ref('purims_admin_pass2').set(hash)
+  firebase.database().ref(FB_ADMIN_PASS2).set(hash)
     .then(()=>{
       document.getElementById('new-admin-pass2').value='';
       document.getElementById('new-admin-pass2-confirm').value='';
@@ -4295,7 +4344,7 @@ async function verifyMasterAuth(){
   if(errEl) errEl.textContent='';
   if(!password){if(errEl)errEl.textContent='パスワードを入力してください';return;}
   const hash = await hashPassword(password);
-  const snap=await firebase.database().ref('purims_users/'+currentUser.username+'/passwordHash').get();
+  const snap=await firebase.database().ref(FB_USERS+'/'+currentUser.username+'/passwordHash').get();
   if(!snap.exists()||snap.val()!==hash){
     if(errEl) errEl.textContent='パスワードが違います';
     return;
@@ -4303,7 +4352,7 @@ async function verifyMasterAuth(){
   closeMasterAuthModal();
   showPanel('master', _masterTabBtn||document.getElementById('tab-master'));
   try{
-    firebase.database().ref('purims_masterlog/'+Date.now()).set({
+    firebase.database().ref(FB_MASTERLOG+'/'+Date.now()).set({
       username:currentUser.username, at:new Date().toISOString(), action:'open_master'
     });
   }catch(e){}
@@ -4319,7 +4368,7 @@ function formatAuthLogTime(entry, key){
 }
 function showMasterLog(){
   const m=document.getElementById('masterlog-modal');
-  firebase.database().ref('purims_masterlog').orderByKey().limitToLast(100).get().then(snap=>{
+  firebase.database().ref(FB_MASTERLOG).orderByKey().limitToLast(100).get().then(snap=>{
     if(m) m.style.display='flex';
     const el=document.getElementById('masterlog-list');
     if(!el) return;
@@ -4333,7 +4382,7 @@ function showMasterLog(){
 function closeMasterLog(){const m=document.getElementById('masterlog-modal'); if(m) m.style.display='none';}
 function showLoginLog(){
   const m=document.getElementById('loginlog-modal');
-  firebase.database().ref('purims_loginlog').orderByKey().limitToLast(100).get().then(snap=>{
+  firebase.database().ref(FB_LOGINLOG).orderByKey().limitToLast(100).get().then(snap=>{
     if(m) m.style.display='flex';
     const el=document.getElementById('loginlog-list');
     if(!el) return;
@@ -4377,7 +4426,7 @@ async function doLogin_company_unused(){
       if(errEl)errEl.textContent='クラウドに接続できません。ネット接続を確認してください';
       return;
     }
-    const snap=await db.ref('purims/users').once('value');
+    const snap=await db.ref(FB_APP+'/users').once('value');
     const users=snap.val()||{};
     const matched=Object.values(users).find(u=>u.hash===hash);
     if(matched){
@@ -4438,7 +4487,7 @@ function doLogout_dup(){
 function exitApp(){
   clearTimeout(persist._t);
   persistHistoryLocal();
-  localStorage.setItem('purims_v14',JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
+  localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
   toast('保存しています…');
   Promise.resolve(fbSave()).then(()=>toast('保存しました'));
 }
@@ -4482,17 +4531,17 @@ async function saveUserPass_company_unused(key){
   if(!np||!nc){if(errEl)errEl.textContent='新しいパスワードを入力してください';return;}
   if(np!==nc){if(errEl)errEl.textContent='パスワードが一致しません';return;}
   if(np.length<4){if(errEl)errEl.textContent='4文字以上にしてください';return;}
-  const snap=await db.ref('purims/users/'+key).once('value');
+  const snap=await db.ref(FB_APP+'/users/'+key).once('value');
   const u=snap.val();
   if(!u){toast('ユーザーが見つかりません','e');return;}
   const hash=await sha256(np);
-  await db.ref('purims/users/'+key).update({hash});
+  await db.ref(FB_APP+'/users/'+key).update({hash});
   userPassEditKey=null;
   renderUserList_company_unused();
   toast(`「${u.username}」のパスワードを変更しました`);
 }
 async function renderUserList_company_unused(){
-  const snap=await db.ref('purims/users').once('value');
+  const snap=await db.ref(FB_APP+'/users').once('value');
   const users=snap.val()||{};
   const el=document.getElementById('user-list');
   if(!el)return;
@@ -4506,7 +4555,7 @@ async function renderUserList_company_unused(){
 }
 async function delUser_company_unused(key){
   if(!confirm('このユーザーを削除しますか？'))return;
-  await db.ref('purims/users/'+key).remove();
+  await db.ref(FB_APP+'/users/'+key).remove();
   renderUserList_company_unused();toast('削除しました');
 }
 async function changeAdminPass_dup(){
@@ -4518,7 +4567,7 @@ async function changeAdminPass_dup(){
   if(np.length<4){errEl.textContent='4文字以上にしてください';return;}
   const hash=await sha256(np);
   localStorage.setItem(ADMIN_HASH_KEY,hash);
-  db.ref('purims/adminHash').set(hash);
+  db.ref(FB_APP+'/adminHash').set(hash);
   document.getElementById('new-admin-pass').value='';document.getElementById('new-admin-pass-confirm').value='';
   errEl.style.color='var(--ok)';errEl.textContent='管理者パスワードを変更しました';
   setTimeout(()=>{errEl.textContent='';errEl.style.color='';},3000);
@@ -4527,7 +4576,7 @@ async function changeAdminPass_dup(){
 // ===== ログイン履歴 =====
 async function showLoginLog_dup(){
   document.getElementById('loginlog-modal').style.display='flex';
-  const snap=await db.ref('purims/loginlog').orderByKey().limitToLast(100).once('value');
+  const snap=await db.ref(FB_APP+'/loginlog').orderByKey().limitToLast(100).once('value');
   const logs=snap.val()||{};
   const entries=Object.values(logs).reverse();
   const el=document.getElementById('loginlog-list');
@@ -4610,7 +4659,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   setNPCode();setNC2();
   renderCycBtns('nc-cyc-btns','nc-cyc','');
   // 印刷モードを復元
-  const savedMode=localStorage.getItem('purims_printmode')||'single';
+  const savedMode=localStorage.getItem(lsKey('printmode'))||'single';
   document.querySelectorAll('input[name="printMode"]').forEach(r=>{r.checked=(r.value===savedMode);});
   setPrintMode(savedMode);
   // ズームを復元
@@ -4622,11 +4671,18 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   // ===== 【修正④】バックアップ警告：localStorage使用（永続化） =====
   window.addEventListener('beforeunload',e=>{
-    if(!localStorage.getItem('purims_backed_up')){
+    if(!localStorage.getItem(lsKey('backed_up'))){
       e.preventDefault();e.returnValue='';
     }
   });
 });
+
+try{applyDemoChrome();}catch(e){}
+try{
+  const _demoBoot=()=>{try{ensureDemoSeedUsers();}catch(e){}};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_demoBoot);
+  else setTimeout(_demoBoot,0);
+}catch(e){}
 </script>
 </body>
 </html>
