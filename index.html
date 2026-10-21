@@ -393,7 +393,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       一般: <code>staff1234</code>
     </div>
     <div class="login-build">
-      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo3</span></div>
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo4</span></div>
     </div>
   </div>
 </div>
@@ -1326,11 +1326,34 @@ function loadLocalHistory(){try{const h=localStorage.getItem(lsKey('h'));if(h){c
 function persistHistoryLocal(){localStorage.setItem(lsKey('h'),JSON.stringify(DB.history||[]));}
 function persistDeletedHistoryLocal(){localStorage.setItem(lsKey('h_deleted'),JSON.stringify(DB.historyDeleted||[]));}
 
+function emptyDemoDB(){
+  DB.clients={};DB.cycles={};DB.products=[];DB.groups=[];DB.clientGroups={};DB.clientOrder={};
+  DB.closing={};DB.minCharge={};DB.deliveryFee={};DB.packagingFee={};DB.parkingEnabled={};
+  DB.slipCheckedThrough='';DB.slipCheckedThroughByClosing={};DB.slipCheckedAtByClosing={};DB.slipIssuedAckIds={};
+  DB.history=[];DB.historyDeleted=[];
+}
+function wipeDemoLocalOnce(){
+  if(!IS_DEMO)return;
+  // 見本データを一度だけ削除。以降は自分で入れたデータを残す
+  if(localStorage.getItem(lsKey('blank_v1')))return;
+  try{
+    ['v14','h','h_deleted'].forEach(k=>{try{localStorage.removeItem(lsKey(k));}catch(e){}});
+    localStorage.setItem(lsKey('blank_v1'),'1');
+  }catch(e){}
+}
 function load(){
+  wipeDemoLocalOnce();
   try{
     const saved=localStorage.getItem(lsKey('v14'));
-    if(saved){const d=JSON.parse(saved);if(d.clients&&Object.keys(d.clients).length){DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};DB.products=d.products&&d.products.length?d.products:JSON.parse(JSON.stringify(INIT_PRODUCTS));DB.groups=d.groups&&d.groups.length?d.groups:JSON.parse(JSON.stringify(INIT_GROUPS));DB.clientGroups=d.clientGroups||JSON.parse(JSON.stringify(INIT_CLIENT_GROUPS));DB.clientOrder=d.clientOrder||{};loadLocalHistory();if(ensurePaperParkingFlags())persistDraft();return;}}
+    if(saved){const d=JSON.parse(saved);if(d.clients&&Object.keys(d.clients).length){DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};DB.products=d.products&&d.products.length?d.products:(IS_DEMO?[]:JSON.parse(JSON.stringify(INIT_PRODUCTS)));DB.groups=d.groups&&d.groups.length?d.groups:(IS_DEMO?[]:JSON.parse(JSON.stringify(INIT_GROUPS)));DB.clientGroups=d.clientGroups||(IS_DEMO?{}:JSON.parse(JSON.stringify(INIT_CLIENT_GROUPS)));DB.clientOrder=d.clientOrder||{};loadLocalHistory();if(ensurePaperParkingFlags())persistDraft();return;}}
   }catch(e){}
+  if(IS_DEMO){
+    emptyDemoDB();
+    persistDraft();
+    persistHistoryLocal();
+    persistDeletedHistoryLocal();
+    return;
+  }
   DB.clients=JSON.parse(JSON.stringify(INIT_DATA.clients));DB.cycles=JSON.parse(JSON.stringify(INIT_DATA.cycles));DB.products=JSON.parse(JSON.stringify(INIT_PRODUCTS));DB.groups=JSON.parse(JSON.stringify(INIT_GROUPS));DB.clientGroups=JSON.parse(JSON.stringify(INIT_CLIENT_GROUPS));DB.history=[];
   loadLocalHistory();
   if(ensurePaperParkingFlags())persistDraft();
