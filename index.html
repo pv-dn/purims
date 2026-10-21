@@ -393,7 +393,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       一般: <code>staff1234</code>
     </div>
     <div class="login-build">
-      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo5</span></div>
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo6</span></div>
     </div>
   </div>
 </div>
@@ -1092,8 +1092,8 @@ firebase.initializeApp({
   });
 
 // ===== 環境分離（本番 / お試しデモ） =====
-// デモURL: https://pv-dn.github.io/purims-demo/
-const IS_DEMO=/\/purims-demo(\/|$)/i.test(location.pathname)||/(?:^|[?&])demo=1(?:&|$)/.test(location.search);
+// デモURL: https://pv-dn.github.io/primus-demo/（旧: purims-demo も可）
+const IS_DEMO=/\/(?:primus|purims)-demo(\/|$)/i.test(location.pathname)||/(?:^|[?&])demo=1(?:&|$)/.test(location.search);
 const FB_APP=IS_DEMO?'purims_demo':'purims';
 const FB_USERS=IS_DEMO?'purims_demo_users':'purims_users';
 const FB_ADMIN_PASS=IS_DEMO?'purims_demo_admin_pass':'purims_admin_pass';
