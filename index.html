@@ -4016,7 +4016,10 @@ function fbLoad(){
     db.ref(FB_APP+'/historyDeleted').once("value")
   ]).then(async ([snapD,snapH,snapDel])=>{
     const d=snapD.val();
-    if(!d||!d.clients){toast("クラウドにデータがありません","e");return;}
+    if(!d||!d.clients){
+      if(IS_DEMO){try{load();}catch(e){} toast('デモ：この端末のデータを使います');return;}
+      toast("クラウドにデータがありません","e");return;
+    }
     const histRaw=await migrateHistoryIfNeeded(snapH.val());
     const r=fbApplyData(d,histRaw,snapDel.val())||{};
     const parts=[];
@@ -4024,7 +4027,10 @@ function fbLoad(){
     if(r.skipped)parts.push(`${r.skipped}件を対象外処理`);
     toast(parts.length?`クラウドから読み込みました（${parts.join('、')}）`:"クラウドから読み込みました");
     fbStartListeners();
-  }).catch(e=>toast("読み込み失敗: "+e.message,"e"));
+  }).catch(e=>{
+    if(IS_DEMO){try{load();}catch(err){} console.warn('demo fbLoad',e); toast('デモ：この端末のデータを使います');return;}
+    toast("読み込み失敗: "+e.message,"e");
+  });
 }
 
 // リアルタイム監視（他PCの変更を検知）
@@ -4184,33 +4190,41 @@ async function doLogin(){
   if(!password){if(errEl)errEl.textContent='パスワードを入力してください';return;}
   const hash = await hashPassword(password);
   try{
-    if(!firebase.auth().currentUser){
-      try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
-    }
-    if(IS_DEMO) await ensureDemoSeedUsers();
-    let snap = await firebase.database().ref(FB_USERS).get();
-    if(!snap.exists() && IS_DEMO){
-      await ensureDemoSeedUsers();
-      snap = await firebase.database().ref(FB_USERS).get();
-    }
+    // デモは先にローカル照合（RTDB Permission denied でも入れる）
     let matched=null, user=null;
-    if(snap.exists()){
-      const users = snap.val()||{};
-      matched = Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
-      if(matched) user = users[matched];
-    }
-    // デモ: RTDB に書けない環境でも、決め打ちパスワードで入れる
-    if(!matched && IS_DEMO){
+    if(IS_DEMO){
       const demoHash=await hashPassword('demo1234');
       const staffHash=await hashPassword('staff1234');
       if(hash===demoHash){matched='demo';user={isAdmin:true};}
       else if(hash===staffHash){matched='staff';user={isAdmin:false};}
+      if(!matched){if(errEl)errEl.textContent='パスワードが違います（お試し: demo1234）';return;}
     }
-    if(!matched){
-      if(errEl)errEl.textContent=IS_DEMO?'パスワードが違います（お試し: demo1234）':(!snap.exists()?'ユーザーが登録されていません':'パスワードが違います');
-      return;
+
+    try{
+      if(!firebase.auth().currentUser){
+        try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
+      }
+      if(IS_DEMO) await ensureDemoSeedUsers();
+      let snap=null;
+      try{snap=await firebase.database().ref(FB_USERS).get();}catch(e){console.warn('users get',e);snap=null;}
+      if(!IS_DEMO){
+        if(!snap||!snap.exists()){if(errEl)errEl.textContent='ユーザーが登録されていません';return;}
+        const users=snap.val()||{};
+        matched=Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
+        if(!matched){if(errEl)errEl.textContent='パスワードが違います';return;}
+        user=users[matched];
+      }else if(snap&&snap.exists()){
+        const users=snap.val()||{};
+        const cloudMatch=Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
+        if(cloudMatch){matched=cloudMatch;user=users[cloudMatch];}
+      }
+    }catch(e){
+      console.warn('login cloud path',e);
+      if(!IS_DEMO){if(errEl)errEl.textContent='ログインに失敗しました: '+e.message;return;}
     }
-    currentUser = {username: matched, isAdmin: !!(user.isAdmin||user.role==='admin'), role: user.isAdmin||user.role==='admin'?'admin':'user'};
+
+    if(!matched){if(errEl)errEl.textContent='パスワードが違います';return;}
+    currentUser = {username: matched, isAdmin: !!(user&&(user.isAdmin||user.role==='admin')), role: (user&&(user.isAdmin||user.role==='admin'))?'admin':'user'};
     if(!matched.startsWith('_')){
       try{firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});}catch(e){}
     }
@@ -4225,13 +4239,13 @@ async function doLogin(){
     // loginSuccess: 匿名認証後に fbLoad（data/history 件単位）を開始
     if(typeof loginSuccess==='function'){try{loginSuccess();}catch(e){console.warn(e);}}
     else if(typeof fbStartListeners==='function'){try{fbStartListeners();}catch(e){}}
-    await loadHistoryKeepSetting();
-    await loadBillingMasterSetting();
-    await loadSlipCompanySetting();
-    syncHistKeepUi();
-    if(typeof pruneExpiredHistory==='function') pruneExpiredHistory({quiet:true});
-    if(typeof pruneDeletedHistory==='function') pruneDeletedHistory({quiet:true});
-    if(typeof renderHistory==='function') renderHistory();
+    try{await loadHistoryKeepSetting();}catch(e){console.warn(e);}
+    try{await loadBillingMasterSetting();}catch(e){console.warn(e);}
+    try{await loadSlipCompanySetting();}catch(e){console.warn(e);}
+    try{syncHistKeepUi();}catch(e){}
+    if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
+    if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
+    if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
   }catch(e){
     if(errEl) errEl.textContent='ログインに失敗しました: '+e.message;
   }
