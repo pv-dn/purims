@@ -393,7 +393,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       一般: <code>staff1234</code>
     </div>
     <div class="login-build">
-      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo4</span></div>
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo5</span></div>
     </div>
   </div>
 </div>
@@ -1101,6 +1101,12 @@ const FB_ADMIN_PASS2=IS_DEMO?'purims_demo_admin_pass2':'purims_admin_pass2';
 const FB_LOGINLOG=IS_DEMO?'purims_demo_loginlog':'purims_loginlog';
 const FB_MASTERLOG=IS_DEMO?'purims_demo_masterlog':'purims_masterlog';
 function lsKey(k){return (IS_DEMO?'purims_demo_':'purims_')+k;}
+const BRIDGE_REV_KEY='purims_demo_bridge_rev';
+const BRIDGE_ISSUE_KEY='purims_demo_issue_pending';
+function bumpBridgeRev(){
+  if(!IS_DEMO)return;
+  try{localStorage.setItem(BRIDGE_REV_KEY,String(Date.now()));}catch(e){}
+}
 function applyDemoChrome(){
   if(!IS_DEMO)return;
   document.title='【デモ】'+document.title.replace(/^【デモ】/,'');
@@ -1109,7 +1115,7 @@ function applyDemoChrome(){
     ban=document.createElement('div');
     ban.id='demo-banner';
     ban.style.cssText='background:#b45309;color:#fff;text-align:center;padding:8px 12px;font-size:13px;font-weight:700;letter-spacing:.02em';
-    ban.textContent='⚠ お試し（デモ）環境です。データは本番と別です。自由に触って大丈夫です。';
+    ban.textContent='⚠ お試し（デモ）環境です。台帳デモとマスタ連動中・この端末のみ。';
     const app=document.getElementById('app');
     if(app&&app.parentNode)app.parentNode.insertBefore(ban,app);
     else document.body.insertBefore(ban,document.body.firstChild);
@@ -1118,6 +1124,99 @@ function applyDemoChrome(){
   if(hs&&!hs.textContent.includes('デモ'))hs.textContent=hs.textContent+'　【デモ】';
   const hint=document.getElementById('demo-login-hint');
   if(hint)hint.classList.remove('hidden');
+}
+function reloadMastersFromBridgeStorage(){
+  if(!IS_DEMO)return;
+  try{
+    const saved=localStorage.getItem(lsKey('v14'));
+    if(!saved)return;
+    const d=JSON.parse(saved);
+    DB.clients=unpackClientsFromFirebase(d.clients||{});
+    DB.cycles=d.cycles||{};
+    DB.products=Array.isArray(d.products)?d.products:(DB.products||[]);
+    DB.groups=Array.isArray(d.groups)?d.groups:(DB.groups||[]);
+    DB.clientGroups=d.clientGroups||{};
+    DB.clientOrder=d.clientOrder||{};
+    DB.closing=d.closing||{};
+    DB.minCharge=d.minCharge||{};
+    DB.deliveryFee=d.deliveryFee||{};
+    DB.packagingFee=d.packagingFee||{};
+    DB.parkingEnabled=d.parkingEnabled||{};
+    fillSel('csel',curC);
+    fillSel('msel',editC);
+    try{fillGrpSel('e-grp');fillGrpSel('nc-grp');}catch(e){}
+    try{renderProducts();}catch(e){}
+    try{renderGroups();}catch(e){}
+    try{renderClientGrpList();}catch(e){}
+    if(curC&&DB.clients[curC]){try{renderItems();}catch(e){}}
+    toast('台帳デモのマスタを反映しました');
+  }catch(e){console.warn('bridge reload',e);}
+}
+function applyLedgerIssuePending(){
+  if(!IS_DEMO||!currentUser)return false;
+  let raw=null;
+  try{raw=localStorage.getItem(BRIDGE_ISSUE_KEY);}catch(e){return false;}
+  if(!raw)return false;
+  let pending=null;
+  try{pending=JSON.parse(raw);}catch(e){return false;}
+  try{localStorage.removeItem(BRIDGE_ISSUE_KEY);}catch(e){}
+  const client=pending&&pending.client;
+  if(!client)return false;
+  if(!DB.clients[client]){
+    DB.clients[client]={items:(pending.items||[]).map(it=>({code:it.code||'---',name:it.name||''}))};
+  }
+  (pending.items||[]).forEach(it=>{
+    if(!it)return;
+    if(it.code&&!(DB.products||[]).some(p=>p.code===it.code)){
+      DB.products.push({code:it.code,name:it.name||it.code});
+    }
+    const list=DB.clients[client].items||(DB.clients[client].items=[]);
+    if(!list.some(m=>m.code===it.code||m.name===it.name)){
+      list.push({code:it.code||'---',name:it.name||''});
+    }
+  });
+  persistDraft();
+  fillSel('csel',client);
+  fillSel('msel');
+  const csel=document.getElementById('csel');
+  if(csel)csel.value=client;
+  curC=client;
+  qtys={};bikos={};extraItems=[];
+  if(pending.deliveryDate){
+    const parts=String(pending.deliveryDate).split(/[-/]/).map(Number);
+    if(parts.length>=3&&parts[0]>1900){
+      customDeliveryDate=new Date(parts[0],parts[1]-1,parts[2]);
+      const ndv=document.getElementById('nd-v');
+      if(ndv){ndv.textContent=fmtD(customDeliveryDate);ndv.style.color='#e67e22';}
+      const rb=document.getElementById('nd-reset-btn');if(rb)rb.style.display='inline-block';
+    }
+  }else{
+    customDeliveryDate=null;
+  }
+  const master=DB.clients[client]?.items||[];
+  (pending.items||[]).forEach(it=>{
+    const idx=master.findIndex(m=>m.code===it.code||m.name===it.name);
+    if(idx>=0)qtys[idx]=Number(it.qty)||0;
+    else extraItems.push({code:it.code||'---',name:it.name||'',qty:Number(it.qty)||0,biko:''});
+  });
+  try{showPanel('slip',document.querySelector('.tabs .tab'));}catch(e){}
+  const cv=document.getElementById('complete-view');if(cv)cv.style.display='none';
+  const iv=document.getElementById('input-view');if(iv)iv.style.display='block';
+  try{updateChips();}catch(e){}
+  const chips=document.getElementById('chips');if(chips)chips.style.display='flex';
+  const sb=document.getElementById('sbtns');if(sb)sb.style.display='flex';
+  const st=document.getElementById('sbtns-top');if(st)st.style.display='flex';
+  try{renderItems();}catch(e){}
+  try{updateSkipButtons();}catch(e){}
+  toast('台帳から「出」数量を取り込みました');
+  return true;
+}
+if(IS_DEMO){
+  window.addEventListener('storage',e=>{
+    if(e.key===lsKey('v14')||e.key===BRIDGE_REV_KEY){
+      reloadMastersFromBridgeStorage();
+    }
+  });
 }
 async function ensureDemoSeedUsers(){
   if(!IS_DEMO)return;
@@ -1360,6 +1459,7 @@ function load(){
 }
 function persistDraft(){
   localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
+  bumpBridgeRev();
 }
 function persistLocal(){
   persistDraft();
@@ -4216,10 +4316,14 @@ async function finishLoginUI(matched){
   if(um) um.style.display = currentUser.isAdmin ? 'inline-block' : 'none';
   toast('ようこそ、'+matched+'さん');
   try{load();}catch(e){console.warn(e);}
+  try{fillSel('csel');fillSel('msel');}catch(e){}
+  try{fillGrpSel('e-grp');fillGrpSel('nc-grp');}catch(e){}
+  try{renderProducts();renderGroups();renderClientGrpList();}catch(e){}
   try{syncHistKeepUi();}catch(e){}
   if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
   if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
   if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
+  try{applyLedgerIssuePending();}catch(e){console.warn(e);}
 }
 async function doLogin(){
   const password = document.getElementById('login-pass').value;
