@@ -1122,6 +1122,9 @@ function applyDemoChrome(){
 async function ensureDemoSeedUsers(){
   if(!IS_DEMO)return;
   try{
+    if(!firebase.auth().currentUser){
+      try{await firebase.auth().signInAnonymously();}catch(e){console.warn('demo seed anon auth',e);return;}
+    }
     const snap=await firebase.database().ref(FB_USERS).get();
     const users=snap.exists()?snap.val():null;
     const keys=users?Object.keys(users).filter(u=>!u.startsWith('_')):[];
@@ -4184,15 +4187,32 @@ async function doLogin(){
     if(!firebase.auth().currentUser){
       try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
     }
-    const snap = await firebase.database().ref(FB_USERS).get();
-    if(!snap.exists()){if(errEl)errEl.textContent='ユーザーが登録されていません';return;}
-    const users = snap.val();
-    const matched = Object.keys(users).find(u=>users[u].passwordHash===hash);
-    if(!matched){if(errEl)errEl.textContent='パスワードが違います';return;}
-    const user = users[matched];
+    if(IS_DEMO) await ensureDemoSeedUsers();
+    let snap = await firebase.database().ref(FB_USERS).get();
+    if(!snap.exists() && IS_DEMO){
+      await ensureDemoSeedUsers();
+      snap = await firebase.database().ref(FB_USERS).get();
+    }
+    let matched=null, user=null;
+    if(snap.exists()){
+      const users = snap.val()||{};
+      matched = Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
+      if(matched) user = users[matched];
+    }
+    // デモ: RTDB に書けない環境でも、決め打ちパスワードで入れる
+    if(!matched && IS_DEMO){
+      const demoHash=await hashPassword('demo1234');
+      const staffHash=await hashPassword('staff1234');
+      if(hash===demoHash){matched='demo';user={isAdmin:true};}
+      else if(hash===staffHash){matched='staff';user={isAdmin:false};}
+    }
+    if(!matched){
+      if(errEl)errEl.textContent=IS_DEMO?'パスワードが違います（お試し: demo1234）':(!snap.exists()?'ユーザーが登録されていません':'パスワードが違います');
+      return;
+    }
     currentUser = {username: matched, isAdmin: !!(user.isAdmin||user.role==='admin'), role: user.isAdmin||user.role==='admin'?'admin':'user'};
     if(!matched.startsWith('_')){
-      firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});
+      try{firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});}catch(e){}
     }
     const loginScreen=document.getElementById('login-screen');
     if(loginScreen) loginScreen.classList.add('hidden');
@@ -4679,9 +4699,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 try{applyDemoChrome();}catch(e){}
 try{
-  const _demoBoot=()=>{try{ensureDemoSeedUsers();}catch(e){}};
+  const _demoBoot=()=>{ensureDemoSeedUsers().catch(e=>console.warn(e));};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',_demoBoot);
-  else setTimeout(_demoBoot,0);
+  else setTimeout(_demoBoot,500);
 }catch(e){}
 </script>
 </body>
