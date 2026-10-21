@@ -393,7 +393,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       一般: <code>staff1234</code>
     </div>
     <div class="login-build">
-      <div class="login-build-badge"><b>BUILD</b><span>2026.10.14</span></div>
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo2</span></div>
     </div>
   </div>
 </div>
@@ -4183,69 +4183,79 @@ async function getAdminPassHash2(){
   const snap = await firebase.database().ref(FB_ADMIN_PASS2).get();
   return snap.exists() ? snap.val() : null;
 }
+async function finishLoginUI(matched){
+  const loginScreen=document.getElementById('login-screen');
+  if(loginScreen) loginScreen.classList.add('hidden');
+  const disp=document.getElementById('current-user-display');
+  if(disp) disp.textContent = matched + (currentUser.isAdmin?' 👑':'');
+  ['tab-loginlog','tab-masterlog'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='inline-block';});
+  const um=document.getElementById('user-mgr-btn');
+  if(um) um.style.display = currentUser.isAdmin ? 'inline-block' : 'none';
+  toast('ようこそ、'+matched+'さん');
+  try{load();}catch(e){console.warn(e);}
+  try{syncHistKeepUi();}catch(e){}
+  if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
+  if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
+  if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
+}
 async function doLogin(){
   const password = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-err');
   if(errEl) errEl.textContent = '';
   if(!password){if(errEl)errEl.textContent='パスワードを入力してください';return;}
   const hash = await hashPassword(password);
-  try{
-    // デモは先にローカル照合（RTDB Permission denied でも入れる）
-    let matched=null, user=null;
-    if(IS_DEMO){
+
+  // ===== デモ専用：Firebase に一切触れずログイン =====
+  if(IS_DEMO){
+    try{
       const demoHash=await hashPassword('demo1234');
       const staffHash=await hashPassword('staff1234');
+      let matched=null, user=null;
       if(hash===demoHash){matched='demo';user={isAdmin:true};}
       else if(hash===staffHash){matched='staff';user={isAdmin:false};}
       if(!matched){if(errEl)errEl.textContent='パスワードが違います（お試し: demo1234）';return;}
-    }
-
-    try{
-      if(!firebase.auth().currentUser){
-        try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
-      }
-      if(IS_DEMO) await ensureDemoSeedUsers();
-      let snap=null;
-      try{snap=await firebase.database().ref(FB_USERS).get();}catch(e){console.warn('users get',e);snap=null;}
-      if(!IS_DEMO){
-        if(!snap||!snap.exists()){if(errEl)errEl.textContent='ユーザーが登録されていません';return;}
-        const users=snap.val()||{};
-        matched=Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
-        if(!matched){if(errEl)errEl.textContent='パスワードが違います';return;}
-        user=users[matched];
-      }else if(snap&&snap.exists()){
-        const users=snap.val()||{};
-        const cloudMatch=Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
-        if(cloudMatch){matched=cloudMatch;user=users[cloudMatch];}
-      }
+      currentUser={username:matched,isAdmin:!!user.isAdmin,role:user.isAdmin?'admin':'user'};
+      await finishLoginUI(matched);
+      // 裏でクラウド接続を試す（失敗しても画面はそのまま）
+      setTimeout(()=>{
+        try{
+          if(!firebase.auth().currentUser){
+            firebase.auth().signInAnonymously().then(()=>{try{ensureDemoSeedUsers();}catch(e){} try{fbLoad();}catch(e){};}).catch(()=>{});
+          }else{
+            try{ensureDemoSeedUsers();}catch(e){}
+            try{fbLoad();}catch(e){}
+          }
+        }catch(e){console.warn('demo background sync',e);}
+      },0);
+      return;
     }catch(e){
-      console.warn('login cloud path',e);
-      if(!IS_DEMO){if(errEl)errEl.textContent='ログインに失敗しました: '+e.message;return;}
+      if(errEl) errEl.textContent='ログインに失敗しました: '+e.message;
+      return;
     }
+  }
 
+  try{
+    let matched=null, user=null;
+    if(!firebase.auth().currentUser){
+      try{await firebase.auth().signInAnonymously();}catch(e){console.warn('匿名認証失敗:',e);}
+    }
+    let snap=null;
+    try{snap=await firebase.database().ref(FB_USERS).get();}catch(e){console.warn('users get',e);snap=null;}
+    if(!snap||!snap.exists()){if(errEl)errEl.textContent='ユーザーが登録されていません';return;}
+    const users=snap.val()||{};
+    matched=Object.keys(users).find(u=>users[u]&&users[u].passwordHash===hash);
     if(!matched){if(errEl)errEl.textContent='パスワードが違います';return;}
+    user=users[matched];
     currentUser = {username: matched, isAdmin: !!(user&&(user.isAdmin||user.role==='admin')), role: (user&&(user.isAdmin||user.role==='admin'))?'admin':'user'};
     if(!matched.startsWith('_')){
       try{firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});}catch(e){}
     }
-    const loginScreen=document.getElementById('login-screen');
-    if(loginScreen) loginScreen.classList.add('hidden');
-    const disp=document.getElementById('current-user-display');
-    if(disp) disp.textContent = matched + (currentUser.isAdmin?' 👑':'');
-    ['tab-loginlog','tab-masterlog'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='inline-block';});
-    const um=document.getElementById('user-mgr-btn');
-    if(um) um.style.display = currentUser.isAdmin ? 'inline-block' : 'none';
-    toast('ようこそ、'+matched+'さん');
-    // loginSuccess: 匿名認証後に fbLoad（data/history 件単位）を開始
+    await finishLoginUI(matched);
     if(typeof loginSuccess==='function'){try{loginSuccess();}catch(e){console.warn(e);}}
     else if(typeof fbStartListeners==='function'){try{fbStartListeners();}catch(e){}}
     try{await loadHistoryKeepSetting();}catch(e){console.warn(e);}
     try{await loadBillingMasterSetting();}catch(e){console.warn(e);}
     try{await loadSlipCompanySetting();}catch(e){console.warn(e);}
-    try{syncHistKeepUi();}catch(e){}
-    if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
-    if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
-    if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
   }catch(e){
     if(errEl) errEl.textContent='ログインに失敗しました: '+e.message;
   }
