@@ -103,7 +103,8 @@
   </ul>
   <h3>C. マスタ／D. 印刷</h3>
   <ul class="check">
-    <li>□ 客先・品目・サイクル登録　□ 必要ならグループ（ルート番号）・記号　□ テスト発行〜印刷</li>
+    <li>□ 客先・品目・サイクル登録　□ 必要ならグループ（ルート番号）・記号　□ ロット付きテスト発行</li>
+    <li>□ 台帳→伝票の受け渡し確認　□（使う場合）請求タブ確認</li>
     <li>□ 用紙 B5横　□ 倍率100%　□ 余白なし／最小</li>
   </ul>
   </section>
@@ -126,6 +127,7 @@
     <tr><th>客先</th><td>選んだ届け先</td></tr>
     <tr><th>次回納品日</th><td>サイクルから自動。「変更」で指定可</td></tr>
     <tr><th>納品サイクル</th><td>納品曜日。クリックで編集可</td></tr>
+    <tr><th>ロット番号</th><td>荷造り照合用（1〜10）。台帳から受け取ることも可</td></tr>
     <tr><th>品番／品名</th><td>マスタから出る一覧</td></tr>
     <tr><th>数量</th><td>本日の出荷数を入力</td></tr>
     <tr><th>備考</th><td>任意メモ</td></tr>
@@ -134,10 +136,11 @@
   </table>
   <ol>
     <li>客先を選ぶ</li>
+    <li>必要ならロット番号を選ぶ</li>
     <li>数量を入れる</li>
     <li>必要なら納品日を変更</li>
     <li><strong>伝票発行</strong>を押す</li>
-    <li>完了画面で客先・納品日・品目数・合計点数を確認</li>
+    <li>完了画面で客先・納品日・ロット・品目数・合計点数を確認</li>
     <li><strong>印刷する</strong> → ブラウザの印刷画面で紙のイメージを確認してから印刷</li>
   </ol>
   <img class="shot" src="images/02c-print-preview.png" alt="印刷プレビュー">
@@ -162,13 +165,37 @@
   <h2>6. 発行履歴</h2>
   <img class="shot" src="images/03-history.png" alt="発行履歴">
   <table>
-    <tr><th>発行日別／客先別／削除履歴</th><td>見方の切り替え</td></tr>
-    <tr><th>検索</th><td>客先・品目・日付で絞り込み</td></tr>
+    <tr><th>発行日別／客先別／ロット別／削除履歴</th><td>見方の切り替え</td></tr>
+    <tr><th>検索</th><td>客先・品目・日付・ロットで絞り込み</td></tr>
     <tr><th>保存期間</th><td>3／6／12か月</td></tr>
     <tr><th>フォルダ</th><td>月→日付。クリックで開く</td></tr>
-    <tr><th>チェック</th><td>選んだ伝票だけまとめて再印刷</td></tr>
+    <tr><th>チェック／ロットまとめて印刷</th><td>選んだ伝票、または同じロットをまとめて再印刷</td></tr>
     <tr><th>訂正して再発行</th><td>数量ミスなどを直して同じ履歴を更新</td></tr>
   </table>
+  </section>
+
+  <section class="sec keep">
+  <h2>6b. 入出荷台帳からの受け渡し</h2>
+  <ol>
+    <li>台帳（https://pv-dn.github.io/pourvous-ledger/）でロット番号を選ぶ</li>
+    <li>客先・数量を入力</li>
+    <li><strong>伝票を発行</strong> → 伝票アプリが開く</li>
+    <li>伝票側でログインすると、客先・数量・ロットが入る</li>
+    <li>確認して伝票発行・印刷</li>
+  </ol>
+  <p>同じブラウザで開くと受け渡しがスムーズです。</p>
+  </section>
+
+  <section class="sec keep">
+  <h2>6c. 請求タブ</h2>
+  <p>上部タブ<strong>請求</strong>から、請求明細書・請求額一覧の確認・印刷・Excel出力ができます。</p>
+  <table>
+    <tr><th>請求月</th><td>年・月を指定</td></tr>
+    <tr><th>請求明細書を見る</th><td>客先ごとの明細を画面で確認・印刷</td></tr>
+    <tr><th>請求額一覧を見る</th><td>一覧表を確認・CSV／Excel</td></tr>
+    <tr><th>未反映分を見る</th><td>まだ請求Excelに出していない伝票</td></tr>
+  </table>
+  <p>※締め日・単価などは<strong>データ</strong>タブの「請求系マスタ項目」をONにしてからマスタで設定（初期OFF）。</p>
   </section>
 
   <section class="sec break keep">
