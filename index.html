@@ -360,11 +360,6 @@ select.cs:focus{outline:none;border-color:var(--ac)}
   @page{margin:10mm 3mm 3mm 3mm;size:B5 landscape}
 }
 
-/* 配布版: 請求画面は常に非表示 */
-#panel-billing,#meisai-viewer,#billing-check-section,#parking-fee-section,
-#billing-excel-section,#meisai-check-wrap,#billing-pending-view-btn,
-.billing-only, #billing-panel-hint { display:none !important; }
-
 /* 請求系マスタ項目（締め日・最低保証・配送費・包装料・駐車場代）: 大元OFF時は隠す */
 body:not(.billing-master-on) .billing-master-field { display:none !important; }
 body:not(.billing-master-on) #ni-price,
@@ -508,6 +503,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <button id="tab-history" class="tab" onclick="showPanel('history',this)">発行履歴</button>
   <button id="tab-master" class="tab" onclick="showMasterWithAuth(this)">マスタ管理</button>
   <button id="tab-data" class="tab" onclick="showPanel('data',this)">データ</button>
+  <button id="tab-billing" class="tab" onclick="showPanel('billing',this)">請求</button>
   <button id="tab-help" class="tab" onclick="showPanel('help',this)">使い方・困ったとき</button>
   <div class="tabs-meta">
     <span class="login-user" id="current-user-display"></span>
@@ -525,6 +521,76 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       <button type="button" onclick="closeUpdatesModal()" style="margin-left:auto;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;font-size:12px;cursor:pointer">閉じる</button>
     </div>
     <div class="updates-body" id="updates-body"></div>
+  </div>
+</div>
+
+<!-- BILLING PANEL -->
+<div id="panel-billing" class="panel">
+  <div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
+    <div class="ch" style="background:#5c3d1e">📄 請求明細書（アプリ内閲覧）</div>
+    <div style="padding:16px;font-size:13px;color:var(--mu);line-height:1.8">
+      伝票の発行履歴と請求単価から、<strong style="color:var(--tx)">ネクサス名義の請求明細書</strong>をアプリ内で表示します。Excelを開かなくても確認・印刷できます。
+      <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap">
+        <label style="font-size:12px;color:var(--tx);font-weight:600">請求月</label>
+        <input type="number" id="meisai-year" min="2020" max="2099" style="width:88px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px" placeholder="年" onchange="onMeisaiMonthChange()">
+        <span>年</span>
+        <input type="number" id="meisai-month" min="1" max="12" style="width:60px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px" placeholder="月" onchange="onMeisaiMonthChange()">
+        <span>月</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap">
+        <button type="button" onclick="openMeisaiViewer('detail')" style="padding:12px 20px;background:#5c3d1e;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">👁 請求明細書を見る</button>
+        <button type="button" onclick="openMeisaiViewer('summary')" style="padding:12px 18px;background:#fff;color:#5c3d1e;border:1.5px solid #5c3d1e;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📋 請求額一覧を見る</button>
+        <button type="button" id="billing-pending-view-btn" onclick="openMeisaiViewer('detail',{source:'pending'})" style="padding:12px 18px;background:#854f0b;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">⏳ 未反映分を見る</button>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--mu)">一覧の行をクリックすると、その客先の請求明細書に切り替わります。画面上で印刷もできます。</div>
+    </div>
+  </div>
+  <div id="billing-check-section" class="no-print" style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
+    <div class="ch" style="background:#2e7d32">✓ 事務チェック（納品日・締め日別）</div>
+    <div style="padding:14px 16px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1;min-width:200px;font-size:13px;color:var(--mu);line-height:1.7">
+        まず<strong style="color:var(--tx)">締め日</strong>を選び、請求明細書を確認したらカレンダーの<strong style="color:var(--tx)">納品日</strong>をクリックします。チェック済みは締め日ごとに別管理です。<br>
+        <span id="billing-check-status" style="display:inline-block;margin-top:8px;font-weight:700;color:#2e7d32">チェック済み: 未設定</span>
+        <div id="billing-check-status-all" style="margin-top:8px;font-size:12px;line-height:1.6;color:var(--mu)"></div>
+        <div style="margin-top:10px">
+          <button type="button" class="btn" style="font-size:12px;padding:5px 10px" onclick="clearSlipCheckedThrough()">この締めのチェック解除</button>
+        </div>
+        <div id="billing-check-issued" class="check-issued-list"></div>
+      </div>
+      <div>
+        <div id="billing-check-closing-tabs" class="check-closing-tabs"></div>
+        <div id="billing-check-cal" class="check-cal"></div>
+        <div class="check-cal-note" id="billing-check-cal-note">薄い青＝その締めの納品あり　／　緑＝チェック済　／　枠＝境界日<br>クリックした納品日「まで」が対象です（印刷には出ません）</div>
+      </div>
+    </div>
+  </div>
+  <div id="parking-fee-section" style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
+    <div class="ch" style="background:#3d5a40">🅿️ 駐車場代入力</div>
+    <div style="padding:14px 16px;font-size:13px;color:var(--mu);line-height:1.7">
+      マスタで「駐車場代あり」の客先を選び、領収書を見て金額を入力します。<strong style="color:var(--tx)">伝票には出ません。</strong> 空欄＝その回なし。上の請求月と同じ年月の伝票を表示します。<br>
+      金額を入れると請求は<strong style="color:var(--tx)">「客先名」</strong>と<strong style="color:var(--tx)">「客先名 駐車場代」</strong>の<strong>2枚</strong>に分かれます（例: あ／あ 駐車場代）。
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        <label style="font-size:12px;color:var(--tx);font-weight:600">客先</label>
+        <select id="parking-fee-client" onchange="renderParkingFeeCorner()" style="min-width:220px;padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx)">
+          <option value="">— 客先を選択 —</option>
+        </select>
+      </div>
+      <div id="parking-fee-list" style="margin-top:12px"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button type="button" class="btn pri" onclick="saveAllParkingFees()" style="padding:8px 16px">駐車場代を保存</button>
+        <button type="button" class="btn" onclick="renderParkingFeeCorner()" style="padding:8px 14px">再表示</button>
+        <span id="parking-fee-hint" style="font-size:12px;color:var(--mu)"></span>
+      </div>
+    </div>
+  </div>
+  <div id="billing-excel-section" style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden">
+    <div class="ch">Excel出力（ファイルが必要なとき）</div>
+    <div style="padding:14px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button type="button" onclick="exportMeisaiMonthXlsx()" style="padding:8px 16px;background:#5c3d1e;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">📥 請求月Excel出力</button>
+      <button type="button" onclick="exportTodayBilling()" style="padding:8px 16px;background:#854f0b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">📄 未反映→請求明細Excel</button>
+      <button type="button" onclick="exportSampleBilling()" style="padding:8px 14px;background:#fff;color:#854f0b;border:1.5px solid #854f0b;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🖨 印刷見本</button>
+      <span id="billing-panel-hint" style="font-size:12px;color:var(--mu)">上記の請求月を使います</span>
+    </div>
   </div>
 </div>
 
@@ -1051,7 +1117,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
 </div><!-- /#app -->
 
 <!-- 請求明細閲覧 -->
-<div id="meisai-viewer" style="display:none!important">
+<div id="meisai-viewer">
   <div class="meisai-viewer-box">
     <div class="meisai-viewer-hd">
       <h2>📄 請求明細書</h2>
@@ -1260,69 +1326,6 @@ async function ensureDemoSeedUsers(){
   }catch(e){console.warn('ensureDemoSeedUsers',e);}
 }
 
-// ===== 請求機能は配布版では無効 =====
-
-// auto stubs for renamed billing funcs
-function applyNexusChrome(){/* 配布版ではネクサス表示は使わない */}
-function applyOfficeChrome(){
-  const setLink=(rel,href,type)=>{
-    let el=[...document.querySelectorAll(`link[rel="${rel}"]`)].find(n=>!type||n.getAttribute('type')===type);
-    if(!el){el=document.createElement('link');el.rel=rel;if(type)el.type=type;document.head.appendChild(el);}
-    el.href=href;
-  };
-  setLink('manifest','manifest.json');
-  let theme=document.querySelector('meta[name="theme-color"]');
-  if(!theme){theme=document.createElement('meta');theme.name='theme-color';document.head.appendChild(theme);}
-  theme.content='#1a2744';
-}
-function applyViewerUi(){}
-function buildInvoicesFromRecs(){return null;}
-function buildMeisaiRows(){return null;}
-function buildMeisaiSummaryRows(){return null;}
-function buildParkingInvoicesFromRecs(){return null;}
-function clearNexusSession(){}
-function closeMeisaiViewer(){}
-function collectMeisaiData(){return null;}
-function exportMeisaiJSON(){}
-function exportMeisaiSummaryCSV(){}
-function exportMeisaiSummaryXlsx(){}
-function exportMeisaiXlsx(){}
-function exportSampleBilling(){}
-function fitMeisaiViewerSheet(){}
-function isNexusMode(){return false;}
-function isViewerSession(){return false;}
-function loadNexusSession(){}
-function meisaiSheetHtml(){}
-function meisaiSummaryBodyHtml(){}
-function meisaiSummaryHtml(){}
-function openMeisaiPrintWindow(){}
-function printAllMeisaiSheets(){}
-function printMeisaiSummary(){}
-function printMeisaiViewerActive(){}
-function printMeisaiViewerSheet(){}
-function renderBillingCheckCalendar(){}
-function renderMeisaiSummary(){}
-function renderMeisaiViewerList(){}
-function saveNexusSession(){}
-function selectMeisaiViewer(){}
-function setMeisaiViewerMode(){}
-function setupMeisaiSheet(){}
-
-function _disabled_openMeisaiViewer(){toast('請求機能は配布版では利用できません','e');}
-function _disabled_exportMeisaiMonthXlsx(){toast('請求機能は配布版では利用できません','e');}
-function _disabled_exportTodayBilling(){toast('請求機能は配布版では利用できません','e');}
-function _disabled_exportMeisaiXlsx(){toast('請求機能は配布版では利用できません','e');}
-function _disabled_exportMeisaiSummaryXlsx(){toast('請求機能は配布版では利用できません','e');}
-function _disabled_exportSampleBilling(){toast('請求機能は配布版では利用できません','e');}
-function _disabled_applyViewerUi(){}
-function _disabled_applyNexusChrome(){}
-function _disabled_applyOfficeChrome(){}
-function _disabled_updateBillingPendingBadge(){}
-function _disabled_renderBillingCheckCalendar(){}
-function _disabled_collectMeisaiData(){return [];}
-function _disabled_isNexusMode(){return false;}
-function _disabled_isViewerSession(){return false;}
-
 const WD=['日','月','火','水','木','金','土'];
 const ROWS=14;
 
@@ -1521,7 +1524,7 @@ function fillGrpSel(id,cur){const s=document.getElementById(id);if(!s)return;con
 function nxtDel(cyc){if(!cyc)return null;const m={月:1,火:2,水:3,木:4,金:5,土:6,日:0};const tw=new Date().getDay();let min=99;for(const c of cyc){if(m[c]!==undefined){const d=(m[c]-tw+7)%7;if(d<min)min=d;}}if(min===99)return null;const r=new Date();r.setDate(r.getDate()+min);return r;}
 function fmtD(d){if(!d)return'—';return fmtDateStr(d);}
 function nextPCode(){let max=0;DB.products.forEach(p=>{const m=p.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});Object.values(DB.clients).forEach(cl=>{(cl.items||[]).forEach(it=>{const m=it.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});});return 'P'+String(max+1).padStart(3,'0');}
-function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} try{loadSlipCompanySetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();renderMasterPickInitials();}
+function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} try{loadSlipCompanySetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();renderMasterPickInitials();try{initMeisaiMonth();}catch(e){}try{updateBillingPendingBadge();}catch(e){}}
 function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.style.borderLeftColor=type==='e'?'#c0392b':'var(--ac)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
 
 // ===== 伝票発行 =====
@@ -2272,7 +2275,7 @@ function renderCheckIssuedList(){
     const el=document.getElementById(id);if(el)el.innerHTML=html;
   });
 }
-function _disabled_renderBillingCheckCalendar(){
+function renderBillingCheckCalendar(){
   if(!_checkCalY||!_checkCalM)syncCheckCalFromMeisai();
   ensureCheckedThroughMap();
   const closing=normalizeCheckClosing(_checkCalClosing);
@@ -2315,7 +2318,7 @@ function _disabled_renderBillingCheckCalendar(){
 }
 function parkingBillingName(customer){return String(customer||'')+' 駐車場代';}
 function isParkingMeisai(data){return / 駐車場代$/.test(String(data&&data.customer||''));}
-function _disabled_buildParkingInvoicesFromRecs(recs){
+function buildParkingInvoicesFromRecs(recs){
   const park=(recs||[]).filter(h=>Number(h.parkingFee)>0);
   if(!park.length){
     /* 金額なしの日は明細に出さない（数量1の仮表示もしない）。★客先のシート枠だけは空で残す */
@@ -2560,8 +2563,28 @@ function isBillingDeliveryInScope(d){if(!d)return false;if(d.y<BILLING_DELIVERY_
 function isExportableHist(h){const d=parseHistDeliveryDate(h);return!!(h&&h.client&&d&&isBillingDeliveryInScope(d));}
 function outOfScopeUnbilled(){return(DB.history||[]).filter(h=>{if(h.billingExportedAt)return false;const d=parseHistDeliveryDate(h);return d&&!isBillingDeliveryInScope(d);});}
 function markOutOfScopeAsBilled(){
-  // 配布版: 請求対象外マーキングはしない（履歴を勝手に書き換えない）
-  return 0;
+  const entries=outOfScopeUnbilled();
+  if(!entries.length)return 0;
+  entries.forEach(h=>{h.billingExportedAt=BILLING_OUT_OF_SCOPE_MARK;});
+  persistHistoryLocal();
+  updateBillingPendingBadge();
+  if(typeof currentUser!=='undefined'&&currentUser){
+    const tok=markSelfSaving();
+    const updates={};
+    entries.forEach(h=>{if(h&&h.id!=null)updates[histPath(h.id)+'/billingExportedAt']=BILLING_OUT_OF_SCOPE_MARK;});
+    const keys=Object.keys(updates);
+    const chunk=400;
+    const writes=[];
+    for(let i=0;i<keys.length;i+=chunk){
+      const part={};
+      keys.slice(i,i+chunk).forEach(k=>{part[k]=updates[k];});
+      writes.push(db.ref().update(part));
+    }
+    Promise.all(writes)
+      .catch(e=>toast('7月以前の反映済み更新に失敗しました: '+e.message,'e'))
+      .finally(()=>setTimeout(()=>clearSelfSaving(tok),800));
+  }
+  return entries.length;
 }
 function getBillingMonth(d,closingDay){if(!d)return null;if(!closingDay||closingDay===99)return{y:d.y,m:d.m};if(d.d>closingDay){let m=d.m+1,y=d.y;if(m>12){m=1;y++;}return{y,m};}return{y:d.y,m:d.m};}
 function belongsToBillingMonth(d,year,month,closingDay){if(!d)return false;if(!closingDay||closingDay===99)return d.y===year&&d.m===month;let sy=year,sm=month-1,sd=closingDay+1;if(sm<1){sm=12;sy--;}const start=new Date(sy,sm-1,sd);const end=new Date(year,month-1,closingDay,23,59,59);const dt=new Date(d.y,d.m-1,d.d);return dt>=start&&dt<=end;}
@@ -2595,8 +2618,8 @@ function assignUniqueSheetNames(meisaiData){
   return meisaiData;
 }
 function xlCol(n){let s='';while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;}
-function _disabled_initMeisaiMonth(){const y=document.getElementById('meisai-year'),m=document.getElementById('meisai-month');if(!y||!m)return;const now=new Date();y.value=now.getFullYear();m.value=now.getMonth()+1;if(typeof renderParkingFeeCorner==='function')renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}
-function _disabled_updateBillingPendingBadge(){const el=document.getElementById('billing-pending-badge');if(!el)return;const pending=(DB.history||[]).filter(h=>!h.billingExportedAt);const n=pending.filter(isExportableHist).length;el.style.display=n?'inline':'none';el.textContent='未反映: '+n+'件';}
+function initMeisaiMonth(){const y=document.getElementById('meisai-year'),m=document.getElementById('meisai-month');if(!y||!m)return;const now=new Date();y.value=now.getFullYear();m.value=now.getMonth()+1;if(typeof renderParkingFeeCorner==='function')renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}
+function updateBillingPendingBadge(){const el=document.getElementById('billing-pending-badge');if(!el)return;const pending=(DB.history||[]).filter(h=>!h.billingExportedAt);const n=pending.filter(isExportableHist).length;el.style.display=n?'inline':'none';el.textContent='未反映: '+n+'件';}
 function fillParkingFeeClientSel(){
   const sel=document.getElementById('parking-fee-client');
   if(!sel)return;
@@ -2658,8 +2681,8 @@ function saveAllParkingFees(){
   toast(changed?changed+'件の駐車場代を保存しました':'変更はありません');
   renderParkingFeeCorner();
 }
-function _disabled_buildInvoicesFromRecs(recs,customer,warnings){if(recs.length>14)warnings.push(`${customer}（${recs.length}枚・14枚まで）`);let zeroPrice=0;const fee=getDeliveryFee(customer);const pack=getPackagingFee(customer);const invoices=recs.slice(0,14).map((h,idx)=>{const items=(h.items||[]).filter(it=>it.qty>0).map(it=>{const price=getBillingPrice(customer,it.code,it.name);if(!price)zeroPrice++;return{name:it.name,price,qty:it.qty};});const pts=items.reduce((s,it)=>s+(Number(it.qty)||0),0);if(fee>0)items.push({name:'配送費',price:fee,qty:1});if(pack>0&&pts>0)items.push({name:'包装料',price:pack,qty:pts});return{invoiceNo:String(idx+1),deliveryDate:historyDeliveryDate(h),items};});if(zeroPrice)warnings.push(`${customer} 単価未設定${zeroPrice}行`);return invoices;}
-function _disabled_collectMeisaiData(opts){const warnings=[];const mode=opts?.mode||'month';
+function buildInvoicesFromRecs(recs,customer,warnings){if(recs.length>14)warnings.push(`${customer}（${recs.length}枚・14枚まで）`);let zeroPrice=0;const fee=getDeliveryFee(customer);const pack=getPackagingFee(customer);const invoices=recs.slice(0,14).map((h,idx)=>{const items=(h.items||[]).filter(it=>it.qty>0).map(it=>{const price=getBillingPrice(customer,it.code,it.name);if(!price)zeroPrice++;return{name:it.name,price,qty:it.qty};});const pts=items.reduce((s,it)=>s+(Number(it.qty)||0),0);if(fee>0)items.push({name:'配送費',price:fee,qty:1});if(pack>0&&pts>0)items.push({name:'包装料',price:pack,qty:pts});return{invoiceNo:String(idx+1),deliveryDate:historyDeliveryDate(h),items};});if(zeroPrice)warnings.push(`${customer} 単価未設定${zeroPrice}行`);return invoices;}
+function collectMeisaiData(opts){const warnings=[];const mode=opts?.mode||'month';
 ensurePaperParkingFlags();
 function pushCustomerSheets(meisaiData,customer,year,month,closingDay,recs){
   if(!recs.length)return;
@@ -2681,7 +2704,7 @@ function meisaiBox(ws,r1,c1,r2,c2,inner){
     }
   }
 }
-function _disabled_setupMeisaiSheet(ws,data){
+function setupMeisaiSheet(ws,data){
   /* 印刷: A4横向き（列が多いため） */
   const font={name:'ＭＳ Ｐゴシック',size:10};
   const fontTitle={name:'ＭＳ Ｐゴシック',size:11};
@@ -2792,7 +2815,7 @@ function _disabled_setupMeisaiSheet(ws,data){
   meisaiBox(ws,9,3,9,16,true);
   meisaiBox(ws,10,1,44,18,true);
 }
-async function _disabled_exportSampleBilling(){
+async function exportSampleBilling(){
   const sample=[
     {sample:true,customer:'見本店（代官山）',sheetName:'見本店代官山_2026年8月',year:2026,month:8,closingDay:20,invoices:[
       {invoiceNo:'1',deliveryDate:'2026年8月4日',items:[{name:'コックコート',price:150,qty:8},{name:'白パンツ',price:80,qty:8},{name:'グラスタオル',price:20,qty:40},{name:'トーション　白',price:15,qty:24}]},
@@ -2837,7 +2860,7 @@ function expandMeisaiSheetsForExport(meisaiData){
   });
   return out;
 }
-async function _disabled_exportMeisaiXlsx(meisaiData,filename){
+async function exportMeisaiXlsx(meisaiData,filename){
   if(typeof ExcelJS==='undefined')throw new Error('Excelライブラリの読み込みに失敗しました');
   const sheets=expandMeisaiSheetsForExport(meisaiData);
   if(sheets.length>MEISAI_MAX_SHEETS)throw new Error(`1ファイルのシート上限（${MEISAI_MAX_SHEETS}）を超えています（${sheets.length}シート）`);
@@ -2849,9 +2872,9 @@ async function _disabled_exportMeisaiXlsx(meisaiData,filename){
 }
 function markBillingExported(entries){const now=new Date().toISOString();entries.forEach(h=>{h.billingExportedAt=now;persistHistoryLocal();fbSaveHistoryEntry(h);});}
 function splitMeisaiByMonth(meisaiData){const groups=new Map();meisaiData.forEach(d=>{const k=`${d.year}-${String(d.month).padStart(2,'0')}`;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(d);});return[...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,rows])=>({key:k,rows}));}
-async function _disabled_exportTodayBilling(){const result=collectMeisaiData({mode:'today'});if(result.error){toast(result.error,'e');return;}try{if(result.meisaiData.length<=MEISAI_MAX_SHEETS){await exportMeisaiXlsx(result.meisaiData,`purims_meisai_${fileDate()}.xlsx`);}else{const parts=splitMeisaiByMonth(result.meisaiData);for(const part of parts){await exportMeisaiXlsx(part.rows,`purims_meisai_${part.key}.xlsx`);}}markBillingExported(result.toMark);let msg=`${result.meisaiData.length}シートの請求明細Excelを出力しました`;if(result.meisaiData.length>MEISAI_MAX_SHEETS)msg+=`（${splitMeisaiByMonth(result.meisaiData).length}ファイルに分割）`;if(result.warnings?.length)msg+='（'+result.warnings.slice(0,3).join('、')+(result.warnings.length>3?'…':'')+'）';toast(msg,result.warnings?.length?'e':'');}catch(e){toast('Excel出力に失敗しました: '+e.message,'e');}}
-async function _disabled_exportMeisaiMonthXlsx(){const year=parseInt(document.getElementById('meisai-year')?.value,10);const month=parseInt(document.getElementById('meisai-month')?.value,10);const result=collectMeisaiData({mode:'month',year,month});if(result.error){toast(result.error,'e');return;}try{await exportMeisaiXlsx(result.meisaiData,`purims_meisai_${year}${String(month).padStart(2,'0')}.xlsx`);let msg=`${result.meisaiData.length}店舗分の請求明細Excelを出力しました`;if(result.warnings?.length)msg+='（'+result.warnings.join('、')+'）';toast(msg,result.warnings?.length?'e':'');}catch(e){toast('Excel出力に失敗しました: '+e.message,'e');}}
-function _disabled_exportMeisaiJSON(){const year=parseInt(document.getElementById('meisai-year')?.value,10);const month=parseInt(document.getElementById('meisai-month')?.value,10);const result=collectMeisaiData({mode:'month',year,month});if(result.error){toast(result.error,'e');return;}const payload={meisaiData:result.meisaiData.map(d=>({...d,invoices:d.invoices.map(inv=>({...inv,deliveryDate:formatDeliveryDateForMeisai(inv.deliveryDate)}))})),exportedAt:new Date().toISOString(),source:'Purims'};dlFile(JSON.stringify(payload,null,2),`purims_meisai_${year}${String(month).padStart(2,'0')}.json`,'application/json');let msg=`${result.meisaiData.length}店舗分の請求JSONを出力しました`;if(result.warnings?.length)msg+='（'+result.warnings.join('、')+'）';toast(msg,result.warnings?.length?'e':'');}
+async function exportTodayBilling(){const result=collectMeisaiData({mode:'today'});if(result.error){toast(result.error,'e');return;}try{if(result.meisaiData.length<=MEISAI_MAX_SHEETS){await exportMeisaiXlsx(result.meisaiData,`purims_meisai_${fileDate()}.xlsx`);}else{const parts=splitMeisaiByMonth(result.meisaiData);for(const part of parts){await exportMeisaiXlsx(part.rows,`purims_meisai_${part.key}.xlsx`);}}markBillingExported(result.toMark);let msg=`${result.meisaiData.length}シートの請求明細Excelを出力しました`;if(result.meisaiData.length>MEISAI_MAX_SHEETS)msg+=`（${splitMeisaiByMonth(result.meisaiData).length}ファイルに分割）`;if(result.warnings?.length)msg+='（'+result.warnings.slice(0,3).join('、')+(result.warnings.length>3?'…':'')+'）';toast(msg,result.warnings?.length?'e':'');}catch(e){toast('Excel出力に失敗しました: '+e.message,'e');}}
+async function exportMeisaiMonthXlsx(){const year=parseInt(document.getElementById('meisai-year')?.value,10);const month=parseInt(document.getElementById('meisai-month')?.value,10);const result=collectMeisaiData({mode:'month',year,month});if(result.error){toast(result.error,'e');return;}try{await exportMeisaiXlsx(result.meisaiData,`purims_meisai_${year}${String(month).padStart(2,'0')}.xlsx`);let msg=`${result.meisaiData.length}店舗分の請求明細Excelを出力しました`;if(result.warnings?.length)msg+='（'+result.warnings.join('、')+'）';toast(msg,result.warnings?.length?'e':'');}catch(e){toast('Excel出力に失敗しました: '+e.message,'e');}}
+function exportMeisaiJSON(){const year=parseInt(document.getElementById('meisai-year')?.value,10);const month=parseInt(document.getElementById('meisai-month')?.value,10);const result=collectMeisaiData({mode:'month',year,month});if(result.error){toast(result.error,'e');return;}const payload={meisaiData:result.meisaiData.map(d=>({...d,invoices:d.invoices.map(inv=>({...inv,deliveryDate:formatDeliveryDateForMeisai(inv.deliveryDate)}))})),exportedAt:new Date().toISOString(),source:'Purims'};dlFile(JSON.stringify(payload,null,2),`purims_meisai_${year}${String(month).padStart(2,'0')}.json`,'application/json');let msg=`${result.meisaiData.length}店舗分の請求JSONを出力しました`;if(result.warnings?.length)msg+='（'+result.warnings.join('、')+'）';toast(msg,result.warnings?.length?'e':'');}
 
 let _meisaiViewerData=[];
 let _meisaiViewerIdx=0;
@@ -2861,7 +2884,7 @@ let _meisaiViewerMonth=0;
 let _meisaiViewerSource='month';
 let _meisaiViewerPeriodLabel='';
 function yenFmt(n){return'¥'+Math.round(Number(n)||0).toLocaleString('ja-JP');}
-function _disabled_buildMeisaiRows(data){
+function buildMeisaiRows(data){
   const invoices=(data.invoices||[]).slice(0,14);
   const itemRows=[];
   const rowMap=new Map();
@@ -2908,7 +2931,7 @@ function _disabled_buildMeisaiRows(data){
   const tax=Math.round(subtotal*0.1);
   return{invoices,itemRows,sum,min,subtotal,tax,total:subtotal+tax,slipCount:invoices.length,minApplied:min>0&&sum<min};
 }
-function _disabled_buildMeisaiSummaryRows(){
+function buildMeisaiSummaryRows(){
   return _meisaiViewerData.map((d,i)=>{
     const r=buildMeisaiRows(d);
     const closing=d.closingDay===99?'末':(d.closingDay?String(d.closingDay):'末');
@@ -2921,7 +2944,7 @@ function meisaiClosingHeading(day){
   if(d===25)return'25日締め';
   return'末日締め';
 }
-function _disabled_meisaiSummaryBodyHtml(rows){
+function meisaiSummaryBodyHtml(rows){
   if(!rows.length)return'<tr><td colspan="7" class="cen" style="padding:24px;color:#888">データがありません</td></tr>';
   let n=0;
   return rows.map((r,i)=>{
@@ -2943,7 +2966,7 @@ function _disabled_meisaiSummaryBodyHtml(rows){
   </tr>`;
   }).join('');
 }
-function _disabled_meisaiSummaryHtml(){
+function meisaiSummaryHtml(){
   const rows=buildMeisaiSummaryRows();
   const sumSub=rows.reduce((s,r)=>s+r.subtotal,0);
   const sumTax=rows.reduce((s,r)=>s+r.tax,0);
@@ -3003,7 +3026,7 @@ function meisaiPrintStyles(){
     .meisai-price-missing{background:#ffe566!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}`;
 }
 const MEISAI_PAGE_ROWS=20;
-function _disabled_meisaiSheetHtml(data){
+function meisaiSheetHtml(data){
   const built=buildMeisaiRows(data);
   const {invoices,itemRows,sum,min,subtotal,tax,total}=built;
   const closingLabel=data.closingDay===99?'末':(data.closingDay?String(data.closingDay):'末');
@@ -3079,7 +3102,7 @@ function _disabled_meisaiSheetHtml(data){
 
   return`<div id="meisai-sheet-print">${pagesHtml}</div>`;
 }
-function _disabled_setMeisaiViewerMode(mode){
+function setMeisaiViewerMode(mode){
   _meisaiViewerMode=mode==='detail'?'detail':'summary';
   const sumTab=document.getElementById('meisai-tab-summary');
   const detTab=document.getElementById('meisai-tab-detail');
@@ -3100,11 +3123,11 @@ function _disabled_setMeisaiViewerMode(mode){
   if(_meisaiViewerMode==='summary')renderMeisaiSummary();
   else requestAnimationFrame(()=>requestAnimationFrame(fitMeisaiViewerSheet));
 }
-function _disabled_renderMeisaiSummary(){
+function renderMeisaiSummary(){
   const el=document.getElementById('meisai-summary-wrap');
   if(el)el.innerHTML=meisaiSummaryHtml();
 }
-function _disabled_openMeisaiViewer(mode,opts){
+function openMeisaiViewer(mode,opts){
   opts=opts||{};
   let result,year,month,periodText;
   if(opts.source==='pending'&&((currentUser&&currentUser.role==='viewer')||isNexusMode())){
@@ -3153,7 +3176,7 @@ function _disabled_openMeisaiViewer(mode,opts){
   setMeisaiViewerMode(mode==='detail'?'detail':'summary');
   if(result.warnings?.length)toast(result.warnings.slice(0,3).join('、')+(result.warnings.length>3?'…':''),'e');
 }
-function _disabled_closeMeisaiViewer(){document.getElementById('meisai-viewer').classList.remove('open');}
+function closeMeisaiViewer(){document.getElementById('meisai-viewer').classList.remove('open');}
 function toggleMeisaiCheckPanel(){
   const body=document.getElementById('meisai-check-wrap');
   const btn=document.getElementById('meisai-check-toggle');
@@ -3164,7 +3187,7 @@ function toggleMeisaiCheckPanel(){
   if(icon)icon.textContent=open?'▼':'▶';
   requestAnimationFrame(fitMeisaiViewerSheet);
 }
-function _disabled_fitMeisaiViewerSheet(){
+function fitMeisaiViewerSheet(){
   const main=document.getElementById('meisai-viewer-main');
   const sheet=document.getElementById('meisai-sheet-print');
   if(!main||!sheet||!document.getElementById('meisai-viewer')?.classList.contains('open'))return;
@@ -3188,7 +3211,7 @@ function _disabled_fitMeisaiViewerSheet(){
   sheet.style.transform=`scale(${scale})`;
   sheet.style.marginBottom=`${Math.ceil(natH*(scale-1))}px`;
 }
-function _disabled_renderMeisaiViewerList(){
+function renderMeisaiViewerList(){
   const q=(document.getElementById('meisai-viewer-search')?.value||'').trim().toLowerCase();
   const el=document.getElementById('meisai-viewer-list');
   if(!el)return;
@@ -3206,7 +3229,7 @@ function _disabled_renderMeisaiViewerList(){
     return head+`<button type="button" class="meisai-viewer-item${i===_meisaiViewerIdx?' on':''}" onclick="selectMeisaiViewer(${i})"><div>${escH(d.customer)}${badge}</div><div style="font-size:12px;opacity:.85;margin-top:2px">${yenFmt(tot)}</div></button>`;
   }).join('');
 }
-function _disabled_selectMeisaiViewer(idx){
+function selectMeisaiViewer(idx){
   if(!_meisaiViewerData[idx])return;
   _meisaiViewerIdx=idx;
   renderMeisaiViewerList();
@@ -3215,11 +3238,11 @@ function _disabled_selectMeisaiViewer(idx){
   main.innerHTML='<div class="meisai-fit-host">'+meisaiSheetHtml(_meisaiViewerData[idx])+'</div>';
   requestAnimationFrame(()=>requestAnimationFrame(fitMeisaiViewerSheet));
 }
-function _disabled_printMeisaiViewerActive(){
+function printMeisaiViewerActive(){
   if(_meisaiViewerMode==='summary')printMeisaiSummary();
   else printMeisaiViewerSheet();
 }
-function _disabled_openMeisaiPrintWindow(title,styles,bodyHtml){
+function openMeisaiPrintWindow(title,styles,bodyHtml){
   const doc=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title||'印刷'}</title><style>${styles}</style></head><body>${bodyHtml}</body></html>`;
   /* noopener だと Chrome が空タブだけ開いて書き込めないため Blob URL を使う */
   const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
@@ -3232,13 +3255,13 @@ function _disabled_openMeisaiPrintWindow(title,styles,bodyHtml){
     setTimeout(revoke,60000);
   },350);
 }
-function _disabled_printMeisaiViewerSheet(){
+function printMeisaiViewerSheet(){
   const sheet=document.getElementById('meisai-sheet-print');
   if(!sheet){toast('表示中の明細がありません','e');return;}
   openMeisaiPrintWindow('請求明細書',meisaiPrintStyles(),sheet.innerHTML);
   toast('印刷ダイアログで「用紙の向き＝横」になっているか確認してください');
 }
-function _disabled_printAllMeisaiSheets(){
+function printAllMeisaiSheets(){
   if(!_meisaiViewerData.length){toast('印刷する明細がありません','e');return;}
   if(!confirm(`${_meisaiViewerData.length}店舗の請求明細書を、紙の一覧表と同じ順で印刷します。続けますか？`))return;
   const pages=_meisaiViewerData.map(d=>{
@@ -3248,7 +3271,7 @@ function _disabled_printAllMeisaiSheets(){
   openMeisaiPrintWindow('請求明細書',meisaiPrintStyles(),`<div id="meisai-sheet-print">${pages}</div>`);
   toast('印刷ダイアログで「用紙の向き＝横」になっているか確認してください');
 }
-function _disabled_printMeisaiSummary(){
+function printMeisaiSummary(){
   const sheet=document.getElementById('meisai-summary-print');
   if(!sheet){toast('一覧がありません','e');return;}
   openMeisaiPrintWindow('請求額一覧表',`
@@ -3283,7 +3306,7 @@ function buildMeisaiSummaryExportLines(){
   lines.push(['','合計','',sumSlips,sumSub,sumTax,sumTot,'']);
   return{rows,lines};
 }
-function _disabled_exportMeisaiSummaryCSV(){
+function exportMeisaiSummaryCSV(){
   const {rows,lines}=buildMeisaiSummaryExportLines();
   if(!rows.length){toast('出力するデータがありません','e');return;}
   const bom='\uFEFF';
@@ -3291,7 +3314,7 @@ function _disabled_exportMeisaiSummaryCSV(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download=meisaiSummaryExportBasename()+'.csv';a.click();URL.revokeObjectURL(a.href);
   toast(`${rows.length}店舗の請求額一覧CSVを出力しました`);
 }
-async function _disabled_exportMeisaiSummaryXlsx(){
+async function exportMeisaiSummaryXlsx(){
   const {rows,lines}=buildMeisaiSummaryExportLines();
   if(!rows.length){toast('出力するデータがありません','e');return;}
   if(typeof ExcelJS==='undefined'){toast('Excelライブラリの読み込みに失敗しました','e');return;}
@@ -3420,13 +3443,14 @@ function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new 
 
 // ===== マスタ管理 =====
 function showPanel(id,btn){
-  if(currentUser&&currentUser.role==='viewer'&&id==='master')return;
+  if(currentUser&&currentUser.role==='viewer'&&id!=='billing')return;
+  if(typeof isNexusMode==='function'&&isNexusMode()&&id!=='billing')return;
   document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.height='';});
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const panel=document.getElementById('panel-'+id);
   if(!panel)return;
   panel.classList.add('on');
-  const scrollPanels=['master','history','data','help'];
+  const scrollPanels=['master','history','data','help','billing'];
   if(scrollPanels.includes(id)){
     const hdrH=document.querySelector('.hdr').offsetHeight;
     const tabH=document.querySelector('.tabs').offsetHeight;
@@ -3435,11 +3459,15 @@ function showPanel(id,btn){
   if(btn&&btn.classList)btn.classList.add('on');
   else{
     const tabs=[...document.querySelectorAll('.tabs .tab')];
-    const map={slip:0,history:1,master:2,data:3,help:4};
+    const map={slip:0,history:1,master:2,data:3,billing:4,help:5};
     if(map[id]!=null&&tabs[map[id]])tabs[map[id]].classList.add('on');
   }
+  if(id==='billing'){
+    if(typeof isViewerSession==='function'&&isViewerSession())applyViewerUi();
+    else{renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}
+  }
 }
-function _disabled_onMeisaiMonthChange(){renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}
+function onMeisaiMonthChange(){renderParkingFeeCorner();syncCheckCalFromMeisai();renderBillingCheckCalendar();}
 function showCTab(id,btn){document.querySelectorAll('#m-panel-client .m-panel').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#m-panel-client .m-tab').forEach(t=>t.classList.remove('on'));document.getElementById('c-panel-'+id).classList.add('on');if(btn)btn.classList.add('on');if(id==='new')renderCycBtns('nc-cyc-btns','nc-cyc','');}
 function showMTab(id,btn){document.querySelectorAll('.m-panel').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.m-tab').forEach(t=>t.classList.remove('on'));document.getElementById('m-panel-'+id).classList.add('on');btn.classList.add('on');if(id==='product'){renderProducts();setNPCode();}if(id==='group'){renderGroups();renderClientGrpList();}if(id==='client')setNC2();}
 const CYC_DAYS=['月','火','水','木','金','土','日'];
@@ -4333,15 +4361,15 @@ const APP_MODE=new URLSearchParams(location.search).get('mode')==='nexus'?'nexus
 const NEXUS_SESSION_KEY=lsKey('nexus_session_v1');
 const NEXUS_SESSION_DAYS=30;
 
-function _disabled_isNexusMode(){return APP_MODE==='nexus';}
-function _disabled_isViewerSession(){return isNexusMode()||(currentUser&&currentUser.role==='viewer');}
-function _disabled_clearNexusSession(){localStorage.removeItem(NEXUS_SESSION_KEY);}
-function _disabled_saveNexusSession(user){
+function isNexusMode(){return APP_MODE==='nexus';}
+function isViewerSession(){return isNexusMode()||(currentUser&&currentUser.role==='viewer');}
+function clearNexusSession(){localStorage.removeItem(NEXUS_SESSION_KEY);}
+function saveNexusSession(user){
   if(!isNexusMode()||!user)return;
   const expiresAt=Date.now()+(NEXUS_SESSION_DAYS*24*60*60*1000);
   localStorage.setItem(NEXUS_SESSION_KEY,JSON.stringify({username:user.username,role:user.role,expiresAt}));
 }
-function _disabled_loadNexusSession(){
+function loadNexusSession(){
   if(!isNexusMode())return null;
   try{
     const raw=localStorage.getItem(NEXUS_SESSION_KEY);
@@ -4357,7 +4385,7 @@ function _disabled_loadNexusSession(){
 }
 function resetRoleUi(){
   document.body.classList.remove('viewer-ui');
-  ['tab-slip','tab-history','tab-master','tab-data','tab-help'].forEach(id=>{
+  ['tab-slip','tab-history','tab-master','tab-data','tab-billing','tab-help'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.display='';
   });
@@ -4374,12 +4402,14 @@ function resetRoleUi(){
   document.getElementById('user-mgr-btn').style.display='none';
   document.getElementById('tab-loginlog').style.display='none';
 }
-function _disabled_applyViewerUi(){
+function applyViewerUi(){
   document.body.classList.add('viewer-ui');
   ['tab-slip','tab-history','tab-master','tab-data','tab-help'].forEach(id=>{
     const el=document.getElementById(id);
     if(el)el.style.display='none';
   });
+  const tabBilling=document.getElementById('tab-billing');
+  if(tabBilling)tabBilling.style.display='';
   const excelSec=document.getElementById('billing-excel-section');
   if(excelSec)excelSec.style.display='none';
   const parkSec=document.getElementById('parking-fee-section');
@@ -4443,6 +4473,9 @@ async function finishLoginUI(matched){
   if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
   if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
   try{applyLedgerIssuePending();}catch(e){console.warn(e);}
+  try{initMeisaiMonth();}catch(e){}
+  try{updateBillingPendingBadge();}catch(e){}
+  try{markOutOfScopeAsBilled();}catch(e){}
 }
 async function doLogin(){
   const password = document.getElementById('login-pass').value;
@@ -4890,6 +4923,7 @@ function closeLoginLog_dup(){document.getElementById('loginlog-modal').style.dis
 
 /* 更新情報（新しいものを上に追加） type: 'feat'=機能更新 / 'fix'=バグ修正 */
 const APP_UPDATES=[
+  {date:'2026-10-29',type:'feat',text:'請求タブを有効化（請求明細書・請求額一覧の閲覧／印刷、Excel出力、事務チェック、駐車場代）'},
   {date:'2026-10-17',type:'feat',text:'伝票のルート番号にグループ名、記号に客先マスタの記号を表示'},
   {date:'2026-10-17',type:'feat',text:'伝票右下の会社情報にFAX・メール・ホームページ欄を追加（空欄は印刷に出ない）'},
   {date:'2026-10-17',type:'feat',text:'伝票右下の会社名・住所を、データタブから変更できるようにした（クラウド共有）'},
@@ -4913,7 +4947,7 @@ function closeUpdatesModal(){document.getElementById('updates-modal')?.classList
 
 // ===== 【修正⑥】DOMContentLoadedを1か所に統合 =====
 // ===== 【修正①】window.loadでのfbLoad呼び出しを削除 =====
-function _disabled_applyNexusChrome(){
+function applyNexusChrome(){
   if(!isNexusMode())return;
   document.body.classList.add('viewer-ui');
   document.title='Purims ネクサス請求閲覧';
@@ -4940,7 +4974,7 @@ function _disabled_applyNexusChrome(){
     }).catch(()=>{});
   }
 }
-function _disabled_applyOfficeChrome(){
+function applyOfficeChrome(){
   if(isNexusMode())return;
   const setLink=(rel,href,type)=>{
     let el=[...document.querySelectorAll(`link[rel="${rel}"]`)].find(n=>!type||n.getAttribute('type')===type);
@@ -4948,8 +4982,10 @@ function _disabled_applyOfficeChrome(){
     el.href=href;
   };
   setLink('manifest','manifest.json');
+  let theme=document.querySelector('meta[name="theme-color"]');
+  if(!theme){theme=document.createElement('meta');theme.name='theme-color';document.head.appendChild(theme);}
+  theme.content='#1a2744';
 }
-
 document.addEventListener('DOMContentLoaded',()=>{
   if(isNexusMode())applyNexusChrome();
   else applyOfficeChrome();
@@ -4971,6 +5007,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   try{loadHistoryKeepSetting();}catch(e){}
   try{loadBillingMasterSetting();}catch(e){}
   try{loadSlipCompanySetting();}catch(e){}
+  try{initMeisaiMonth();}catch(e){}
+  try{updateBillingPendingBadge();}catch(e){}
 
   // ===== 【修正④】バックアップ警告：localStorage使用（永続化） =====
   window.addEventListener('beforeunload',e=>{

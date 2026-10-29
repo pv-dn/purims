@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ソフトウェア利用契約書（草案）</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Yu Mincho", "Hiragino Mincho ProN", "MS PMincho", serif;
+    color: #111; line-height: 1.7; max-width: 780px; margin: 0 auto;
+    padding: 24px 28px 48px; font-size: 12.5px;
+  }
+  h1 {
+    font-size: 20px; text-align: center; font-weight: 700;
+    margin: 0 0 18px; letter-spacing: 0.12em;
+  }
+  h2 {
+    font-size: 13.5px; font-weight: 700; margin: 18px 0 8px;
+    border-bottom: 1px solid #333; padding-bottom: 2px;
+    break-after: avoid; page-break-after: avoid;
+  }
+  h3 { font-size: 12.5px; font-weight: 700; margin: 14px 0 6px; }
+  p { margin: 6px 0; text-align: justify; }
+  .note {
+    font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    font-size: 11px; color: #444; background: #f6f6f6;
+    border: 1px solid #ddd; padding: 8px 10px; margin: 0 0 16px;
+  }
+  .parties { margin: 12px 0 16px; }
+  .parties p { margin: 2px 0; }
+  .label { font-weight: 700; margin-top: 10px; }
+  ol { padding-left: 1.4em; margin: 6px 0 10px; }
+  ol li { margin: 4px 0; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 11.5px;
+    font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+  }
+  th, td { border: 1px solid #333; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; width: 8%; font-weight: 700; white-space: nowrap; }
+  .opt-block {
+    margin-top: 10px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .opt-block h3 {
+    margin: 0 0 4px;
+    font-size: 12px;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  table.opt {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  table.opt th,
+  table.opt td {
+    padding: 14px 10px;
+    vertical-align: middle;
+  }
+  table.opt th:nth-child(1),
+  table.opt td:nth-child(1) { width: 22%; white-space: nowrap; }
+  table.opt th:nth-child(2),
+  table.opt td:nth-child(2) { width: auto; }
+  table.opt th:last-child,
+  table.opt td:last-child {
+    width: 12%;
+    text-align: right;
+    white-space: nowrap;
+    padding-right: 10px;
+  }
+  table.opt tr.total td:first-child { text-align: left; }
+  .sign {
+    margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .sign-box { border: 1px solid #333; padding: 12px 14px; min-height: 160px; }
+  .sign-box .ttl { font-weight: 700; margin-bottom: 10px; }
+  .sign-box p { margin: 4px 0; }
+  .inkan { text-align: right; margin-top: 28px; letter-spacing: 1.5em; }
+  .toolbar {
+    position: sticky; top: 0; z-index: 10; background: #fff;
+    border-bottom: 1px solid #ccc; padding: 10px 0 12px; margin: -8px 0 16px;
+    display: flex; gap: 10px; align-items: center;
+    font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+  }
+  .toolbar button {
+    background: #333; color: #fff; border: none; border-radius: 6px;
+    padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .toolbar span { color: #666; font-size: 12px; }
+  .annex { margin-top: 8px; }
+  @media print {
+    .toolbar, .note { display: none !important; }
+    body {
+      padding: 0;
+      max-width: none;
+      font-size: 11px;
+      line-height: 1.62;
+    }
+    h1 { font-size: 17px; margin: 0 0 12px; }
+    h2 {
+      font-size: 12px;
+      margin: 11px 0 5px;
+      padding-bottom: 1px;
+    }
+    p { margin: 4px 0; }
+    .parties { margin: 8px 0 10px; }
+    .label { margin-top: 8px; }
+    ol { margin: 4px 0 7px; padding-left: 1.25em; }
+    ol li { margin: 3px 0; }
+    table {
+      font-size: 10.5px;
+      margin: 6px 0 8px;
+    }
+    th, td { padding: 4px 6px; }
+    .sign {
+      margin-top: 18px;
+      gap: 16px;
+    }
+    .sign-box {
+      padding: 10px 12px;
+      min-height: 125px;
+    }
+    .sign-box .ttl { margin-bottom: 8px; }
+    .inkan { margin-top: 18px; }
+    /* 別紙は4枚目専用。本文はゆったり、別紙側で収める */
+    .annex {
+      break-before: page;
+      page-break-before: always;
+    }
+    .annex h2 { margin-top: 0; margin-bottom: 6px; }
+    .annex > p { margin: 4px 0 6px; }
+    .annex > table {
+      font-size: 9.6px;
+      margin: 4px 0 6px;
+      line-height: 1.35;
+    }
+    .annex > table th,
+    .annex > table td { padding: 3px 5px; }
+    .opt-block {
+      margin-top: 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .opt-block h3 { font-size: 11px; margin: 0 0 4px; }
+    table.opt { font-size: 10.2px; line-height: 1.4; }
+    table.opt th,
+    table.opt td { padding: 8px 7px; }
+  }
+  @page { margin: 11mm 10mm; size: A4 portrait; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">印刷する</button>
+    <span>A4縦・印刷時おおよそ4ページ想定。社内メモは印刷されません。プレビューでページ数を確認してください。</span>
+  </div>
+
+  <div class="note">
+    草案（オプション全部載せ・採用決定）。甲乙の名称、支払条件、サポート期間、納品予定日等の〔　〕はWord化後に記入。金額に疑義がある場合は見積書・注文書を優先。
+  </div>
+
+  <h1>ソフトウェア利用契約書（草案）</h1>
+
+  <div class="parties">
+    <p class="label">甲（提供者）</p>
+    <p>名称：〔　　　　　　　　　　〕</p>
+    <p class="label">乙（利用者）</p>
+    <p>名称：〔　　　　　　　　　　〕</p>
+  </div>
+
+  <p>甲および乙は、甲が乙に提供する伝票発行システムおよび入出荷台帳アプリケーション（以下総称して「本システム」という。）の利用等に関し、次のとおり契約（以下「本契約」という。）を締結する。</p>
+
+  <h2>第1条（目的）</h2>
+  <p>本契約は、甲が乙に対し本システムの利用を許諾し、初期導入およびサポート等の条件を定めることを目的とする。</p>
+
+  <h2>第2条（定義）</h2>
+  <ol>
+    <li>「本システム」とは、画面上「Primus 伝票発行システム」等の名称で提供される伝票発行用Webアプリケーション、およびこれに付随する入出荷台帳アプリケーションをいう。</li>
+    <li>「見積書」とは、本契約に先立ち甲が乙に提示した導入費用およびオプション等の見積書類をいう。</li>
+    <li>「注文書」とは、乙が見積書の内容に基づき甲に対して発注の意思を表示する書類（電磁的方法によるものを含む。）をいう。</li>
+    <li>「別紙」とは、本契約末尾の「別紙（取引内容）」をいい、本契約の一部を構成する。</li>
+  </ol>
+
+  <h2>第3条（契約の成立）</h2>
+  <ol>
+    <li>本契約は、乙が甲に対し注文書を交付し、かつ甲乙が本契約の内容に合意し、記名押印（またはこれに準ずる電磁的な合意）をしたときに成立する。</li>
+    <li>注文書の記載と本契約または見積書の記載に相違がある場合は、甲乙協議のうえ確定する。協議が整わない事項については、本契約および見積書の記載を基準とする。</li>
+    <li>本契約に定めのない事項で見積書または注文書に定めのある事項は、本契約に反しない限り、その定めに従う。</li>
+  </ol>
+
+  <h2>第4条（納品物）</h2>
+  <p>甲が乙に納品する物は、次のとおりとする。</p>
+  <ol>
+    <li>本システムを利用するために必要な環境（伝票アプリケーションおよび台帳アプリケーションのURLその他これに準ずる利用手段）</li>
+    <li>初期設定に関する案内（ログイン方法および基本操作の説明を含む。）</li>
+    <li>スタート・運用ガイド（導入手順および日常運用に関する説明資料）</li>
+    <li>別紙に記載した初期設定、カスタマイズおよびオプション機能</li>
+  </ol>
+  <p>ソースコードの引渡しは、原則として行わない。必要がある場合は、別途書面により合意する。</p>
+
+  <h2>第5条（納品および検収）</h2>
+  <ol>
+    <li>甲は、前条の納品物の提供が完了したときは、乙に対し納品書を発行する。</li>
+    <li>乙は、納品書受領後、〔　　〕日以内に本システムの利用可否を確認し、甲に対し確認の結果を通知する。当該期間内に乙から書面（電磁的方法を含む。）による異議がないときは、検収が完了したものとみなす。</li>
+    <li>検収完了をもって、本システムの初期導入は完了したものとする。</li>
+    <li>検収前に発見された本システムの明らかな不具合については、甲が無償で修正する。ただし、乙の指示に基づく仕様変更、乙の環境に起因する事象は、この限りでない。</li>
+  </ol>
+
+  <h2>第6条（利用許諾の範囲）</h2>
+  <ol>
+    <li>甲は乙に対し、本契約の有効期間中、本システムを乙の業務目的の範囲内で利用することを非独占的に許諾する。</li>
+    <li>利用の範囲は、原則として乙の一法人（一組織）に限る。</li>
+    <li>乙は、本システムを第三者に再販売、再配布、賃貸、貸与し、または利用許諾してはならない。</li>
+    <li>本システムに係るログイン情報の管理は、乙の責任において行う。</li>
+    <li>乙は、伝票等に表示する自社名、住所、連絡先その他の表示内容を、本システム内の設定機能により管理する。当該表示内容の正確性についての責任は、乙が負う。</li>
+  </ol>
+
+  <h2>第7条（対価および支払）</h2>
+  <ol>
+    <li>乙が甲に支払う対価は、次のとおりとし、金額の詳細は別紙および見積書に定める。
+      <ol type="1" style="list-style-type:none;padding-left:1em;">
+        <li>(1) 初期費用（基本導入費および別紙記載のオプション費用）</li>
+        <li>(2) 月額サポート料</li>
+      </ol>
+    </li>
+    <li>消費税その他の公租公課の扱いは、見積書および注文書の記載に従う。</li>
+    <li>支払時期は、次のとおりとする。
+      <ol type="1" style="list-style-type:none;padding-left:1em;">
+        <li>(1) 初期費用：〔　　〕</li>
+        <li>(2) 月額サポート料：〔　　〕</li>
+      </ol>
+    </li>
+    <li>支払方法は〔銀行振込〕とし、振込手数料は乙の負担とする。振込先は甲が別途指定する。</li>
+    <li>サポート期間終了後にサポートを継続する場合の条件は、甲乙協議のうえ別途合意する。</li>
+    <li>別紙および見積書に含まれない追加改修、追加オプションその他の作業は、別途見積のうえ実施する。</li>
+    <li>クラウド利用料、ドメイン費用その他外部サービスに係る費用は、原則として乙の負担とする。ただし、導入当初に甲が用意するクラウド環境を利用する期間の費用負担は、別紙の定めに従う。</li>
+  </ol>
+
+  <h2>第8条（追加開発およびカスタマイズ）</h2>
+  <ol>
+    <li>別紙に記載した範囲を超える改修は、追加の見積および合意を要する。</li>
+    <li>乙から追加の要望があった場合、甲は見積を提示し、乙が承諾した範囲において実施する。</li>
+    <li>本システムの不具合の修正と、乙の要望に基づく機能追加・仕様変更とは区別して扱う。後者は、原則として有償とする。</li>
+  </ol>
+
+  <h2>第9条（サポート）</h2>
+  <ol>
+    <li>甲は、月額サポート料の対象期間中、次の事項に対応する。
+      <ol type="1" style="list-style-type:none;padding-left:1em;">
+        <li>(1) 本システムの操作方法に関する問い合わせ</li>
+        <li>(2) 本システムに起因することが明らかな不具合の修正</li>
+        <li>(3) 軽微な運用上の相談</li>
+      </ol>
+    </li>
+    <li>次の各号に該当する事項は、サポートの対象外とし、または別途対価を要する。
+      <ol type="1" style="list-style-type:none;padding-left:1em;">
+        <li>(1) 乙の使用する端末、プリンタ、ブラウザ、ネットワークその他乙の環境に起因する問題</li>
+        <li>(2) 乙が依頼する仕様変更または追加開発</li>
+        <li>(3) 乙の操作誤り等によるデータの消失に係る復旧（甲は可能な範囲で協力するが、復旧を保証しない。）</li>
+      </ol>
+    </li>
+    <li>サポート期間の終了後における継続対応は、更新合意または都度の見積による。</li>
+  </ol>
+
+  <h2>第10条（データおよびクラウド）</h2>
+  <ol>
+    <li>本システム上に保存される業務データ（客先、品目、発行履歴等）に関する権利は、乙に帰属する。</li>
+    <li>甲は、サポートおよび障害対応に必要な場合を除き、乙のデータを本契約の目的外に利用しない。</li>
+    <li>乙は、重要データについて、本システムが提供するバックアップ機能等を用い、適宜バックアップを行うものとする。甲は保全に努めるが、完全な保全を保証しない。</li>
+    <li>導入当初、本システムのデータは甲が用意するクラウド環境（Firebaseその他これに準ずるサービスを含む。）に保存する。乙は、利用URLおよびログイン情報により本システムを利用でき、乙自身による当該クラウドのアカウント登録は必須としない。</li>
+    <li>甲乙合意のうえ、乙が用意するクラウド環境へデータを移管し、接続先を変更することができる。移管の時期、作業範囲および費用は、都度見積または別途合意による。</li>
+    <li>本契約終了時、乙から請求があった場合、甲は合理的な範囲でデータのエクスポートおよび移管に協力する。</li>
+  </ol>
+
+  <h2>第11条（免責および責任の制限）</h2>
+  <ol>
+    <li>本システムは業務の効率化を目的とするツールであり、法令適合性の保証、会計監査または税務判断の代替となるものではない。</li>
+    <li>印刷結果は、プリンタ、ブラウザ、用紙および設定により差異が生じ得る。甲は一般的な案内を行うが、乙の環境における完全な一致を保証しない。</li>
+    <li>甲の故意または重過失による場合を除き、本契約に関する甲の損害賠償責任は、当該損害発生前12か月間に乙が甲に支払った本契約に係る対価の総額を上限とする。</li>
+    <li>甲は、間接損害、特別損害、逸失利益および乙の取引先との紛争等について、責任を負わない。</li>
+  </ol>
+
+  <h2>第12条（秘密保持）</h2>
+  <p>甲および乙は、本契約の履行に関し知り得た相手方の営業上または技術上の秘密を、相手方の事前の同意なく第三者に開示または漏洩してはならない。ただし、法令に基づき開示が求められる場合は、この限りでない。</p>
+
+  <h2>第13条（有効期間および終了）</h2>
+  <ol>
+    <li>本契約は、第3条により成立した日に効力を生ずる。</li>
+    <li>本システムの利用許諾は、乙が本システムの利用を終了するまで存続する。</li>
+    <li>月額サポートの期間は、別紙に定める期間とする。更新しない場合、当該期間の末日をもってサポートは終了する。</li>
+    <li>乙は、〔　　〕前までに甲へ通知することにより、利用またはサポートを終了することができる。</li>
+    <li>乙が対価の支払を怠り、または第6条に違反した場合、甲は本システムの利用停止または本契約の解除を行うことができる。</li>
+    <li>本契約終了後、甲は合理的な期間の経過後、乙向けの利用環境を閉鎖することができる。</li>
+  </ol>
+
+  <h2>第14条（協議および管轄）</h2>
+  <ol>
+    <li>本契約に関し疑義または紛争が生じたときは、甲乙誠実に協議し解決を図る。</li>
+    <li>協議により解決しない場合、甲の本店所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とする。</li>
+  </ol>
+
+  <h2>第15条（本契約の優先等）</h2>
+  <ol>
+    <li>本契約、見積書、注文書および仕様に関する書面の記載に相違がある場合の優先順位は、個別に甲乙が書面で合意した事項、注文書、見積書、本契約の順を目安とし、最終的には甲乙の協議により確定する。</li>
+    <li>本契約の変更は、甲乙の書面（電磁的方法による明確な合意を含む。）によらなければ、その効力を生じない。</li>
+  </ol>
+
+  <p>本契約成立の証として、本書2通を作成し、甲乙記名押印のうえ各1通を保有する。電磁的方法により合意する場合は、その記録をもってこれに代えることができる。</p>
+
+  <div class="sign">
+    <div class="sign-box">
+      <div class="ttl">甲（提供者）</div>
+      <p>名称：〔　　　　　　　　　　〕</p>
+      <p>日付：　　　年　　　月　　　日</p>
+      <p>記名押印者氏名：＿＿＿＿＿＿＿＿＿＿＿＿</p>
+      <div class="inkan">印</div>
+    </div>
+    <div class="sign-box">
+      <div class="ttl">乙（利用者）</div>
+      <p>名称：〔　　　　　　　　　　〕</p>
+      <p>日付：　　　年　　　月　　　日</p>
+      <p>記名押印者氏名：＿＿＿＿＿＿＿＿＿＿＿＿</p>
+      <div class="inkan">印</div>
+    </div>
+  </div>
+
+  <div class="annex">
+  <h2>別紙（取引内容）</h2>
+  <p>本別紙は、見積書に記載の基本内容およびオプションをすべて含む条件とする。</p>
+
+  <table>
+    <tr><th>項目</th><th>内容</th></tr>
+    <tr><td>利用者（乙）</td><td>〔　　　　　　　　　　〕</td></tr>
+    <tr><td>対象システム</td><td>Primus 伝票発行システムおよび入出荷台帳</td></tr>
+    <tr><td>基本機能</td><td>納品書発行、発行履歴、客先・品目マスタ、ログイン、自社情報、A4印刷、会社名マスタ（伝票印刷は店舗名のみ）、客先グループ（配送便の区分）、ロット番号（台帳で都度選択し伝票に反映／基本に含む）、マスタのCSV読込および手入力（導入後の運用は乙が行う。）、請求系マスタ項目の表示設定（最低保証、配送費等。請求機能利用時）、クラウド保存、JSONバックアップ、スタート・運用ガイド</td></tr>
+    <tr><td>台帳アプリケーション</td><td>入出荷台帳（「入」数量の入力に対応）。基本導入の範囲に含み、追加費用を要しない（サービス提供）。</td></tr>
+    <tr><td>基本導入費</td><td>150,000円（税別）</td></tr>
+    <tr><td>オプション費用合計</td><td>50,000円（税別）（内訳は下表）</td></tr>
+    <tr><td>初期費用合計</td><td>200,000円（税別）</td></tr>
+    <tr><td>月額サポート料</td><td>10,000円／月（税別）</td></tr>
+    <tr><td>サポート期間</td><td>〔　　〕か月（開始：　　年　　月　〜　終了：　　年　　月）</td></tr>
+    <tr><td>参考（サポート6か月の場合）</td><td>初期費用200,000円およびサポート料60,000円の合計260,000円（税別）</td></tr>
+    <tr><td>納品物</td><td>伝票アプリケーションURL、台帳アプリケーションURL、初期設定案内、スタート・運用ガイド、納品書</td></tr>
+    <tr><td>納品予定日</td><td>〔　　　　　　　　　　〕</td></tr>
+    <tr><td>利用URL</td><td>〔　　　　　　　　　　〕</td></tr>
+    <tr><td>クラウド（導入時）</td><td>甲が用意するFirebase等（乙によるアカウント登録は不要）</td></tr>
+    <tr><td>クラウド（移管）</td><td>乙が用意する環境への移管可（時期および費用は都度合意）</td></tr>
+    <tr><td>クラウド費用（当面）</td><td>甲負担（移管後は乙負担を想定）</td></tr>
+    <tr><td>特記事項</td><td>別紙記載の範囲を超える改修は別途見積とする。社内ネットワーク限定アクセスの実装には、乙のネットワーク環境に関する協力を要する場合がある。</td></tr>
+  </table>
+
+  <div class="opt-block">
+    <h3>オプション内訳（すべて含む）</h3>
+    <table class="opt">
+      <tr><th>名称</th><th>内容</th><th>金額（税別）</th></tr>
+      <tr><td>ロット番号の反映</td><td>台帳でロット番号を都度入力し、伝票に反映する</td><td>10,000円</td></tr>
+      <tr><td>社内ネットワーク限定アクセス</td><td>社内（Wi-Fi等）からのみアクセス可能とする</td><td>20,000円</td></tr>
+      <tr><td>請求明細書・請求一覧</td><td>請求明細書・一覧（自社運用版プリームスに準拠）</td><td>20,000円</td></tr>
+      <tr class="total"><td colspan="2"><strong>合計</strong></td><td><strong>50,000円</strong></td></tr>
+    </table>
+  </div>
+  </div>
+</body>
+</html>
