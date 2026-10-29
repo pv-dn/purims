@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -1065,10 +1065,11 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="help-section help-collapsed" id="help-daily">
     <div class="help-section-hd" onclick="toggleHelp('daily')">🗓 日常の運用（1日の流れ）<span class="help-toggle" id="help-toggle-daily">▶</span></div>
     <div class="help-section-body">
-      <p>伝票発行・履歴確認・マスタ管理を行うアプリです。データはクラウドに自動保存されます。</p>
-      <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブ … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">使い方</span></p>
-      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行ができます。保存期間は同タブで 3／6／12か月から選べます。</div></div>
+      <p>伝票発行・履歴・請求・マスタ管理を行うアプリです。入出荷台帳からの数量・ロット受け渡しもできます。データはクラウドに自動保存されます。</p>
+      <p style="margin-top:8px;font-size:12px;color:var(--mu)">画面上部タブ … <span class="help-tag">伝票発行</span> → <span class="help-tag">発行履歴</span> → <span class="help-tag">請求</span> → <span class="help-tag">マスタ管理</span> → <span class="help-tag">データ</span> → <span class="help-tag">使い方</span></p>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">伝票を発行する</div>客先を選び、<strong>ロット番号</strong>（任意）と数量を入力 → <span class="help-tag">伝票発行</span>。出さない店は <span class="help-tag">⏭ 飛ばす</span>。一括印刷モードなら最後に <span class="help-tag">まとめて印刷</span>。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">発行履歴を見る</div><span class="help-tag">発行履歴</span> タブで再印刷・CSV・訂正再発行・ロット別表示ができます。保存期間は同タブで 3／6／12か月から選べます。</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">請求を確認する</div><span class="help-tag">請求</span> タブで請求明細書・請求額一覧の確認・印刷・Excel出力ができます（使う場合はデータタブで請求系マスタをON）。</div></div>
       <div class="help-note">💡 データはクラウド（Firebase）に自動保存されます。別のPCで開いても同じデータが表示されます。</div>
     </div>
   </div>
@@ -1076,10 +1077,28 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-hd" onclick="toggleHelp('basic')">📋 伝票発行の詳細<span class="help-toggle" id="help-toggle-basic">▶</span></div>
     <div class="help-section-body">
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">印刷モードを選ぶ</div>画面上部の「🖨 印刷モード」バーで <span class="help-tag">1件ずつ印刷</span> か <span class="help-tag">一括印刷</span> を選びます。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先・数量</div>客先を選び、品目の数量を入力します。納品日はサイクルから自動計算され、必要なら変更できます。</div></div>
-      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票発行</div><span class="help-tag">伝票発行</span> を押すと履歴に保存され、印刷できます。同じ客先・同じ納品日が既にあるときは確認が出ます（おすすめは訂正再発行。必要なら同じ納品日で新規発行も可）。</div></div>
-      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">伝票右下に出るもの</div><strong>ルート番号</strong>＝客先のグループ名、<strong>記号</strong>＝客先マスタの「記号」、右側＝会社名など（<span class="help-tag">データ</span> タブで変更）。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">客先・ロット・数量</div>客先を選び、必要なら<strong>ロット番号</strong>（1〜10・荷造り照合用）を選び、品目の数量を入力します。納品日はサイクルから自動計算され、必要なら変更できます。台帳から受け取った場合は客先・数量・ロットがすでに入っています。</div></div>
+      <div class="help-step"><div class="help-step-num">3</div><div class="help-step-body"><div class="help-step-title">伝票発行</div><span class="help-tag">伝票発行</span> を押すと履歴に保存され、印刷できます。同じ客先・同じ納品日が既にあるときは確認が出ます（おすすめは訂正再発行。必要なら同じ納品日で新規発行も可）。同じロットの伝票をまとめて印刷するボタンも出ることがあります。</div></div>
+      <div class="help-step"><div class="help-step-num">4</div><div class="help-step-body"><div class="help-step-title">伝票右下に出るもの</div><strong>ルート番号</strong>＝客先のグループ名、<strong>記号</strong>＝客先マスタの「記号」、右側＝会社名など（<span class="help-tag">データ</span> タブで変更）。ロット番号も伝票面に載ります。</div></div>
       <div class="help-note">💡 発行履歴の保存期間（納品日基準）は <span class="help-tag">発行履歴</span> タブで設定できます。</div>
+    </div>
+  </div>
+  <div class="help-section help-collapsed" id="help-ledger">
+    <div class="help-section-hd" onclick="toggleHelp('ledger')">📒 入出荷台帳からの受け渡し<span class="help-toggle" id="help-toggle-ledger">▶</span></div>
+    <div class="help-section-body">
+      <p>入出荷台帳（<a href="https://pv-dn.github.io/pourvous-ledger/" target="_blank" rel="noopener">pourvous-ledger</a>）で数量を入れたあと、伝票へ渡せます。</p>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">台帳で入力</div>ロット番号を選び、客先・数量を入力 → <span class="help-tag">伝票を発行</span>。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>伝票アプリが開きます。ログインすると<strong>客先・数量・ロット</strong>が入ります。内容を確認してから伝票発行してください。</div></div>
+      <div class="help-note">💡 同じPC・同じブラウザで使うと受け渡しがスムーズです。伝票だけでも従来どおり発行できます。</div>
+    </div>
+  </div>
+  <div class="help-section help-collapsed" id="help-billing">
+    <div class="help-section-hd" onclick="toggleHelp('billing')">📄 請求タブ<span class="help-toggle" id="help-toggle-billing">▶</span></div>
+    <div class="help-section-body">
+      <p><span class="help-tag">請求</span> タブから、請求明細書・請求額一覧の確認・印刷・Excel出力ができます。</p>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">請求月を指定</div>年・月を選んでから、「請求明細書を見る」「請求額一覧を見る」を使います。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">未反映・Excel</div>まだ請求Excelに出していない伝票の確認や、請求月Excel出力も同タブからできます。</div></div>
+      <div class="help-note">💡 締め日・単価・配送費などは <span class="help-tag">データ</span> タブの「請求系マスタ項目」をONにしてからマスタで設定します（初期はOFF。伝票だけ使うならOFFのままでOK）。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-print">
@@ -1303,7 +1322,7 @@ function applyLedgerIssuePending(){
   try{syncSlipLotUi();}catch(e){}
   try{renderItems();}catch(e){}
   try{updateSkipButtons();}catch(e){}
-  toast('台帳から「出」数量を取り込みました'+(currentLotNo?'（ロット '+currentLotNo+'）':''));
+  toast('台帳から数量を取り込みました'+(currentLotNo?'（ロット '+currentLotNo+'）':''));
   return true;
 }
 if(IS_DEMO){
@@ -4024,7 +4043,7 @@ function histMonthSortVal(label){
 
 // ===== ヘルプ =====
 function toggleHelp(id){const sec=document.getElementById('help-'+id);const tog=document.getElementById('help-toggle-'+id);if(!sec)return;const collapsed=sec.classList.toggle('help-collapsed');if(tog)tog.textContent=collapsed?'▶':'▼';}
-function helpExpandAll(){['daily','basic','master','billing','print','data'].forEach(id=>{const sec=document.getElementById('help-'+id);const tog=document.getElementById('help-toggle-'+id);if(sec){sec.classList.remove('help-collapsed');if(tog)tog.textContent='▼';}});}
+function helpExpandAll(){['daily','basic','ledger','billing','print','master','data'].forEach(id=>{const sec=document.getElementById('help-'+id);const tog=document.getElementById('help-toggle-'+id);if(sec){sec.classList.remove('help-collapsed');if(tog)tog.textContent='▼';}});}
 
 // ===== Firebase連携 =====
 const db=firebase.database();
@@ -4933,7 +4952,7 @@ function closeLoginLog_dup(){document.getElementById('loginlog-modal').style.dis
 
 /* 更新情報（新しいものを上に追加） type: 'feat'=機能更新 / 'fix'=バグ修正 */
 const APP_UPDATES=[
-  {date:'2026-10-29',type:'feat',text:'本番台帳から伝票へ「出」数量・ロットを受け渡し（ログイン後に自動取り込み）'},
+  {date:'2026-10-29',type:'feat',text:'本番台帳から伝票へ数量・ロットを受け渡し（ログイン後に自動取り込み）'},
   {date:'2026-10-29',type:'fix',text:'ロットまとめて印刷の件数表示が、発行直後に1件ずれていたのを修正'},
   {date:'2026-10-29',type:'feat',text:'請求タブを有効化（請求明細書・請求額一覧の閲覧／印刷、Excel出力、事務チェック、駐車場代）'},
   {date:'2026-10-17',type:'feat',text:'伝票のルート番号にグループ名、記号に客先マスタの記号を表示'},
