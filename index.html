@@ -254,6 +254,7 @@ select.cs:focus{outline:none;border-color:var(--ac)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#fff;border:1px solid var(--b2);border-left:4px solid var(--ac);border-radius:8px;padding:10px 20px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.12);opacity:0;transition:all .3s;z-index:99999;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #login-screen{position:fixed;inset:0;background:var(--nv);display:flex;align-items:center;justify-content:center;z-index:9999}
+.hidden{display:none!important}
 #login-screen.hidden{display:none}
 .login-box{background:#fff;border-radius:14px;padding:36px 40px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.25)}
 .login-logo{font-size:11px;letter-spacing:1px;color:var(--mu);margin-bottom:6px}
@@ -388,7 +389,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       一般: <code>staff1234</code>
     </div>
     <div class="login-build">
-      <div class="login-build-badge"><b>BUILD</b><span>2026.10.21-demo6</span></div>
+      <div class="login-build-badge"><b>BUILD</b><span>2026.10.29</span></div>
     </div>
   </div>
 </div>
@@ -1192,7 +1193,12 @@ function bumpBridgeRev(){
   try{localStorage.setItem(BRIDGE_REV_KEY,String(Date.now()));}catch(e){}
 }
 function applyDemoChrome(){
-  if(!IS_DEMO)return;
+  const hint=document.getElementById('demo-login-hint');
+  const badge=document.querySelector('.login-build-badge span');
+  if(!IS_DEMO){
+    if(hint)hint.classList.add('hidden');
+    return;
+  }
   document.title='【デモ】'+document.title.replace(/^【デモ】/,'');
   let ban=document.getElementById('demo-banner');
   if(!ban){
@@ -1206,8 +1212,8 @@ function applyDemoChrome(){
   }
   const hs=document.querySelector('.hdr-s');
   if(hs&&!hs.textContent.includes('デモ'))hs.textContent=hs.textContent+'　【デモ】';
-  const hint=document.getElementById('demo-login-hint');
   if(hint)hint.classList.remove('hidden');
+  if(badge)badge.textContent='2026.10.29-demo';
 }
 function reloadMastersFromBridgeStorage(){
   if(!IS_DEMO)return;
