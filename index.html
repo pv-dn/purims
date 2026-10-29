@@ -1186,8 +1186,8 @@ const FB_ADMIN_PASS2=IS_DEMO?'purims_demo_admin_pass2':'purims_admin_pass2';
 const FB_LOGINLOG=IS_DEMO?'purims_demo_loginlog':'purims_loginlog';
 const FB_MASTERLOG=IS_DEMO?'purims_demo_masterlog':'purims_masterlog';
 function lsKey(k){return (IS_DEMO?'purims_demo_':'purims_')+k;}
-const BRIDGE_REV_KEY='purims_demo_bridge_rev';
-const BRIDGE_ISSUE_KEY='purims_demo_issue_pending';
+const BRIDGE_REV_KEY=IS_DEMO?'purims_demo_bridge_rev':'purims_bridge_rev';
+const BRIDGE_ISSUE_KEY=IS_DEMO?'purims_demo_issue_pending':'purims_issue_pending';
 function bumpBridgeRev(){
   if(!IS_DEMO)return;
   try{localStorage.setItem(BRIDGE_REV_KEY,String(Date.now()));}catch(e){}
@@ -1243,7 +1243,7 @@ function reloadMastersFromBridgeStorage(){
   }catch(e){console.warn('bridge reload',e);}
 }
 function applyLedgerIssuePending(){
-  if(!IS_DEMO||!currentUser)return false;
+  if(!currentUser)return false;
   let raw=null;
   try{raw=localStorage.getItem(BRIDGE_ISSUE_KEY);}catch(e){return false;}
   if(!raw)return false;
@@ -1313,6 +1313,10 @@ if(IS_DEMO){
     }
   });
 }
+window.addEventListener('storage',e=>{
+  if(e.key!==BRIDGE_ISSUE_KEY||!e.newValue||!currentUser)return;
+  try{applyLedgerIssuePending();}catch(err){console.warn(err);}
+});
 async function ensureDemoSeedUsers(){
   if(!IS_DEMO)return;
   try{
@@ -1864,16 +1868,6 @@ function showPrev(){
       if(batchExecCount)batchExecCount.textContent=printQueue.length;
     }else batchExecBtn.style.display='none';
   }
-  const lotBatchBtn=document.getElementById('lot-batch-print-btn');
-  if(lotBatchBtn){
-    if(lotNo){
-      const n=histByLot(lotNo).length;
-      lotBatchBtn.style.display='inline-block';
-      lotBatchBtn.textContent='📦 ロット '+lotNo+' をまとめて印刷（'+n+'件）';
-    }else{
-      lotBatchBtn.style.display='none';
-    }
-  }
   window.scrollTo({top:0,behavior:'smooth'});
   // 追加品目を客先マスタに自動追加
   const addedToMaster=[];
@@ -1920,6 +1914,16 @@ function showPrev(){
     persistHistoryLocal();
     renderHistory();
     fbSaveHistoryEntry(entry);
+  }
+  const lotBatchBtn=document.getElementById('lot-batch-print-btn');
+  if(lotBatchBtn){
+    if(lotNo){
+      const n=histByLot(lotNo).length;
+      lotBatchBtn.style.display='inline-block';
+      lotBatchBtn.textContent='📦 ロット '+lotNo+' をまとめて印刷（'+n+'件）';
+    }else{
+      lotBatchBtn.style.display='none';
+    }
   }
   _issueSession={fp,histId,queued,isCorrection,prevEntry};
   
@@ -4929,6 +4933,8 @@ function closeLoginLog_dup(){document.getElementById('loginlog-modal').style.dis
 
 /* 更新情報（新しいものを上に追加） type: 'feat'=機能更新 / 'fix'=バグ修正 */
 const APP_UPDATES=[
+  {date:'2026-10-29',type:'feat',text:'本番台帳から伝票へ「出」数量・ロットを受け渡し（ログイン後に自動取り込み）'},
+  {date:'2026-10-29',type:'fix',text:'ロットまとめて印刷の件数表示が、発行直後に1件ずれていたのを修正'},
   {date:'2026-10-29',type:'feat',text:'請求タブを有効化（請求明細書・請求額一覧の閲覧／印刷、Excel出力、事務チェック、駐車場代）'},
   {date:'2026-10-17',type:'feat',text:'伝票のルート番号にグループ名、記号に客先マスタの記号を表示'},
   {date:'2026-10-17',type:'feat',text:'伝票右下の会社情報にFAX・メール・ホームページ欄を追加（空欄は印刷に出ない）'},
