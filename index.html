@@ -538,6 +538,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       <div class="complete-btns">
         <button class="btn pri" id="complete-print-btn" onclick="doPrint()">印刷する</button>
         <button class="btn acc" id="batch-exec-btn" onclick="doBatchPrint()" style="display:none">🖨 まとめて印刷（<span id="batch-exec-count">0</span>件）</button>
+        <button class="btn acc" id="lot-batch-print-btn" onclick="printCurrentLotHist()" style="display:none">📦 このロットをまとめて印刷</button>
         <button class="btn acc" id="next-client-btn" onclick="goNextOrSelect()" style="display:none"></button>
         <button class="btn" id="skip-ahead-btn" onclick="skipAheadClient()" style="display:none"></button>
         <button class="btn" onclick="resetToSelect()">客先選択に戻る</button>
@@ -606,6 +607,18 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
             </div>
           </div>
           <div class="chip"><div class="lb">品目数</div><div class="vl" id="icnt">—</div></div>
+          <div class="chip"><div class="lb">ロット番号</div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <select id="slip-lot" onchange="onSlipLotChange(this.value)" style="padding:4px 8px;border:1.5px solid var(--ac);border-radius:5px;font-size:14px;font-weight:700;color:var(--nv);background:var(--w);cursor:pointer">
+                <option value="">—</option>
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                <option value="10">10</option>
+              </select>
+              <span style="font-size:10px;color:var(--mu)">荷造り照合用</span>
+            </div>
+          </div>
         </div>
       </div>
       <div style="padding:0 16px 8px;flex:1;overflow:hidden;display:flex;flex-direction:column">
@@ -859,13 +872,18 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="m-tabs" style="margin-bottom:12px">
     <button class="m-tab on" id="hist-tab-date" onclick="setHistView('date')">📅 発行日別</button>
     <button class="m-tab" id="hist-tab-client" onclick="setHistView('client')">🏢 客先別</button>
+    <button class="m-tab" id="hist-tab-lot" onclick="setHistView('lot')">📦 ロット別</button>
     <button class="m-tab" id="hist-tab-deleted" onclick="setHistView('deleted')">🗑 削除履歴</button>
   </div>
-  <input class="search-box" type="text" id="hist-search" placeholder="客先名・品目・日付で検索..." oninput="renderHistory()">
+  <input class="search-box" type="text" id="hist-search" placeholder="客先名・品目・日付・ロットで検索..." oninput="renderHistory()">
   <div id="hist-print-bar" style="display:none;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;padding:10px 12px;background:#f0f4fa;border:1px solid #ccd6e8;border-radius:8px">
     <button type="button" class="btn pri" style="font-size:12px;padding:7px 14px" onclick="printSelectedHist()">🖨 選択した伝票をまとめて印刷（<span id="hist-sel-count">0</span>件）</button>
     <button type="button" class="btn" style="font-size:12px;padding:7px 12px" onclick="selectAllVisibleHist()">表示中をすべて選択</button>
     <button type="button" class="btn" style="font-size:12px;padding:7px 12px" onclick="clearHistSelection()">選択解除</button>
+    <span style="width:1px;height:22px;background:#ccd6e8;margin:0 2px"></span>
+    <label style="font-size:12px;color:var(--mu);white-space:nowrap">ロット</label>
+    <select id="hist-lot-print" style="padding:5px 8px;border:1.5px solid var(--b2);border-radius:6px;font-size:12px;background:var(--w);font-weight:700"></select>
+    <button type="button" class="btn acc" style="font-size:12px;padding:7px 12px" onclick="printHistByLotSelect()">📦 このロットをまとめて印刷</button>
   </div>
   <div style="font-size:12px;color:var(--mu);margin-bottom:10px" id="hist-hint">月ごとのフォルダの中に発行日があります。履歴の保存期間は<strong>6か月</strong>（納品日基準）です。</div>
   <div id="hlist"></div>
@@ -1199,6 +1217,10 @@ function applyLedgerIssuePending(){
     if(idx>=0)qtys[idx]=Number(it.qty)||0;
     else extraItems.push({code:it.code||'---',name:it.name||'',qty:Number(it.qty)||0,biko:''});
   });
+  if(pending.lotNo!=null&&String(pending.lotNo).trim()!==''){
+    currentLotNo=String(pending.lotNo).trim();
+    try{localStorage.setItem(lsKey('lot'),currentLotNo);}catch(e){}
+  }
   try{showPanel('slip',document.querySelector('.tabs .tab'));}catch(e){}
   const cv=document.getElementById('complete-view');if(cv)cv.style.display='none';
   const iv=document.getElementById('input-view');if(iv)iv.style.display='block';
@@ -1206,9 +1228,10 @@ function applyLedgerIssuePending(){
   const chips=document.getElementById('chips');if(chips)chips.style.display='flex';
   const sb=document.getElementById('sbtns');if(sb)sb.style.display='flex';
   const st=document.getElementById('sbtns-top');if(st)st.style.display='flex';
+  try{syncSlipLotUi();}catch(e){}
   try{renderItems();}catch(e){}
   try{updateSkipButtons();}catch(e){}
-  toast('台帳から「出」数量を取り込みました');
+  toast('台帳から「出」数量を取り込みました'+(currentLotNo?'（ロット '+currentLotNo+'）':''));
   return true;
 }
 if(IS_DEMO){
@@ -1347,7 +1370,16 @@ cycles:{"SCAPES THE SUITE":"水土","楽園　町田店":"火木土","楽園　�
 };
 
 let DB={clients:{},cycles:{},products:[],groups:[],clientGroups:{},clientOrder:{},closing:{},minCharge:{},deliveryFee:{},packagingFee:{},parkingEnabled:{},slipCheckedThrough:'',slipCheckedThroughByClosing:{},slipCheckedAtByClosing:{},slipIssuedAckIds:{},history:[],historyDeleted:[]};
-let curC=null,qtys={},bikos={},extraItems=[],editC=null,lastSlip=null,openHistId=null,customDeliveryDate=null;
+let curC=null,qtys={},bikos={},extraItems=[],editC=null,lastSlip=null,openHistId=null,customDeliveryDate=null,currentLotNo='';
+function onSlipLotChange(v){
+  currentLotNo=String(v||'').trim();
+  try{localStorage.setItem(lsKey('lot'),currentLotNo);}catch(e){}
+}
+function syncSlipLotUi(){
+  const el=document.getElementById('slip-lot');
+  if(el)el.value=currentLotNo||'';
+}
+try{currentLotNo=localStorage.getItem(lsKey('lot'))||'';}catch(e){}
 let printMode=localStorage.getItem(lsKey('printmode'))||'single',printQueue=[];
 let _issueSession=null,_lastAppliedSavedAt=null,_selfSaveTokens=new Set();
 let _correctingHistId=null;
@@ -1408,6 +1440,10 @@ function startHistCorrect(id){
     if(idx>=0){qtys[idx]=Number(it.qty)||0;bikos[idx]=it.biko||'';}
     else extraItems.push({code:it.code||'---',name:it.name||'',qty:Number(it.qty)||0,biko:it.biko||''});
   });
+  if(h.lotNo!=null&&String(h.lotNo).trim()!==''){
+    currentLotNo=String(h.lotNo).trim();
+    try{localStorage.setItem(lsKey('lot'),currentLotNo);}catch(e){}
+  }
   updateChips();
   document.getElementById('chips').style.display='flex';
   document.getElementById('sbtns').style.display='flex';
@@ -1495,7 +1531,7 @@ function resetNdPicker(){customDeliveryDate=null;document.getElementById('nd-pic
 function getDeliveryDate(){if(customDeliveryDate)return fmtD(customDeliveryDate);return fmtD(nxtDel(DB.cycles[curC]||''));}
 function focusFirstQty(){const el=document.querySelector('#iarea-body .qty');if(!el)return;el.focus();el.select();}
 function onCC(){if(_correctingHistId!=null){_correctingHistId=null;updateCorrectionBanner();}curC=document.getElementById('csel').value||null;qtys={};bikos={};extraItems=[];customDeliveryDate=null;const picker=document.getElementById('nd-picker');if(picker)picker.style.display='none';const resetBtn=document.getElementById('nd-reset-btn');if(resetBtn)resetBtn.style.display='none';const calBtn=document.getElementById('nd-cal-btn');if(calBtn)calBtn.textContent='📅 変更';const ndv=document.getElementById('nd-v');if(ndv)ndv.style.color='';const aa=document.getElementById('add-item-area');if(aa)aa.style.display='none';const st=document.getElementById('sbtns-top');if(!curC){document.getElementById('chips').style.display='none';document.getElementById('sbtns').style.display='none';if(st)st.style.display='none';document.getElementById('iarea').innerHTML='<div class="emp">上のプルダウンから客先を選択してください</div>';updateSkipButtons();return;}updateChips();document.getElementById('sbtns').style.display='flex';if(st)st.style.display='flex';renderItems();updateSkipButtons();setTimeout(()=>{fitIareaBody();focusFirstQty();},80);}
-function updateChips(){if(!curC)return;const cyc=DB.cycles[curC]||'';document.getElementById('chips').style.display='flex';if(!customDeliveryDate){document.getElementById('nd-v').textContent=fmtD(nxtDel(cyc));document.getElementById('nd-v').style.color='';}const cv=document.getElementById('cyc-v');cv.textContent=cyc?cyc+'曜日':'（未設定）';cv.style.display='';document.getElementById('cyc-edit-hint').style.display='';document.getElementById('cyc-btn-area').style.display='none';document.getElementById('icnt').textContent=(DB.clients[curC]?.items||[]).length+' 品目';}
+function updateChips(){if(!curC)return;const cyc=DB.cycles[curC]||'';document.getElementById('chips').style.display='flex';if(!customDeliveryDate){document.getElementById('nd-v').textContent=fmtD(nxtDel(cyc));document.getElementById('nd-v').style.color='';}const cv=document.getElementById('cyc-v');cv.textContent=cyc?cyc+'曜日':'（未設定）';cv.style.display='';document.getElementById('cyc-edit-hint').style.display='';document.getElementById('cyc-btn-area').style.display='none';document.getElementById('icnt').textContent=(DB.clients[curC]?.items||[]).length+' 品目';try{syncSlipLotUi();}catch(e){}}
 function startCyc(){if(!curC)return;document.getElementById('cyc-v').style.display='none';document.getElementById('cyc-edit-hint').style.display='none';renderCycBtns('slip-cyc-btns','slip-cyc',DB.cycles[curC]||'');document.getElementById('cyc-btn-area').style.display='flex';}
 function saveCycBtns(){if(!curC)return;const val=document.getElementById('slip-cyc').value.trim();DB.cycles[curC]=val;persist();if(!customDeliveryDate){document.getElementById('nd-v').textContent=fmtD(nxtDel(val));}updateChips();if(editC===curC)renderCycBtns('e-cyc-btns','e-cyc',val);toast('サイクルを更新しました');}
 function cancelCyc(){document.getElementById('cyc-btn-area').style.display='none';document.getElementById('cyc-v').style.display='';document.getElementById('cyc-edit-hint').style.display='';}
@@ -1708,8 +1744,8 @@ function formatSlipFooterValue(raw){
   if(best>0&&best<s.length)return escH(s.slice(0,best))+'<br>'+escH(s.slice(best));
   return escH(s);
 }
-function buildUnit(items,client,ds,pg,tp,titleExtra){const pgLabel=tp>1?`${pg}/${tp}ページ`:'';const cns=clientNameStyle(client);const title='委託洗濯伝票'+(titleExtra||'');const rows=Array.from({length:ROWS},(_,i)=>{const it=items[i];return`<div class="s-tr"><div class="s-td td-name">${it?it.name:''}</div><div class="s-td td-qty">${it&&it.qty?it.qty:''}</div><div class="s-td td-biko" style="font-size:10px">${it&&it.biko?it.biko:''}</div></div>`;}).join('');return`<div class="slip-unit">${pgLabel?`<div style="font-size:7px;color:#999;text-align:right;margin-bottom:1px">${pgLabel}</div>`:''}<div class="s-title">${title}</div><div class="s-head"><div class="s-client-area"><span class="s-client-name" style="${cns}">${escH(client)}</span><span class="s-sama">様</span></div><div class="s-date-area"><span class="s-date-label">納品日</span><span class="s-date-val">${ds}</span></div></div><div class="s-table-wrap"><div class="s-thead"><div class="s-thead-cell" style="flex:62">品　　　名</div><div class="s-thead-cell" style="flex:16">数　量</div><div class="s-thead-cell" style="flex:22">備　　　考</div></div><div class="s-tbody">${rows}</div></div><div class="s-footer"><div class="s-footer-left"><div class="s-footer-cell"><div class="s-footer-label">確認印</div><div class="s-footer-space"></div></div><div class="s-footer-cell"><div class="s-footer-label">ルート番号</div><div class="s-footer-value">${formatSlipFooterValue(slipClientRouteLabel(client))}</div></div><div class="s-footer-cell"><div class="s-footer-label">記号</div><div class="s-footer-value">${formatSlipFooterValue(slipClientSymbol(client))}</div></div></div><div class="s-footer-company"><div class="s-footer-company-name">${escH(SLIP_COMPANY.name)}</div><div class="s-footer-company-info">${slipCompanyInfoHtml()}</div></div></div></div>`;}
-function buildSlipHTML(items,client,ds){const chunks=[];for(let i=0;i<items.length;i+=ROWS)chunks.push(items.slice(i,i+ROWS));const tp=chunks.length;return chunks.map((chunk,pi)=>`<div class="slip-page-wrap"><div class="slip-row" style="flex:1">${buildUnit(chunk,client,ds,pi+1,tp,'')}${buildUnit(chunk,client,ds,pi+1,tp,'　(納品控)')}</div></div>`+(pi<tp-1?'<div class="slip-page-break"></div>':'')).join('');}
+function buildUnit(items,client,ds,pg,tp,titleExtra,lotNo){const pgLabel=tp>1?`${pg}/${tp}ページ`:'';const cns=clientNameStyle(client);const title='委託洗濯伝票'+(titleExtra||'');const lot=lotNo!=null&&String(lotNo).trim()!==''?String(lotNo).trim():'';const lotHtml=lot?`<div style="margin-top:2px;font-size:10px;font-weight:700;color:#222">ロット ${escH(lot)}</div>`:'';const rows=Array.from({length:ROWS},(_,i)=>{const it=items[i];return`<div class="s-tr"><div class="s-td td-name">${it?it.name:''}</div><div class="s-td td-qty">${it&&it.qty?it.qty:''}</div><div class="s-td td-biko" style="font-size:10px">${it&&it.biko?it.biko:''}</div></div>`;}).join('');return`<div class="slip-unit">${pgLabel?`<div style="font-size:7px;color:#999;text-align:right;margin-bottom:1px">${pgLabel}</div>`:''}<div class="s-title">${title}</div><div class="s-head"><div class="s-client-area"><span class="s-client-name" style="${cns}">${escH(client)}</span><span class="s-sama">様</span></div><div class="s-date-area"><span class="s-date-label">納品日</span><span class="s-date-val">${ds}</span>${lotHtml}</div></div><div class="s-table-wrap"><div class="s-thead"><div class="s-thead-cell" style="flex:62">品　　　名</div><div class="s-thead-cell" style="flex:16">数　量</div><div class="s-thead-cell" style="flex:22">備　　　考</div></div><div class="s-tbody">${rows}</div></div><div class="s-footer"><div class="s-footer-left"><div class="s-footer-cell"><div class="s-footer-label">確認印</div><div class="s-footer-space"></div></div><div class="s-footer-cell"><div class="s-footer-label">ルート番号</div><div class="s-footer-value">${formatSlipFooterValue(slipClientRouteLabel(client))}</div></div><div class="s-footer-cell"><div class="s-footer-label">記号</div><div class="s-footer-value">${formatSlipFooterValue(slipClientSymbol(client))}</div></div></div><div class="s-footer-company"><div class="s-footer-company-name">${escH(SLIP_COMPANY.name)}</div><div class="s-footer-company-info">${slipCompanyInfoHtml()}</div></div></div></div>`;}
+function buildSlipHTML(items,client,ds,lotNo){const lot=lotNo!=null&&String(lotNo).trim()!==''?String(lotNo).trim():(currentLotNo||'');const chunks=[];for(let i=0;i<items.length;i+=ROWS)chunks.push(items.slice(i,i+ROWS));const tp=chunks.length;return chunks.map((chunk,pi)=>`<div class="slip-page-wrap"><div class="slip-row" style="flex:1">${buildUnit(chunk,client,ds,pi+1,tp,'',lot)}${buildUnit(chunk,client,ds,pi+1,tp,'　(納品控)',lot)}</div></div>`+(pi<tp-1?'<div class="slip-page-break"></div>':'')).join('');}
 function openPrintWindow(html){let ov=document.getElementById('print-overlay');if(!ov){ov=document.createElement('div');ov.id='print-overlay';ov.style.cssText='display:none;position:static;background:#fff;font-family:\'游ゴシック\',sans-serif;color:#000';document.body.appendChild(ov);}const printCSS='<style>*{box-sizing:border-box;margin:0;padding:0}.slip-page-wrap{width:100%;height:170mm;display:flex;flex-direction:column;background:#fff;color:#000;page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid;overflow:hidden;transform:scale(0.93);transform-origin:center center}.slip-page-wrap:last-child{page-break-after:avoid;break-after:avoid}.slip-row{display:grid;grid-template-columns:1fr 1fr;gap:10mm;flex:1;border-bottom:1.5px solid #444;min-height:0}.slip-row:last-child{border-bottom:none}.slip-unit{display:flex;flex-direction:column;padding:6px 10px;min-height:0;overflow:hidden}.s-title{font-size:16px;text-align:center;padding:4px 0 3px;border-bottom:2px solid #222;margin-bottom:3px;letter-spacing:2px;font-weight:400;flex-shrink:0}.s-head{display:flex;align-items:stretch;border:1px solid #555;margin-bottom:2px;flex-shrink:0}.s-client-area{display:flex;align-items:flex-end;flex:1;border-right:1px solid #555;padding:4px 4px 5px;min-height:51px}.s-client-name{border-bottom:1.5px solid #222;flex:1;padding-bottom:1px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2;font-weight:600}.s-sama{font-size:13px;padding-left:3px;white-space:nowrap;align-self:flex-end}.s-date-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 4px;white-space:nowrap;width:22%}.s-date-label{font-size:8px;color:#555;margin-bottom:1px}.s-date-val{font-size:11px;font-weight:600}.s-table-wrap{flex:1;display:flex;flex-direction:column;min-height:0;border:1px solid #555;overflow:hidden}.s-thead{display:flex;background:#f2f2f2;border-bottom:1.5px solid #555;flex-shrink:0}.s-thead-cell{font-size:10px;padding:3px 2px;text-align:center;letter-spacing:1px;font-weight:400;border-right:1px solid #888;overflow:hidden}.s-thead-cell:last-child{border-right:none}.s-tbody{flex:1;display:flex;flex-direction:column;overflow:hidden}.s-tr{display:flex;flex:1;border-bottom:1px solid #ccc;min-height:0}.s-tr:last-child{border-bottom:none}.s-td{border-right:1px solid #ccc;overflow:hidden;white-space:nowrap;display:flex;align-items:center;padding:0 3px;min-height:0}.s-td:last-child{border-right:none}.s-td.td-name{font-size:12px;flex:62}.s-td.td-qty{font-size:12px;font-weight:700;justify-content:center;border-left:1px solid #777;border-right:1px solid #777;flex:16}.s-td.td-biko{flex:22}.s-footer{display:flex;border:1px solid #555;border-top:none;flex-shrink:0}.s-footer-left{display:flex;flex:40;border-right:1px solid #555;min-width:0}.s-footer-cell{flex:1;border-right:1px solid #555;padding:1px 3px;display:flex;flex-direction:column}.s-footer-cell:last-child{border-right:none}.s-footer-label{font-size:7px;color:#666}.s-footer-space{height:57px}.s-footer-value{height:57px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;padding:1px 2px;text-align:center;overflow:hidden;line-height:1.2;word-break:keep-all;overflow-wrap:normal}.s-footer-company{flex:60;padding:3px 6px;display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden}.s-footer-company-name{font-size:17px;font-weight:700;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s-footer-company-info{font-size:8px;color:#444;line-height:1.45;overflow:hidden}@page{margin:10mm 3mm 3mm 3mm;size:B5 landscape}</style>';ov.innerHTML=printCSS+html;ov.style.display='block';// 件数に応じて待機時間を調整（1件200ms + ページ数×50ms）
   const pageCount=(html.match(/slip-page-wrap/g)||[]).length;
   const waitMs=Math.max(300, 200 + pageCount*50);
@@ -1752,14 +1788,15 @@ function changeZoom(dir){zoomIdx=Math.max(0,Math.min(ZOOM_STEPS.length-1,zoomIdx
 function clearPrintQueue(){if(!printQueue.length){toast('キューは空です');return;}if(!confirm('キューの '+printQueue.length+' 件を削除してよいですか？'))return;printQueue=[];updateQueueBadge();toast('クリアしました');}
 function doBatchPrint(){if(!printQueue.length){toast('キューが空です','e');return;}const combined=printQueue.map((item,idx)=>{// 最後の伝票以外はpage-break-afterを確実に付ける
   if(idx<printQueue.length-1){return item.html.replace(/slip-page-wrap:last-child[^}]*}/g,'').replace(/break-after:avoid/g,'break-after:page');}return item.html;}).join('');openPrintWindow(combined);const c=printQueue.length;printQueue=[];updateQueueBadge();toast(c+'件をまとめて印刷しました');}
-function printHist(id){const h=findHistById(id);if(!h)return;openPrintWindow(buildSlipHTML(h.items,h.client,historyDeliveryDate(h)||h.deliveryDate));}
+function printHist(id){const h=findHistById(id);if(!h)return;openPrintWindow(buildSlipHTML(h.items,h.client,historyDeliveryDate(h)||h.deliveryDate,h.lotNo||''));}
 function showPrev(){
   if(!curC){toast('客先を選択してください','e');return;}
   const masterItems=(DB.clients[curC]?.items||[]).map((it,i)=>({...it,qty:qtys[i]||0,biko:bikos[i]||''})).filter(it=>it.qty>0);
   const allItems=[...masterItems,...extraItems.filter(it=>it.qty>0)];
   if(!allItems.length){toast('数量を入力してください','e');return;}
   const ds=getDeliveryDate();
-  const slipHTML=buildSlipHTML(allItems,curC,ds);
+  const lotNo=currentLotNo||'';
+  const slipHTML=buildSlipHTML(allItems,curC,ds,lotNo);
   const fp=slipFingerprint(curC,ds,allItems);
   // 同じ内容の二重発行を防止（入力に戻らず再押下した場合）
   if(_issueSession&&_issueSession.fp===fp){
@@ -1790,7 +1827,7 @@ function showPrev(){
   document.getElementById('complete-view').style.display='block';
   const titleEl=document.querySelector('#complete-view .complete-title');
   if(titleEl)titleEl.textContent=isCorrection?'訂正再発行しました':'伝票を発行しました';
-  document.getElementById('complete-sub').innerHTML='<strong>'+curC+'</strong>　納品日: '+ds+'<br>'+allItems.length+'品目　合計 <strong>'+allItems.reduce((sum,it)=>sum+it.qty,0)+'点</strong>'+(isCorrection?'<br><span style="color:#854f0b;font-weight:600">※履歴の伝票を訂正して再発行しました</span>':'');
+  document.getElementById('complete-sub').innerHTML='<strong>'+curC+'</strong>　納品日: '+ds+(lotNo?'　ロット: <strong>'+lotNo+'</strong>':'')+'<br>'+allItems.length+'品目　合計 <strong>'+allItems.reduce((sum,it)=>sum+it.qty,0)+'点</strong>'+(isCorrection?'<br><span style="color:#854f0b;font-weight:600">※履歴の伝票を訂正して再発行しました</span>':'');
   const cpBtn=document.getElementById('complete-print-btn');
   if(cpBtn){
     if(printMode==='batch'){cpBtn.style.display='none';}
@@ -1817,6 +1854,16 @@ function showPrev(){
       batchExecBtn.style.display='inline-block';
       if(batchExecCount)batchExecCount.textContent=printQueue.length;
     }else batchExecBtn.style.display='none';
+  }
+  const lotBatchBtn=document.getElementById('lot-batch-print-btn');
+  if(lotBatchBtn){
+    if(lotNo){
+      const n=histByLot(lotNo).length;
+      lotBatchBtn.style.display='inline-block';
+      lotBatchBtn.textContent='📦 ロット '+lotNo+' をまとめて印刷（'+n+'件）';
+    }else{
+      lotBatchBtn.style.display='none';
+    }
   }
   window.scrollTo({top:0,behavior:'smooth'});
   // 追加品目を客先マスタに自動追加
@@ -1847,7 +1894,8 @@ function showPrev(){
     correctingHist.correctedAt=todayIso();
     correctingHist.correctedBy=currentUser?currentUser.username:'';
     correctingHist.correctionCount=(Number(correctingHist.correctionCount)||0)+1;
-    lastSlip={client:correctingHist.client,date:correctingHist.date,deliveryDate:ds,items:allItems,total:totalPts,issuedBy:correctingHist.issuedBy||''};
+    correctingHist.lotNo=lotNo||'';
+    lastSlip={client:correctingHist.client,date:correctingHist.date,deliveryDate:ds,lotNo:lotNo||'',items:allItems,total:totalPts,issuedBy:correctingHist.issuedBy||''};
     histId=correctingHist.id;
     persistHistoryLocal();
     renderHistory();
@@ -1857,7 +1905,7 @@ function showPrev(){
   }else{
     const recDate=todayIso();
     histId=newHistId();
-    lastSlip={client:curC,date:recDate,deliveryDate:ds,items:allItems,total:totalPts,issuedBy:currentUser?currentUser.username:''};
+    lastSlip={client:curC,date:recDate,deliveryDate:ds,lotNo:lotNo||'',items:allItems,total:totalPts,issuedBy:currentUser?currentUser.username:''};
     const entry={...lastSlip,id:histId};
     DB.history.unshift(entry);
     persistHistoryLocal();
@@ -3650,24 +3698,71 @@ function printSelectedHist(){
   if(!histSelectedIds.size){toast('伝票を選択してください','e');return;}
   const items=[...histSelectedIds].map(id=>findHistById(id)).filter(Boolean);
   if(!items.length){toast('印刷できる伝票がありません','e');return;}
-  items.sort((a,b)=>parseYMD(b.deliveryDate||b.date)-parseYMD(a.deliveryDate||a.date)||(a.client||'').localeCompare(b.client||'','ja')||String(b.id).localeCompare(String(a.id)));
-  const htmlParts=items.map(h=>buildSlipHTML(h.items||[],h.client,historyDeliveryDate(h)||h.deliveryDate));
+  printHistList(items);
+}
+function histLotKey(h){
+  const n=h&&h.lotNo!=null?String(h.lotNo).trim():'';
+  return n||'（ロットなし）';
+}
+function printHistList(items){
+  if(!items||!items.length){toast('印刷できる伝票がありません','e');return;}
+  const sorted=items.slice().sort((a,b)=>{
+    const la=histLotKey(a),lb=histLotKey(b);
+    if(la!==lb){
+      if(la==='（ロットなし）')return 1;
+      if(lb==='（ロットなし）')return -1;
+      return la.localeCompare(lb,'ja',{numeric:true});
+    }
+    return parseYMD(b.deliveryDate||b.date)-parseYMD(a.deliveryDate||a.date)||(a.client||'').localeCompare(b.client||'','ja')||String(b.id).localeCompare(String(a.id));
+  });
+  const htmlParts=sorted.map(h=>buildSlipHTML(h.items||[],h.client,historyDeliveryDate(h)||h.deliveryDate,h.lotNo||''));
   const combined=htmlParts.map((html,idx)=>{
     if(idx<htmlParts.length-1)return html.replace(/slip-page-wrap:last-child[^}]*}/g,'').replace(/break-after:avoid/g,'break-after:page');
     return html;
   }).join('');
   openPrintWindow(combined);
-  toast(items.length+'件をまとめて印刷しました');
+  toast(sorted.length+'件をまとめて印刷しました');
+}
+function histByLot(lotNo){
+  const key=String(lotNo||'').trim();
+  if(!key)return[];
+  return (DB.history||[]).filter(h=>String(h.lotNo||'').trim()===key);
+}
+function fillHistLotPrintSelect(){
+  const sel=document.getElementById('hist-lot-print');
+  if(!sel)return;
+  const lots=new Set();
+  (DB.history||[]).forEach(h=>{const n=String(h.lotNo||'').trim();if(n)lots.add(n);});
+  const cur=sel.value||currentLotNo||'';
+  const sorted=[...lots].sort((a,b)=>a.localeCompare(b,'ja',{numeric:true}));
+  sel.innerHTML='<option value="">— ロット選択 —</option>'+sorted.map(n=>`<option value="${escH(n)}">${escH(n)}（${histByLot(n).length}件）</option>`).join('');
+  if(cur&&sorted.includes(cur))sel.value=cur;
+}
+function printHistByLot(lotNo){
+  const key=String(lotNo||'').trim();
+  if(!key){toast('ロット番号を選んでください','e');return;}
+  const items=histByLot(key);
+  if(!items.length){toast('ロット '+key+' の伝票がありません','e');return;}
+  printHistList(items);
+}
+function printHistByLotSelect(){
+  const sel=document.getElementById('hist-lot-print');
+  printHistByLot(sel?sel.value:'');
+}
+function printCurrentLotHist(){
+  if(!currentLotNo){toast('ロット番号がありません','e');return;}
+  printHistByLot(currentLotNo);
 }
 function escH(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function setHistView(mode){
-  histViewMode=mode==='client'?'client':(mode==='deleted'?'deleted':'date');
-  const d=document.getElementById('hist-tab-date'),c=document.getElementById('hist-tab-client'),del=document.getElementById('hist-tab-deleted');
+  histViewMode=mode==='client'?'client':(mode==='lot'?'lot':(mode==='deleted'?'deleted':'date'));
+  const d=document.getElementById('hist-tab-date'),c=document.getElementById('hist-tab-client'),lot=document.getElementById('hist-tab-lot'),del=document.getElementById('hist-tab-deleted');
   if(d)d.classList.toggle('on',histViewMode==='date');
   if(c)c.classList.toggle('on',histViewMode==='client');
+  if(lot)lot.classList.toggle('on',histViewMode==='lot');
   if(del)del.classList.toggle('on',histViewMode==='deleted');
   const search=document.getElementById('hist-search');
-  if(search)search.placeholder=histViewMode==='deleted'?'削除履歴を検索（客先・納品日・削除者）...':'客先名・品目・日付で検索...';
+  if(search)search.placeholder=histViewMode==='deleted'?'削除履歴を検索（客先・納品日・削除者）...':(histViewMode==='lot'?'ロット・客先・日付で検索...':'客先名・品目・日付・ロットで検索...');
   renderHistory();
 }
 function toggleHistFolder(encKey){const key=decodeURIComponent(encKey);histFolderCollapsed[key]=!histFolderCollapsed[key];renderHistory();}
@@ -3677,13 +3772,15 @@ function histSlipHtml(h,byClient){
   const title=byClient?escH(h.date||''):escH(h.client||'');
   const corrected=!!h.correctedAt;
   const corrBadge=corrected?' <span style="display:inline-block;padding:1px 7px;border-radius:8px;background:#fff3cd;color:#854f0b;font-size:10px;font-weight:700;vertical-align:middle">訂正再発行</span>':'';
+  const lotBadge=h.lotNo?(' <span style="display:inline-block;padding:1px 7px;border-radius:8px;background:#e8f0fe;color:#1a5276;font-size:10px;font-weight:700;vertical-align:middle">ロット '+escH(h.lotNo)+'</span>'):'';
   const corrSub=corrected?('　｜　訂正: '+escH(h.correctedAt)+(h.correctedBy?' ('+escH(h.correctedBy)+')':'')+(h.correctionCount>1?' ×'+h.correctionCount:'')):'';
   const deliv=escH(historyDeliveryDate(h)||h.deliveryDate||'');
-  const sub=byClient?('納品: '+deliv+'　｜　'+(h.items||[]).length+'品目'+(h.issuedBy?'　｜　発行者: '+escH(h.issuedBy):'')+corrSub):('納品: '+deliv+'　｜　'+(h.items||[]).length+'品目'+(h.issuedBy?'　｜　発行者: '+escH(h.issuedBy):'')+corrSub);
+  const lotSub=h.lotNo?('　｜　ロット '+escH(h.lotNo)):'';
+  const sub=byClient?('納品: '+deliv+lotSub+'　｜　'+(h.items||[]).length+'品目'+(h.issuedBy?'　｜　発行者: '+escH(h.issuedBy):'')+corrSub):('納品: '+deliv+lotSub+'　｜　'+(h.items||[]).length+'品目'+(h.issuedBy?'　｜　発行者: '+escH(h.issuedBy):'')+corrSub);
   const idLit=histIdLit(h.id);
-  return `<div style="background:var(--w);border-bottom:0.5px solid var(--bd)"><div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;background:${open?'var(--s)':'var(--w)'}" onclick="toggleHist(${idLit})"><label style="display:flex;align-items:center;flex-shrink:0;margin-right:4px;cursor:pointer" onclick="event.stopPropagation()"><input type="checkbox" ${histSelectedIds.has(String(h.id))?'checked':''} onchange="toggleHistSelect(${idLit},this.checked)" style="width:16px;height:16px;cursor:pointer" aria-label="印刷対象に選択"></label><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${title}${corrBadge}</div><div style="font-size:11px;color:var(--mu);margin-top:2px">${sub}</div></div><div style="display:flex;align-items:center;gap:10px"><span style="background:var(--nv);color:#fff;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:600">合計 ${h.total}点</span><span style="font-size:14px;color:var(--mu);display:inline-block;transform:rotate(${open?'180':'0'}deg)">▼</span></div></div><div style="display:${open?'block':'none'};padding:14px 16px;background:var(--s);border-top:0.5px solid var(--bd)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:12px;color:var(--mu);line-height:1.8"><strong style="color:var(--tx);font-size:13px">${escH(h.client)}</strong><br>発行日: ${escH(h.date)}　｜　納品日: ${deliv}${h.issuedBy?'　｜　発行者: <strong style="color:var(--nv);">'+escH(h.issuedBy)+'</strong>':''}${corrected?'<br><span style="color:#854f0b;font-weight:600">訂正再発行: '+escH(h.correctedAt)+(h.correctedBy?'（'+escH(h.correctedBy)+'）':'')+(h.correctionCount>1?'　'+h.correctionCount+'回目':'')+'</span>':''}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn acc" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();startHistCorrect(${idLit})">訂正して再発行</button><button class="btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();dlHistCSV(${idLit})">CSV出力</button><button class="btn pri" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();printHist(${idLit})">伝票印刷</button><button class="btn ng" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();delHist(${idLit})">削除</button></div></div><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:left;font-weight:500;width:18%">品番</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:left;font-weight:500">品目名</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:right;font-weight:500;width:80px">数量</th></tr></thead><tbody>${(h.items||[]).map(it=>`<tr><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd)"><span class="cbdg">${escH(it.code)}</span></td><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd)">${escH(it.name)}</td><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd);text-align:right;font-weight:700">${it.qty}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2" style="background:var(--w);padding:8px 10px;font-weight:700;border-top:2px solid var(--b2)">合計</td><td style="background:var(--w);padding:8px 10px;font-weight:700;text-align:right;border-top:2px solid var(--b2);font-size:15px;color:var(--nv)">${h.total}点</td></tr></tfoot></table></div></div>`;
+  return `<div style="background:var(--w);border-bottom:0.5px solid var(--bd)"><div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;background:${open?'var(--s)':'var(--w)'}" onclick="toggleHist(${idLit})"><label style="display:flex;align-items:center;flex-shrink:0;margin-right:4px;cursor:pointer" onclick="event.stopPropagation()"><input type="checkbox" ${histSelectedIds.has(String(h.id))?'checked':''} onchange="toggleHistSelect(${idLit},this.checked)" style="width:16px;height:16px;cursor:pointer" aria-label="印刷対象に選択"></label><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">${title}${corrBadge}${lotBadge}</div><div style="font-size:11px;color:var(--mu);margin-top:2px">${sub}</div></div><div style="display:flex;align-items:center;gap:10px"><span style="background:var(--nv);color:#fff;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:600">合計 ${h.total}点</span><span style="font-size:14px;color:var(--mu);display:inline-block;transform:rotate(${open?'180':'0'}deg)">▼</span></div></div><div style="display:${open?'block':'none'};padding:14px 16px;background:var(--s);border-top:0.5px solid var(--bd)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px"><div style="font-size:12px;color:var(--mu);line-height:1.8"><strong style="color:var(--tx);font-size:13px">${escH(h.client)}</strong><br>発行日: ${escH(h.date)}　｜　納品日: ${deliv}${h.issuedBy?'　｜　発行者: <strong style="color:var(--nv);">'+escH(h.issuedBy)+'</strong>':''}${corrected?'<br><span style="color:#854f0b;font-weight:600">訂正再発行: '+escH(h.correctedAt)+(h.correctedBy?'（'+escH(h.correctedBy)+'）':'')+(h.correctionCount>1?'　'+h.correctionCount+'回目':'')+'</span>':''}</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn acc" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();startHistCorrect(${idLit})">訂正して再発行</button><button class="btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();dlHistCSV(${idLit})">CSV出力</button><button class="btn pri" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();printHist(${idLit})">伝票印刷</button><button class="btn ng" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();delHist(${idLit})">削除</button></div></div><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:left;font-weight:500;width:18%">品番</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:left;font-weight:500">品目名</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:right;font-weight:500;width:80px">数量</th></tr></thead><tbody>${(h.items||[]).map(it=>`<tr><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd)"><span class="cbdg">${escH(it.code)}</span></td><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd)">${escH(it.name)}</td><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd);text-align:right;font-weight:700">${it.qty}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2" style="background:var(--w);padding:8px 10px;font-weight:700;border-top:2px solid var(--b2)">合計</td><td style="background:var(--w);padding:8px 10px;font-weight:700;text-align:right;border-top:2px solid var(--b2);font-size:15px;color:var(--nv)">${h.total}点</td></tr></tfoot></table></div></div>`;
 }
-function histFiltered(){const q=(document.getElementById('hist-search')?.value||'').trim().toLowerCase();if(!q)return DB.history||[];return (DB.history||[]).filter(h=>[h.client,h.date,h.deliveryDate,h.issuedBy,...((h.items||[]).flatMap(it=>[it.code,it.name]))].some(v=>String(v||'').toLowerCase().includes(q)));}
+function histFiltered(){const q=(document.getElementById('hist-search')?.value||'').trim().toLowerCase();if(!q)return DB.history||[];return (DB.history||[]).filter(h=>[h.client,h.date,h.deliveryDate,h.issuedBy,h.lotNo,...((h.items||[]).flatMap(it=>[it.code,it.name]))].some(v=>String(v||'').toLowerCase().includes(q)));}
 function histDeletedFiltered(){
   const q=(document.getElementById('hist-search')?.value||'').trim().toLowerCase();
   const list=DB.historyDeleted||[];
@@ -3742,7 +3839,7 @@ function printDeletedHist(logId){
   const log=(DB.historyDeleted||[]).find(x=>histIdEq(x.id,logId));
   if(!log||!log.slip){toast('削除履歴が見つかりません','e');return;}
   const h=log.slip;
-  openPrintWindow(buildSlipHTML(h.items||[],h.client,historyDeliveryDate(h)||h.deliveryDate));
+  openPrintWindow(buildSlipHTML(h.items||[],h.client,historyDeliveryDate(h)||h.deliveryDate,h.lotNo||''));
 }
 function renderDeletedHistoryList(){
   const el=document.getElementById('hlist');if(!el)return;
@@ -3775,11 +3872,33 @@ function renderHistory(){
     el.innerHTML='<div class="emp">発行履歴はありません</div>';if(hint)hint.textContent='';return;
   }
   if(bar)bar.style.display='flex';
+  try{fillHistLotPrintSelect();}catch(e){}
   if(!recs.length){el.innerHTML='<div class="emp">該当する履歴がありません</div>';if(hint)hint.textContent='検索条件に一致する伝票はありません。';return;}
   const byClient=histViewMode==='client';
+  const byLot=histViewMode==='lot';
   if(hint){
     const m=typeof getHistoryKeepMonths==='function'?getHistoryKeepMonths():6;
-    hint.innerHTML=(byClient?'客先ごとにまとまっています。フォルダをクリックして開きます。':'月ごとのフォルダの中に発行日があります。フォルダをクリックして開きます。')+' 数量の誤りは「訂正して再発行」から直します。チェックを入れた伝票だけまとめて再印刷できます。履歴の保存期間は<strong>'+m+'か月</strong>（納品日基準）です。削除すると「削除履歴」タブに記録が残ります。';
+    hint.innerHTML=(byLot?'ロットごとにまとまっています。フォルダの「まとめて印刷」で荷造り単位の伝票を一度に出せます。':(byClient?'客先ごとにまとまっています。フォルダをクリックして開きます。':'月ごとのフォルダの中に発行日があります。フォルダをクリックして開きます。'))+' 数量の誤りは「訂正して再発行」から直します。チェックを入れた伝票だけまとめて再印刷できます。履歴の保存期間は<strong>'+m+'か月</strong>（納品日基準）です。削除すると「削除履歴」タブに記録が残ります。';
+  }
+  if(byLot){
+    const groups={};
+    recs.forEach(h=>{const k=histLotKey(h);if(!groups[k])groups[k]=[];groups[k].push(h);});
+    const keys=Object.keys(groups).sort((a,b)=>{
+      if(a==='（ロットなし）')return 1;
+      if(b==='（ロットなし）')return -1;
+      return a.localeCompare(b,'ja',{numeric:true});
+    });
+    el.innerHTML=keys.map(key=>{
+      const items=groups[key].slice().sort((a,b)=>parseYMD(b.date)-parseYMD(a.date)||(a.client||'').localeCompare(b.client||'','ja')||(b.id||0)-(a.id||0));
+      const total=items.reduce((sum,h)=>sum+h.total,0);
+      const folderKey='l|'+key;
+      const isOpen=histFolderCollapsed[folderKey]===true;
+      const enc=encodeURIComponent(folderKey);
+      const lotPrintAttr=key==='（ロットなし）'?'':` onclick="event.stopPropagation();printHistByLot(${JSON.stringify(String(key)).replace(/"/g,'&quot;')})"`;
+      const lotPrintBtn=key==='（ロットなし）'?'':`<button type="button" class="btn acc" style="font-size:11px;padding:4px 10px;background:#fff;color:#1a5276;border:none;border-radius:5px;font-weight:700;cursor:pointer"${lotPrintAttr}>まとめて印刷</button>`;
+      return '<div style="margin-bottom:10px"><div onclick="toggleHistFolder(\''+enc+'\')" style="display:flex;align-items:center;gap:10px;padding:9px 14px;background:#1a5276;color:#fff;border-radius:'+(isOpen?'8px 8px 0 0':'8px')+';cursor:pointer;user-select:none"><span style="font-size:16px">📦</span><span style="font-weight:700;font-size:14px;flex:1">ロット '+escH(key)+'</span>'+lotPrintBtn+'<span style="font-size:12px;opacity:.8">'+items.length+'件　合計 '+total+'点</span><span style="font-size:13px;display:inline-block;transform:rotate('+(isOpen?'180':'0')+'deg)">▼</span></div><div style="display:'+(isOpen?'block':'none')+';border:0.5px solid #1a5276;border-top:none;border-radius:0 0 8px 8px;overflow:hidden">'+items.map(h=>histSlipHtml(h,false)).join('')+'</div></div>';
+    }).join('');
+    return;
   }
   if(byClient){
     const groups={};
