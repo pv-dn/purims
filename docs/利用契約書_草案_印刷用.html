@@ -74,10 +74,23 @@
     margin-top: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
     break-inside: avoid; page-break-inside: avoid;
   }
-  .sign-box { border: 1px solid #333; padding: 12px 14px; min-height: 160px; }
+  .sign-box {
+    border: 1px solid #333; padding: 12px 14px; min-height: 195px;
+    display: flex; flex-direction: column;
+  }
   .sign-box .ttl { font-weight: 700; margin-bottom: 10px; }
   .sign-box p { margin: 4px 0; }
-  .inkan { text-align: right; margin-top: 28px; letter-spacing: 1.5em; }
+  .sign-box .signer-row {
+    margin-top: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 3.6em; /* 名称・日付から下げて空きを確保 */
+    padding-bottom: 4px;
+  }
+  .sign-box .signer-row p { margin: 0; flex: 1; }
+  .inkan { text-align: right; margin: 0; letter-spacing: 1.5em; flex-shrink: 0; }
   .toolbar {
     position: sticky; top: 0; z-index: 10; background: #fff;
     border-bottom: 1px solid #ccc; padding: 10px 0 12px; margin: -8px 0 16px;
@@ -120,10 +133,10 @@
     }
     .sign-box {
       padding: 10px 12px;
-      min-height: 125px;
+      min-height: 52mm; /* 縦幅を少し広げ、ゴム印・署名の余白を確保 */
     }
     .sign-box .ttl { margin-bottom: 8px; }
-    .inkan { margin-top: 18px; }
+    .sign-box .signer-row { padding-top: 3em; padding-bottom: 2px; }
     /* 別紙は4枚目専用。本文はゆったり、別紙側で収める */
     .annex {
       break-before: page;
@@ -314,15 +327,19 @@
       <div class="ttl">甲（利用者）</div>
       <p>名称：〔　　　　　　　　　　〕</p>
       <p>日付：　　　年　　　月　　　日</p>
-      <p>記名押印者氏名：＿＿＿＿＿＿＿＿＿＿＿＿</p>
-      <div class="inkan">印</div>
+      <div class="signer-row">
+        <p>記名押印者氏名：＿＿＿＿＿＿＿＿＿＿＿＿</p>
+        <div class="inkan">印</div>
+      </div>
     </div>
     <div class="sign-box">
       <div class="ttl">乙（提供者）</div>
       <p>名称：〔　　　　　　　　　　〕</p>
       <p>日付：　　　年　　　月　　　日</p>
-      <p>記名押印者氏名：＿＿＿＿＿＿＿＿＿＿＿＿</p>
-      <div class="inkan">印</div>
+      <div class="signer-row">
+        <p>記名押印者氏名：＿＿＿＿＿＿＿＿＿＿＿＿</p>
+        <div class="inkan">印</div>
+      </div>
     </div>
   </div>
 
