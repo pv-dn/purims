@@ -509,7 +509,18 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="tabs-meta">
     <span class="login-user" id="current-user-display"></span>
     <div class="hdr-d" id="hdr-d"></div>
-    <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
+    <button type="button" class="tab-updates" id="btn-ledger-queue" onclick="openLedgerQueueModal()" style="position:relative">台帳キュー<span id="ledger-queue-badge" style="display:none;margin-left:6px;background:#e74c3c;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;font-weight:700">0</span></button>`n    <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
+  </div>
+</div>
+
+<div id="ledger-queue-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9200;align-items:center;justify-content:center" onclick="if(event.target===this)closeLedgerQueueModal()">
+  <div style="background:#fff;border-radius:12px;width:min(720px,94vw);max-height:85vh;overflow:auto;padding:16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.25)" role="dialog" aria-labelledby="ledger-queue-title">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px">
+      <h3 id="ledger-queue-title" style="margin:0;font-size:17px">台帳からの発行キュー</h3>
+      <button type="button" onclick="closeLedgerQueueModal()" style="border:1px solid #ddd;background:#f7f7f7;border-radius:8px;padding:6px 12px;cursor:pointer">閉じる</button>
+    </div>
+    <p style="font-size:13px;color:#666;margin:0 0 12px;line-height:1.5">タブレットの「伝票を発行」で送られた内容です。取り込むと伝票発行画面に入ります。</p>
+    <div id="ledger-queue-list" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
 </div>
 <div class="main">
@@ -1088,7 +1099,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-body">
       <p>入出荷台帳（<a href="https://pv-dn.github.io/pourvous-ledger/" target="_blank" rel="noopener">pourvous-ledger</a>）で数量を入れたあと、事務所PCの伝票へクラウド経由で渡せます。</p>
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">台帳で入力</div>タブレットでロット・客先・数量を入力 → <span class="help-tag">伝票を発行</span>（画面は台帳のまま）。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>この伝票アプリ（PC）でログインすると<strong>客先・数量・ロット</strong>が入ります。内容を確認してから伝票発行・印刷してください。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>この伝票アプリ（PC）でログインし、<strong>台帳キュー</strong>から取り込むと客先・数量・ロットが入ります。内容を確認してから伝票発行・印刷してください。</div></div>
       <div class="help-note">💡 タブレットで「伝票を発行」→ PCでログインして取込。ネット接続が必要です。伝票だけでも従来どおり発行できます。</div>
     </div>
   </div>
@@ -1316,31 +1327,104 @@ function reloadMastersFromBridgeStorage(){
     toast('台帳デモのマスタを反映しました');
   }catch(e){console.warn('bridge reload',e);}
 }
-async function applyLedgerIssuePending(){
+function ledgerIssueCol(){return IS_DEMO?'ledgerIssuePending_demo':'ledgerIssuePending';}
+async function fetchLedgerIssueQueue(){
+  const list=[];
+  try{
+    const snap=await ledgerFs.collection(ledgerIssueCol()).where('status','==','pending').get();
+    snap.forEach(doc=>{list.push({id:doc.id,data:doc.data()||{}});});
+    list.sort((a,b)=>String(a.data.at||'').localeCompare(String(b.data.at||''))); // 古い順＝キュー順
+  }catch(e){console.warn('fetchLedgerIssueQueue',e);}
+  return list;
+}
+function updateLedgerQueueBadge(n){
+  const badge=document.getElementById('ledger-queue-badge');
+  const btn=document.getElementById('btn-ledger-queue');
+  if(!badge)return;
+  const count=Number(n)||0;
+  if(count>0){
+    badge.style.display='inline-block';
+    badge.textContent=String(count);
+    if(btn)btn.style.fontWeight='700';
+  }else{
+    badge.style.display='none';
+    badge.textContent='0';
+    if(btn)btn.style.fontWeight='';
+  }
+}
+async function refreshLedgerQueueBadge(){
+  if(!currentUser||typeof ledgerFs==='undefined'){updateLedgerQueueBadge(0);return 0;}
+  const list=await fetchLedgerIssueQueue();
+  updateLedgerQueueBadge(list.length);
+  return list.length;
+}
+function closeLedgerQueueModal(){
+  const m=document.getElementById('ledger-queue-modal');
+  if(m)m.style.display='none';
+}
+async function openLedgerQueueModal(){
+  if(!currentUser){toast('ログインしてください','e');return;}
+  const m=document.getElementById('ledger-queue-modal');
+  const box=document.getElementById('ledger-queue-list');
+  if(!m||!box)return;
+  m.style.display='flex';
+  box.innerHTML='<div style="padding:16px;color:#888">読み込み中…</div>';
+  const list=await fetchLedgerIssueQueue();
+  updateLedgerQueueBadge(list.length);
+  if(!list.length){
+    box.innerHTML='<div style="padding:18px;text-align:center;color:#888;background:#fafafa;border:1px dashed #ddd;border-radius:8px">キューは空です</div>';
+    return;
+  }
+  box.innerHTML=list.map((row,i)=>{
+    const d=row.data||{};
+    const items=Array.isArray(d.items)?d.items:[];
+    const pts=items.reduce((s,it)=>s+(Number(it.qty)||0),0);
+    const when=(d.at||'').replace('T',' ').slice(0,16);
+    const lot=d.lotNo?('ロット '+d.lotNo):'ロットなし';
+    const date=d.deliveryDate||'—';
+    const names=items.slice(0,4).map(it=>((it.name||it.code||'')+'×'+(it.qty||0))).join('、')+(items.length>4?' …':'');
+    return `<div style="border:1px solid #e5e5e5;border-radius:10px;padding:12px 14px;background:#fff">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:700;font-size:15px">${escH(d.client||'（客先不明）')}</div>
+          <div style="font-size:12px;color:#666;margin-top:4px;line-height:1.5">納品日 ${escH(date)}　${escH(lot)}　合計 ${pts}点<br>${escH(when)}${names?('<br>'+escH(names)):''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button type="button" onclick="takeLedgerQueueItem('${row.id}')" style="padding:8px 12px;border:none;border-radius:8px;background:#1a4a62;color:#fff;font-weight:700;cursor:pointer">取り込む</button>
+          <button type="button" onclick="dismissLedgerQueueItem('${row.id}')" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f7f7f7;color:#666;cursor:pointer">取消</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function dismissLedgerQueueItem(id){
+  if(!id||!confirm('このキューを取消しますか？\\n（台帳側には残りますが、伝票には取り込みません）'))return;
+  try{
+    await ledgerFs.collection(ledgerIssueCol()).doc(id).update({
+      status:'dismissed',
+      consumedAt:new Date().toISOString(),
+      consumedBy:currentUser&&currentUser.username||''
+    });
+    toast('キューから取消しました');
+    await openLedgerQueueModal();
+  }catch(e){console.warn(e);toast('取消に失敗しました','e');}
+}
+async function takeLedgerQueueItem(id){
+  if(!id)return;
+  try{
+    const snap=await ledgerFs.collection(ledgerIssueCol()).doc(id).get();
+    if(!snap.exists){toast('既に処理済みです','e');await openLedgerQueueModal();return;}
+    const pending=snap.data();
+    if(!pending||pending.status!=='pending'){toast('既に処理済みです','e');await openLedgerQueueModal();return;}
+    const ok=await applyLedgerIssuePayload(pending,id);
+    if(ok){
+      closeLedgerQueueModal();
+      await refreshLedgerQueueBadge();
+    }
+  }catch(e){console.warn(e);toast('取り込みに失敗しました','e');}
+}
+async function applyLedgerIssuePayload(pending,cloudKey){
   if(!currentUser)return false;
-  let pending=null;
-  let cloudKey=null;
-  // 1) 同一ブラウザの localStorage（後方互換）
-  let raw=null;
-  try{raw=localStorage.getItem(BRIDGE_ISSUE_KEY);}catch(e){}
-  if(raw){
-    try{pending=JSON.parse(raw);}catch(e){pending=null;}
-    try{localStorage.removeItem(BRIDGE_ISSUE_KEY);}catch(e){}
-  }
-  // 2) クラウド（タブレット→PC / Firestore）: 最新の pending を1件
-  if(!pending||!pending.client){
-    try{
-      const colName=IS_DEMO?'ledgerIssuePending_demo':'ledgerIssuePending';
-      const snap=await ledgerFs.collection(colName).where('status','==','pending').get();
-      const list=[];
-      snap.forEach(doc=>{list.push({id:doc.id,data:doc.data()});});
-      list.sort((a,b)=>String(b.data.at||'').localeCompare(String(a.data.at||'')));
-      if(list.length){
-        cloudKey=list[0].id;
-        pending=list[0].data;
-      }
-    }catch(e){console.warn('ledgerIssuePending cloud',e);}
-  }
   if(!pending||!pending.client)return false;
   const client=pending.client;
   if(!DB.clients[client]){
@@ -1384,7 +1468,7 @@ async function applyLedgerIssuePending(){
     currentLotNo=String(pending.lotNo).trim();
     try{localStorage.setItem(lsKey('lot'),currentLotNo);}catch(e){}
   }
-  try{showPanel('slip',document.querySelector('.tabs .tab'));}catch(e){}
+  try{showPanel('slip',document.getElementById('tab-slip')||document.querySelector('.tabs .tab'));}catch(e){}
   const cv=document.getElementById('complete-view');if(cv)cv.style.display='none';
   const iv=document.getElementById('input-view');if(iv)iv.style.display='block';
   try{updateChips();}catch(e){}
@@ -1396,8 +1480,7 @@ async function applyLedgerIssuePending(){
   try{updateSkipButtons();}catch(e){}
   if(cloudKey){
     try{
-      const colName=IS_DEMO?'ledgerIssuePending_demo':'ledgerIssuePending';
-      await ledgerFs.collection(colName).doc(cloudKey).update({
+      await ledgerFs.collection(ledgerIssueCol()).doc(cloudKey).update({
         status:'consumed',
         consumedAt:new Date().toISOString(),
         consumedBy:currentUser&&currentUser.username||''
@@ -1406,6 +1489,23 @@ async function applyLedgerIssuePending(){
   }
   toast('台帳から数量を取り込みました'+(currentLotNo?'（ロット '+currentLotNo+'）':''));
   return true;
+}
+/** ログイン時: キュー件数を更新。localStorage の1件だけは従来どおり即取込 */
+async function applyLedgerIssuePending(){
+  if(!currentUser)return false;
+  let pending=null;
+  let raw=null;
+  try{raw=localStorage.getItem(BRIDGE_ISSUE_KEY);}catch(e){}
+  if(raw){
+    try{pending=JSON.parse(raw);}catch(e){pending=null;}
+    try{localStorage.removeItem(BRIDGE_ISSUE_KEY);}catch(e){}
+  }
+  const n=await refreshLedgerQueueBadge();
+  if(pending&&pending.client){
+    return applyLedgerIssuePayload(pending,null);
+  }
+  if(n>0)toast('台帳キューが '+n+' 件あります。「台帳キュー」から取り込んでください');
+  return false;
 }
 if(IS_DEMO){
   window.addEventListener('storage',e=>{
@@ -1417,6 +1517,7 @@ if(IS_DEMO){
 window.addEventListener('storage',e=>{
   if(e.key!==BRIDGE_ISSUE_KEY||!e.newValue||!currentUser)return;
   applyLedgerIssuePending().catch(err=>console.warn(err));
+  refreshLedgerQueueBadge().catch(()=>{});
 });
 async function ensureDemoSeedUsers(){
   if(!IS_DEMO)return;
