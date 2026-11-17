@@ -1183,6 +1183,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
 firebase.initializeApp({
@@ -1194,6 +1195,15 @@ firebase.initializeApp({
     messagingSenderId: "721627985179",
     appId: "1:721627985179:web:db1066eb92e9a1633c8fbe"
   });
+const LEDGER_FS_APP=firebase.initializeApp({
+    apiKey:"AIzaSyBRvXOmLV_iU9ybzJrquJSglUYfEON_CsM",
+    authDomain:"pourvoussystem.firebaseapp.com",
+    projectId:"pourvoussystem",
+    storageBucket:"pourvoussystem.firebasestorage.app",
+    messagingSenderId:"505648740877",
+    appId:"1:505648740877:web:f5b0c3a950866ce74bb344"
+  },"ledgerBridge");
+const ledgerFs=LEDGER_FS_APP.firestore();
 
 // ===== 環境分離（本番 / お試しデモ） =====
 // デモURL: https://pv-dn.github.io/primus-demo/（旧: purims-demo も可）
@@ -1272,19 +1282,17 @@ async function applyLedgerIssuePending(){
     try{pending=JSON.parse(raw);}catch(e){pending=null;}
     try{localStorage.removeItem(BRIDGE_ISSUE_KEY);}catch(e){}
   }
-  // 2) クラウド（タブレット→PC）: 最新の pending を1件
+  // 2) クラウド（タブレット→PC / Firestore）: 最新の pending を1件
   if(!pending||!pending.client){
     try{
-      const snap=await firebase.database().ref(FB_APP+'/ledgerIssuePending').get();
-      const all=snap.exists()?snap.val():null;
-      if(all){
-        const list=Object.entries(all)
-          .filter(([,v])=>v&&v.status==='pending'&&v.client)
-          .sort((a,b)=>String(b[1].at||'').localeCompare(String(a[1].at||'')));
-        if(list.length){
-          cloudKey=list[0][0];
-          pending=list[0][1];
-        }
+      const colName=IS_DEMO?'ledgerIssuePending_demo':'ledgerIssuePending';
+      const snap=await ledgerFs.collection(colName).where('status','==','pending').get();
+      const list=[];
+      snap.forEach(doc=>{list.push({id:doc.id,data:doc.data()});});
+      list.sort((a,b)=>String(b.data.at||'').localeCompare(String(a.data.at||'')));
+      if(list.length){
+        cloudKey=list[0].id;
+        pending=list[0].data;
       }
     }catch(e){console.warn('ledgerIssuePending cloud',e);}
   }
@@ -1343,7 +1351,8 @@ async function applyLedgerIssuePending(){
   try{updateSkipButtons();}catch(e){}
   if(cloudKey){
     try{
-      await firebase.database().ref(FB_APP+'/ledgerIssuePending/'+cloudKey).update({
+      const colName=IS_DEMO?'ledgerIssuePending_demo':'ledgerIssuePending';
+      await ledgerFs.collection(colName).doc(cloudKey).update({
         status:'consumed',
         consumedAt:new Date().toISOString(),
         consumedBy:currentUser&&currentUser.username||''
