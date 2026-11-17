@@ -1217,6 +1217,51 @@ const FB_MASTERLOG=IS_DEMO?'purims_demo_masterlog':'purims_masterlog';
 function lsKey(k){return (IS_DEMO?'purims_demo_':'purims_')+k;}
 const BRIDGE_REV_KEY=IS_DEMO?'purims_demo_bridge_rev':'purims_bridge_rev';
 const BRIDGE_ISSUE_KEY=IS_DEMO?'purims_demo_issue_pending':'purims_issue_pending';
+const SHARED_MASTER_DOC=IS_DEMO?'v14_demo':'v14';
+function packSharedMastersPayload(){
+  return {clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}};
+}
+async function pushSharedMastersCloud(){
+  try{
+    if(typeof ledgerFs==='undefined'||!ledgerFs)return false;
+    const payload=packSharedMastersPayload();
+    if(!payload.clients||!Object.keys(payload.clients).length)return false;
+    await ledgerFs.collection('sharedMasters').doc(SHARED_MASTER_DOC).set({
+      value:JSON.stringify(payload),
+      updatedAt:new Date().toISOString(),
+      updatedBy:'slip'
+    });
+    return true;
+  }catch(e){console.warn('pushSharedMastersCloud',e);return false;}
+}
+async function pullSharedMastersCloud(){
+  try{
+    if(typeof ledgerFs==='undefined'||!ledgerFs)return false;
+    const snap=await ledgerFs.collection('sharedMasters').doc(SHARED_MASTER_DOC).get();
+    if(!snap.exists)return false;
+    const raw=snap.data().value;
+    const d=typeof raw==='string'?JSON.parse(raw):raw;
+    if(!d||!d.clients||!Object.keys(d.clients).length)return false;
+    DB.clients=unpackClientsFromFirebase(d.clients||{});
+    if(d.cycles&&Object.keys(d.cycles).length)DB.cycles=d.cycles;
+    if(Array.isArray(d.products)&&d.products.length)DB.products=d.products;
+    if(Array.isArray(d.groups)&&d.groups.length)DB.groups=d.groups;
+    if(d.clientGroups)DB.clientGroups=d.clientGroups;
+    if(d.clientOrder)DB.clientOrder=d.clientOrder;
+    if(d.closing)DB.closing=d.closing;
+    if(d.minCharge)DB.minCharge=d.minCharge;
+    if(d.deliveryFee)DB.deliveryFee=d.deliveryFee;
+    if(d.packagingFee)DB.packagingFee=d.packagingFee;
+    if(d.parkingEnabled)DB.parkingEnabled=d.parkingEnabled;
+    persistDraft();
+    try{fillSel('csel',curC);fillSel('msel',editC);}catch(e){}
+    try{fillGrpSel('e-grp');fillGrpSel('nc-grp');}catch(e){}
+    try{renderProducts();renderGroups();renderClientGrpList();}catch(e){}
+    if(curC&&DB.clients[curC]){try{renderItems();}catch(e){}}
+    toast('台帳とマスタを同期しました');
+    return true;
+  }catch(e){console.warn('pullSharedMastersCloud',e);return false;}
+}
 function bumpBridgeRev(){
   if(!IS_DEMO)return;
   try{localStorage.setItem(BRIDGE_REV_KEY,String(Date.now()));}catch(e){}
@@ -1563,8 +1608,9 @@ function load(){
   if(ensurePaperParkingFlags())persistDraft();
 }
 function persistDraft(){
-  localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
+  localStorage.setItem(lsKey('v14'),JSON.stringify(packSharedMastersPayload()));
   bumpBridgeRev();
+  pushSharedMastersCloud().catch(()=>{});
 }
 function persistLocal(){
   persistDraft();
@@ -4538,7 +4584,7 @@ async function finishLoginUI(matched){
   if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
   if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
   if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
-  try{await applyLedgerIssuePending();}catch(e){console.warn(e);}
+  try{await pullSharedMastersCloud();}catch(e){console.warn(e);}try{await applyLedgerIssuePending();}catch(e){console.warn(e);}
   try{initMeisaiMonth();}catch(e){}
   try{updateBillingPendingBadge();}catch(e){}
   try{markOutOfScopeAsBilled();}catch(e){}
