@@ -1086,10 +1086,10 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="help-section help-collapsed" id="help-ledger">
     <div class="help-section-hd" onclick="toggleHelp('ledger')">📒 入出荷台帳からの受け渡し<span class="help-toggle" id="help-toggle-ledger">▶</span></div>
     <div class="help-section-body">
-      <p>入出荷台帳（<a href="https://pv-dn.github.io/pourvous-ledger/" target="_blank" rel="noopener">pourvous-ledger</a>）で数量を入れたあと、伝票へ渡せます。</p>
-      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">台帳で入力</div>ロット番号を選び、客先・数量を入力 → <span class="help-tag">伝票を発行</span>。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>伝票アプリが開きます。ログインすると<strong>客先・数量・ロット</strong>が入ります。内容を確認してから伝票発行してください。</div></div>
-      <div class="help-note">💡 同じPC・同じブラウザで使うと受け渡しがスムーズです。伝票だけでも従来どおり発行できます。</div>
+      <p>入出荷台帳（<a href="https://pv-dn.github.io/pourvous-ledger/" target="_blank" rel="noopener">pourvous-ledger</a>）で数量を入れたあと、事務所PCの伝票へクラウド経由で渡せます。</p>
+      <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">台帳で入力</div>タブレットでロット・客先・数量を入力 → <span class="help-tag">伝票を発行</span>（画面は台帳のまま）。</div></div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>この伝票アプリ（PC）でログインすると<strong>客先・数量・ロット</strong>が入ります。内容を確認してから伝票発行・印刷してください。</div></div>
+      <div class="help-note">💡 タブレットで「伝票を発行」→ PCでログインして取込。ネット接続が必要です。伝票だけでも従来どおり発行できます。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-billing">
@@ -1261,16 +1261,35 @@ function reloadMastersFromBridgeStorage(){
     toast('台帳デモのマスタを反映しました');
   }catch(e){console.warn('bridge reload',e);}
 }
-function applyLedgerIssuePending(){
+async function applyLedgerIssuePending(){
   if(!currentUser)return false;
-  let raw=null;
-  try{raw=localStorage.getItem(BRIDGE_ISSUE_KEY);}catch(e){return false;}
-  if(!raw)return false;
   let pending=null;
-  try{pending=JSON.parse(raw);}catch(e){return false;}
-  try{localStorage.removeItem(BRIDGE_ISSUE_KEY);}catch(e){}
-  const client=pending&&pending.client;
-  if(!client)return false;
+  let cloudKey=null;
+  // 1) 同一ブラウザの localStorage（後方互換）
+  let raw=null;
+  try{raw=localStorage.getItem(BRIDGE_ISSUE_KEY);}catch(e){}
+  if(raw){
+    try{pending=JSON.parse(raw);}catch(e){pending=null;}
+    try{localStorage.removeItem(BRIDGE_ISSUE_KEY);}catch(e){}
+  }
+  // 2) クラウド（タブレット→PC）: 最新の pending を1件
+  if(!pending||!pending.client){
+    try{
+      const snap=await firebase.database().ref(FB_APP+'/ledgerIssuePending').get();
+      const all=snap.exists()?snap.val():null;
+      if(all){
+        const list=Object.entries(all)
+          .filter(([,v])=>v&&v.status==='pending'&&v.client)
+          .sort((a,b)=>String(b[1].at||'').localeCompare(String(a[1].at||'')));
+        if(list.length){
+          cloudKey=list[0][0];
+          pending=list[0][1];
+        }
+      }
+    }catch(e){console.warn('ledgerIssuePending cloud',e);}
+  }
+  if(!pending||!pending.client)return false;
+  const client=pending.client;
   if(!DB.clients[client]){
     DB.clients[client]={items:(pending.items||[]).map(it=>({code:it.code||'---',name:it.name||''}))};
   }
@@ -1322,6 +1341,15 @@ function applyLedgerIssuePending(){
   try{syncSlipLotUi();}catch(e){}
   try{renderItems();}catch(e){}
   try{updateSkipButtons();}catch(e){}
+  if(cloudKey){
+    try{
+      await firebase.database().ref(FB_APP+'/ledgerIssuePending/'+cloudKey).update({
+        status:'consumed',
+        consumedAt:new Date().toISOString(),
+        consumedBy:currentUser&&currentUser.username||''
+      });
+    }catch(e){console.warn('consume pending',e);}
+  }
   toast('台帳から数量を取り込みました'+(currentLotNo?'（ロット '+currentLotNo+'）':''));
   return true;
 }
@@ -1334,7 +1362,7 @@ if(IS_DEMO){
 }
 window.addEventListener('storage',e=>{
   if(e.key!==BRIDGE_ISSUE_KEY||!e.newValue||!currentUser)return;
-  try{applyLedgerIssuePending();}catch(err){console.warn(err);}
+  applyLedgerIssuePending().catch(err=>console.warn(err));
 });
 async function ensureDemoSeedUsers(){
   if(!IS_DEMO)return;
@@ -4501,7 +4529,7 @@ async function finishLoginUI(matched){
   if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
   if(typeof pruneDeletedHistory==='function') try{pruneDeletedHistory({quiet:true});}catch(e){}
   if(typeof renderHistory==='function') try{renderHistory();}catch(e){}
-  try{applyLedgerIssuePending();}catch(e){console.warn(e);}
+  try{await applyLedgerIssuePending();}catch(e){console.warn(e);}
   try{initMeisaiMonth();}catch(e){}
   try{updateBillingPendingBadge();}catch(e){}
   try{markOutOfScopeAsBilled();}catch(e){}
@@ -4952,6 +4980,7 @@ function closeLoginLog_dup(){document.getElementById('loginlog-modal').style.dis
 
 /* 更新情報（新しいものを上に追加） type: 'feat'=機能更新 / 'fix'=バグ修正 */
 const APP_UPDATES=[
+  {date:'2026-11-18',type:'feat',text:'台帳「伝票を発行」をクラウド経由に（タブレット→PCで取込）'},
   {date:'2026-10-29',type:'feat',text:'本番台帳から伝票へ数量・ロットを受け渡し（ログイン後に自動取り込み）'},
   {date:'2026-10-29',type:'fix',text:'ロットまとめて印刷の件数表示が、発行直後に1件ずれていたのを修正'},
   {date:'2026-10-29',type:'feat',text:'請求タブを有効化（請求明細書・請求額一覧の閲覧／印刷、Excel出力、事務チェック、駐車場代）'},
