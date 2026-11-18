@@ -1396,19 +1396,21 @@ async function openLedgerQueueModal(){
     return;
   }
   const groups=groupLedgerQueueByLot(list);
-  box.innerHTML=groups.map(([lotKey,rows])=>{
+  // ボタンにはロット名を直接書かず、番号で呼ぶ（引用符などで壊れないように）
+  window._ledgerBatchLots=groups.map(g=>g[0]);
+  box.innerHTML=groups.map(([lotKey,rows],gi)=>{
     const canBatch=lotKey!=='（ロットなし）'&&rows.length>0;
     const lotLabel=lotKey==='（ロットなし）'?'ロット未設定':('ロット '+lotKey);
     const head=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
       <div style="font-weight:800;font-size:14px;color:#1a4a62">${escH(lotLabel)}（${rows.length}件）</div>
-      ${canBatch?`<button type="button" onclick="issueAndPrintLedgerLot(decodeURIComponent('${encodeURIComponent(lotKey)}'))" style="padding:7px 12px;border:none;border-radius:8px;background:#0f6e56;color:#fff;font-weight:700;cursor:pointer;font-size:12px">📦 このロットを一括発行してまとめて印刷</button>`:''}
+      ${canBatch?`<button type="button" onclick="issueAndPrintLedgerLotByIndex(${gi})" style="padding:7px 12px;border:none;border-radius:8px;background:#0f6e56;color:#fff;font-weight:700;cursor:pointer;font-size:12px">📦 このロットを一括発行してまとめて印刷</button>`:''}
     </div>`;
     const cards=rows.map(row=>{
       const d=row.data||{};
       const items=Array.isArray(d.items)?d.items:[];
       const pts=items.reduce((s,it)=>s+(Number(it.qty)||0),0);
       const when=(d.at||'').replace('T',' ').slice(0,16);
-      const date=d.deliveryDate||'—';
+      const date=deliveryDateLabelFromPending(d.deliveryDate,d.client);
       const names=items.slice(0,4).map(it=>((it.name||it.code||'')+'×'+(it.qty||0))).join('、')+(items.length>4?' …':'');
       return `<div style="border:1px solid #e5e5e5;border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:8px">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
@@ -1511,6 +1513,11 @@ async function markLedgerQueueConsumed(id,extra){
       consumedBy:currentUser&&currentUser.username||''
     },extra||{}));
   }catch(e){console.warn('consume pending',e);}
+}
+function issueAndPrintLedgerLotByIndex(gi){
+  const key=(window._ledgerBatchLots||[])[gi];
+  if(key==null){toast('一覧を開き直してください','e');return;}
+  return issueAndPrintLedgerLot(key);
 }
 async function issueAndPrintLedgerLot(lotKey){
   if(!currentUser){toast('ログインしてください','e');return;}
