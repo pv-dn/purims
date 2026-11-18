@@ -520,7 +520,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       <h3 id="ledger-queue-title" style="margin:0;font-size:17px">台帳からの発行キュー</h3>
       <button type="button" onclick="closeLedgerQueueModal()" style="border:1px solid #ddd;background:#f7f7f7;border-radius:8px;padding:6px 12px;cursor:pointer">閉じる</button>
     </div>
-    <p style="font-size:13px;color:#666;margin:0 0 12px;line-height:1.5">タブレットの「伝票を発行」で送られた内容です。取り込むと伝票発行画面に入ります。</p>
+    <p style="font-size:13px;color:#666;margin:0 0 12px;line-height:1.5">タブレットの「伝票を発行」で送られた内容です。1件ずつ取り込むか、ロットごとに一括発行してまとめて印刷できます。</p>
     <div id="ledger-queue-list" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
 </div>
@@ -1100,8 +1100,8 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <div class="help-section-body">
       <p>入出荷台帳（<a href="https://pv-dn.github.io/pourvous-ledger/" target="_blank" rel="noopener">pourvous-ledger</a>）で数量を入れたあと、事務所PCの伝票へクラウド経由で渡せます。</p>
       <div class="help-step"><div class="help-step-num">1</div><div class="help-step-body"><div class="help-step-title">台帳で入力</div>タブレットでロット・客先・数量を入力 → <span class="help-tag">伝票を発行</span>（画面は台帳のまま）。</div></div>
-      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>この伝票アプリ（PC）でログインし、<strong>台帳キュー</strong>から取り込むと客先・数量・ロットが入ります。内容を確認してから伝票発行・印刷してください。</div></div>
-      <div class="help-note">💡 タブレットで「伝票を発行」→ PCでログインして取込。ネット接続が必要です。伝票だけでも従来どおり発行できます。</div>
+      <div class="help-step"><div class="help-step-num">2</div><div class="help-step-body"><div class="help-step-title">伝票側でログイン</div>この伝票アプリ（PC）でログインし、<strong>台帳キュー</strong>を開きます。1件ずつ取り込むか、<strong>ロットごとに一括発行してまとめて印刷</strong>できます。</div></div>
+      <div class="help-note">💡 同じロット番号のキューは緑ボタンで一括発行→まとめて印刷。ネット接続が必要です。伝票だけでも従来どおり発行できます。</div>
     </div>
   </div>
   <div class="help-section help-collapsed" id="help-billing">
@@ -1363,8 +1363,27 @@ function closeLedgerQueueModal(){
   const m=document.getElementById('ledger-queue-modal');
   if(m)m.style.display='none';
 }
+let _ledgerLotBatchBusy=false;
+function ledgerQueueLotKey(d){
+  const n=d&&d.lotNo!=null?String(d.lotNo).trim():'';
+  return n||'（ロットなし）';
+}
+function groupLedgerQueueByLot(list){
+  const map=new Map();
+  (list||[]).forEach(row=>{
+    const key=ledgerQueueLotKey(row.data||{});
+    if(!map.has(key))map.set(key,[]);
+    map.get(key).push(row);
+  });
+  return [...map.entries()].sort((a,b)=>{
+    if(a[0]==='（ロットなし）')return 1;
+    if(b[0]==='（ロットなし）')return -1;
+    return String(a[0]).localeCompare(String(b[0]),'ja',{numeric:true});
+  });
+}
 async function openLedgerQueueModal(){
   if(!currentUser){toast('ログインしてください','e');return;}
+  if(_ledgerLotBatchBusy){toast('一括発行の処理中です');return;}
   const m=document.getElementById('ledger-queue-modal');
   const box=document.getElementById('ledger-queue-list');
   if(!m||!box)return;
@@ -1376,27 +1395,174 @@ async function openLedgerQueueModal(){
     box.innerHTML='<div style="padding:18px;text-align:center;color:#888;background:#fafafa;border:1px dashed #ddd;border-radius:8px">キューは空です</div>';
     return;
   }
-  box.innerHTML=list.map((row,i)=>{
-    const d=row.data||{};
-    const items=Array.isArray(d.items)?d.items:[];
-    const pts=items.reduce((s,it)=>s+(Number(it.qty)||0),0);
-    const when=(d.at||'').replace('T',' ').slice(0,16);
-    const lot=d.lotNo?('ロット '+d.lotNo):'ロットなし';
-    const date=d.deliveryDate||'—';
-    const names=items.slice(0,4).map(it=>((it.name||it.code||'')+'×'+(it.qty||0))).join('、')+(items.length>4?' …':'');
-    return `<div style="border:1px solid #e5e5e5;border-radius:10px;padding:12px 14px;background:#fff">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
-        <div style="min-width:0;flex:1">
-          <div style="font-weight:700;font-size:15px">${escH(d.client||'（客先不明）')}</div>
-          <div style="font-size:12px;color:#666;margin-top:4px;line-height:1.5">納品日 ${escH(date)}　${escH(lot)}　合計 ${pts}点<br>${escH(when)}${names?('<br>'+escH(names)):''}</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button type="button" onclick="takeLedgerQueueItem('${row.id}')" style="padding:8px 12px;border:none;border-radius:8px;background:#1a4a62;color:#fff;font-weight:700;cursor:pointer">取り込む</button>
-          <button type="button" onclick="dismissLedgerQueueItem('${row.id}')" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f7f7f7;color:#666;cursor:pointer">取消</button>
-        </div>
-      </div>
+  const groups=groupLedgerQueueByLot(list);
+  box.innerHTML=groups.map(([lotKey,rows])=>{
+    const canBatch=lotKey!=='（ロットなし）'&&rows.length>0;
+    const lotLabel=lotKey==='（ロットなし）'?'ロット未設定':('ロット '+lotKey);
+    const head=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
+      <div style="font-weight:800;font-size:14px;color:#1a4a62">${escH(lotLabel)}（${rows.length}件）</div>
+      ${canBatch?`<button type="button" onclick='issueAndPrintLedgerLot(${JSON.stringify(lotKey)})' style="padding:7px 12px;border:none;border-radius:8px;background:#0f6e56;color:#fff;font-weight:700;cursor:pointer;font-size:12px">📦 このロットを一括発行してまとめて印刷</button>`:''}
     </div>`;
+    const cards=rows.map(row=>{
+      const d=row.data||{};
+      const items=Array.isArray(d.items)?d.items:[];
+      const pts=items.reduce((s,it)=>s+(Number(it.qty)||0),0);
+      const when=(d.at||'').replace('T',' ').slice(0,16);
+      const date=d.deliveryDate||'—';
+      const names=items.slice(0,4).map(it=>((it.name||it.code||'')+'×'+(it.qty||0))).join('、')+(items.length>4?' …':'');
+      return `<div style="border:1px solid #e5e5e5;border-radius:10px;padding:12px 14px;background:#fff;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:700;font-size:15px">${escH(d.client||'（客先不明）')}</div>
+            <div style="font-size:12px;color:#666;margin-top:4px;line-height:1.5">納品日 ${escH(date)}　合計 ${pts}点<br>${escH(when)}${names?('<br>'+escH(names)):''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button type="button" onclick="takeLedgerQueueItem('${row.id}')" style="padding:8px 12px;border:none;border-radius:8px;background:#1a4a62;color:#fff;font-weight:700;cursor:pointer">取り込む</button>
+            <button type="button" onclick="dismissLedgerQueueItem('${row.id}')" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f7f7f7;color:#666;cursor:pointer">取消</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:14px">${head}${cards}</div>`;
   }).join('');
+}
+function deliveryDateLabelFromPending(raw){
+  const parts=String(raw||'').split(/[-/]/).map(Number);
+  if(parts.length>=3&&parts[0]>1900)return fmtD(new Date(parts[0],parts[1]-1,parts[2]));
+  return String(raw||'').trim()||fmtD(new Date());
+}
+function ensureClientFromLedgerPending(pending){
+  const client=pending&&pending.client;
+  if(!client)return '';
+  if(!DB.clients[client]){
+    DB.clients[client]={items:(pending.items||[]).map(it=>({code:it.code||'---',name:it.name||''}))};
+  }
+  (pending.items||[]).forEach(it=>{
+    if(!it)return;
+    if(it.code&&!(DB.products||[]).some(p=>p.code===it.code)){
+      DB.products.push({code:it.code,name:it.name||it.code});
+    }
+    const list=DB.clients[client].items||(DB.clients[client].items=[]);
+    if(!list.some(m=>m.code===it.code||m.name===it.name)){
+      list.push({code:it.code||'---',name:it.name||''});
+    }
+  });
+  return client;
+}
+function buildItemsFromLedgerPending(pending){
+  return (pending.items||[])
+    .filter(it=>it&&Number(it.qty)>0)
+    .map(it=>({code:it.code||'---',name:it.name||'',qty:Number(it.qty)||0,biko:''}));
+}
+/** 確認ダイアログなしで履歴保存（台帳ロット一括用） */
+async function issueSlipSilentFromPending(pending){
+  const client=ensureClientFromLedgerPending(pending);
+  if(!client)return {ok:false,reason:'客先なし'};
+  const allItems=buildItemsFromLedgerPending(pending);
+  if(!allItems.length)return {ok:false,reason:'数量なし'};
+  const ds=deliveryDateLabelFromPending(pending.deliveryDate);
+  const lotNo=pending.lotNo!=null?String(pending.lotNo).trim():'';
+  const sameDayHist=findHistByClientDelivery(client,ds);
+  const totalPts=allItems.reduce((s,it)=>s+it.qty,0);
+  let histId;
+  let isCorrection=false;
+  if(sameDayHist){
+    isCorrection=true;
+    sameDayHist.items=allItems;
+    sameDayHist.total=totalPts;
+    sameDayHist.deliveryDate=ds;
+    sameDayHist.correctedAt=todayIso();
+    sameDayHist.correctedBy=currentUser?currentUser.username:'';
+    sameDayHist.correctionCount=(Number(sameDayHist.correctionCount)||0)+1;
+    sameDayHist.lotNo=lotNo||'';
+    histId=sameDayHist.id;
+    persistHistoryLocal();
+    try{fbSaveHistoryEntry(sameDayHist);}catch(e){console.warn(e);}
+  }else{
+    histId=newHistId();
+    const entry={
+      id:histId,
+      client,
+      date:todayIso(),
+      deliveryDate:ds,
+      lotNo:lotNo||'',
+      items:allItems,
+      total:totalPts,
+      issuedBy:currentUser?currentUser.username:''
+    };
+    DB.history.unshift(entry);
+    persistHistoryLocal();
+    try{fbSaveHistoryEntry(entry);}catch(e){console.warn(e);}
+  }
+  return {ok:true,client,ds,lotNo,histId,isCorrection,itemCount:allItems.length,totalPts};
+}
+async function markLedgerQueueConsumed(id,extra){
+  if(!id)return;
+  try{
+    await ledgerFs.collection(ledgerIssueCol()).doc(id).update(Object.assign({
+      status:'consumed',
+      consumedAt:new Date().toISOString(),
+      consumedBy:currentUser&&currentUser.username||''
+    },extra||{}));
+  }catch(e){console.warn('consume pending',e);}
+}
+async function issueAndPrintLedgerLot(lotKey){
+  if(!currentUser){toast('ログインしてください','e');return;}
+  if(_ledgerLotBatchBusy){toast('処理中です');return;}
+  const key=String(lotKey||'').trim();
+  if(!key||key==='（ロットなし）'){toast('ロット未設定のキューは一括できません','e');return;}
+  const list=await fetchLedgerIssueQueue();
+  const rows=list.filter(r=>ledgerQueueLotKey(r.data||{})===key);
+  if(!rows.length){toast('対象のキューがありません','e');await openLedgerQueueModal();return;}
+  if(!confirm('ロット '+key+' の '+rows.length+' 件を一括発行し、まとめて印刷しますか？\n\n※同じ客先・同じ納品日が既にある場合は訂正再発行します。'))return;
+  _ledgerLotBatchBusy=true;
+  closeLedgerQueueModal();
+  toast('ロット '+key+' を一括発行中…（'+rows.length+'件）');
+  let okCount=0, correctCount=0, failCount=0;
+  const fails=[];
+  const issuedIds=[];
+  try{
+    for(const row of rows){
+      const pending=row.data||{};
+      try{
+        const res=await issueSlipSilentFromPending(pending);
+        if(!res.ok){
+          failCount++;
+          fails.push((pending.client||'?')+':'+(res.reason||'失敗'));
+          continue;
+        }
+        await markLedgerQueueConsumed(row.id,{batchLot:key});
+        okCount++;
+        if(res.isCorrection)correctCount++;
+        if(res.histId!=null)issuedIds.push(String(res.histId));
+      }catch(e){
+        console.warn(e);
+        failCount++;
+        fails.push((pending.client||'?')+':エラー');
+      }
+    }
+    try{persistDraft();}catch(e){}
+    try{renderHistory();}catch(e){}
+    try{fillSel('csel');}catch(e){}
+    try{fillHistLotPrintSelect();}catch(e){}
+    currentLotNo=key;
+    try{localStorage.setItem(lsKey('lot'),currentLotNo);}catch(e){}
+    try{syncSlipLotUi();}catch(e){}
+    await refreshLedgerQueueBadge();
+    const idSet=new Set(issuedIds);
+    const printed=(DB.history||[]).filter(h=>idSet.has(String(h.id)));
+    if(printed.length){
+      printHistList(printed);
+    }
+    let msg='ロット '+key+'：'+okCount+'件発行';
+    if(correctCount)msg+='（うち訂正 '+correctCount+'件）';
+    if(printed.length)msg+=' → '+printed.length+'件をまとめて印刷';
+    if(failCount)msg+='／失敗 '+failCount+'件';
+    toast(msg,failCount?'e':'');
+    if(fails.length)console.warn('ledger lot batch fails',fails);
+  }finally{
+    _ledgerLotBatchBusy=false;
+  }
 }
 async function dismissLedgerQueueItem(id){
   if(!id||!confirm('このキューを取消しますか？\n（台帳側には残りますが、伝票には取り込みません）'))return;
