@@ -509,7 +509,8 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="tabs-meta">
     <span class="login-user" id="current-user-display"></span>
     <div class="hdr-d" id="hdr-d"></div>
-    <button type="button" class="tab-updates" id="btn-ledger-queue" onclick="openLedgerQueueModal()" style="position:relative">台帳キュー<span id="ledger-queue-badge" style="display:none;margin-left:6px;background:#e74c3c;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;font-weight:700">0</span></button>`n    <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
+    <button type="button" class="tab-updates" id="btn-ledger-queue" onclick="openLedgerQueueModal()" style="position:relative">台帳キュー<span id="ledger-queue-badge" style="display:none;margin-left:6px;background:#e74c3c;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;font-weight:700">0</span></button>
+    <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
   </div>
 </div>
 
@@ -1398,7 +1399,7 @@ async function openLedgerQueueModal(){
   }).join('');
 }
 async function dismissLedgerQueueItem(id){
-  if(!id||!confirm('このキューを取消しますか？\\n（台帳側には残りますが、伝票には取り込みません）'))return;
+  if(!id||!confirm('このキューを取消しますか？\n（台帳側には残りますが、伝票には取り込みません）'))return;
   try{
     await ledgerFs.collection(ledgerIssueCol()).doc(id).update({
       status:'dismissed',
