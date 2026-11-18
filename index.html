@@ -1401,7 +1401,7 @@ async function openLedgerQueueModal(){
     const lotLabel=lotKey==='（ロットなし）'?'ロット未設定':('ロット '+lotKey);
     const head=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
       <div style="font-weight:800;font-size:14px;color:#1a4a62">${escH(lotLabel)}（${rows.length}件）</div>
-      ${canBatch?`<button type="button" onclick='issueAndPrintLedgerLot(${JSON.stringify(lotKey)})' style="padding:7px 12px;border:none;border-radius:8px;background:#0f6e56;color:#fff;font-weight:700;cursor:pointer;font-size:12px">📦 このロットを一括発行してまとめて印刷</button>`:''}
+      ${canBatch?`<button type="button" onclick="issueAndPrintLedgerLot(decodeURIComponent('${encodeURIComponent(lotKey)}'))" style="padding:7px 12px;border:none;border-radius:8px;background:#0f6e56;color:#fff;font-weight:700;cursor:pointer;font-size:12px">📦 このロットを一括発行してまとめて印刷</button>`:''}
     </div>`;
     const cards=rows.map(row=>{
       const d=row.data||{};
@@ -1426,10 +1426,12 @@ async function openLedgerQueueModal(){
     return `<div style="margin-bottom:14px">${head}${cards}</div>`;
   }).join('');
 }
-function deliveryDateLabelFromPending(raw){
-  const parts=String(raw||'').split(/[-/]/).map(Number);
-  if(parts.length>=3&&parts[0]>1900)return fmtD(new Date(parts[0],parts[1]-1,parts[2]));
-  return String(raw||'').trim()||fmtD(new Date());
+function deliveryDateLabelFromPending(raw,client){
+  const parsed=parseDeliveryDate(raw);
+  if(parsed)return fmtD(new Date(parsed.y,parsed.m-1,parsed.d));
+  // 納品日がないキューは、客先のサイクルから自動計算（単件発行と同じ）
+  const auto=nxtDel(DB.cycles[client]||'');
+  return auto?fmtD(auto):fmtD(new Date());
 }
 function ensureClientFromLedgerPending(pending){
   const client=pending&&pending.client;
@@ -1460,9 +1462,13 @@ async function issueSlipSilentFromPending(pending){
   if(!client)return {ok:false,reason:'客先なし'};
   const allItems=buildItemsFromLedgerPending(pending);
   if(!allItems.length)return {ok:false,reason:'数量なし'};
-  const ds=deliveryDateLabelFromPending(pending.deliveryDate);
+  const ds=deliveryDateLabelFromPending(pending.deliveryDate,client);
   const lotNo=pending.lotNo!=null?String(pending.lotNo).trim():'';
   const sameDayHist=findHistByClientDelivery(client,ds);
+  // 確認済み期間の伝票は無確認で書き換えない（単件発行と同じ扱い）
+  if(sameDayHist&&isHistDeliveryChecked(sameDayHist)){
+    return {ok:false,reason:'確認済み期間の伝票があるため（単件で確認してください）'};
+  }
   const totalPts=allItems.reduce((s,it)=>s+it.qty,0);
   let histId;
   let isCorrection=false;
@@ -1514,7 +1520,21 @@ async function issueAndPrintLedgerLot(lotKey){
   const list=await fetchLedgerIssueQueue();
   const rows=list.filter(r=>ledgerQueueLotKey(r.data||{})===key);
   if(!rows.length){toast('対象のキューがありません','e');await openLedgerQueueModal();return;}
-  if(!confirm('ロット '+key+' の '+rows.length+' 件を一括発行し、まとめて印刷しますか？\n\n※同じ客先・同じ納品日が既にある場合は訂正再発行します。'))return;
+  // 同じロット内で同じ客先・同じ納品日が2件以上あると、後の1件で前の内容が上書きされるため止める
+  const seen=new Map();
+  const dups=[];
+  rows.forEach(r=>{
+    const p=r.data||{};
+    const ds=deliveryDateLabelFromPending(p.deliveryDate,p.client);
+    const k=String(p.client||'')+'\t'+ds;
+    if(seen.has(k))dups.push((p.client||'?')+'（'+ds+'）');
+    else seen.set(k,true);
+  });
+  if(dups.length){
+    alert('同じ客先・同じ納品日のキューが同じロット内に複数あるため、一括発行を止めました。\n\n'+[...new Set(dups)].join('\n')+'\n\n該当分は「取り込む」で1件ずつ確認してください。');
+    return;
+  }
+  if(!confirm('ロット '+key+' の '+rows.length+' 件を一括発行し、まとめて印刷しますか？\n\n※同じ客先・同じ納品日の履歴が既にある場合は、訂正再発行になります。\n※確認済み期間の伝票は一括では変更せず、スキップします。'))return;
   _ledgerLotBatchBusy=true;
   closeLedgerQueueModal();
   toast('ロット '+key+' を一括発行中…（'+rows.length+'件）');
@@ -1528,7 +1548,7 @@ async function issueAndPrintLedgerLot(lotKey){
         const res=await issueSlipSilentFromPending(pending);
         if(!res.ok){
           failCount++;
-          fails.push((pending.client||'?')+':'+(res.reason||'失敗'));
+          fails.push((pending.client||'?')+'：'+(res.reason||'失敗'));
           continue;
         }
         await markLedgerQueueConsumed(row.id,{batchLot:key});
@@ -1538,16 +1558,13 @@ async function issueAndPrintLedgerLot(lotKey){
       }catch(e){
         console.warn(e);
         failCount++;
-        fails.push((pending.client||'?')+':エラー');
+        fails.push((pending.client||'?')+'：エラー');
       }
     }
     try{persistDraft();}catch(e){}
     try{renderHistory();}catch(e){}
     try{fillSel('csel');}catch(e){}
     try{fillHistLotPrintSelect();}catch(e){}
-    currentLotNo=key;
-    try{localStorage.setItem(lsKey('lot'),currentLotNo);}catch(e){}
-    try{syncSlipLotUi();}catch(e){}
     await refreshLedgerQueueBadge();
     const idSet=new Set(issuedIds);
     const printed=(DB.history||[]).filter(h=>idSet.has(String(h.id)));
@@ -1559,7 +1576,10 @@ async function issueAndPrintLedgerLot(lotKey){
     if(printed.length)msg+=' → '+printed.length+'件をまとめて印刷';
     if(failCount)msg+='／失敗 '+failCount+'件';
     toast(msg,failCount?'e':'');
-    if(fails.length)console.warn('ledger lot batch fails',fails);
+    if(fails.length){
+      console.warn('ledger lot batch fails',fails);
+      alert('一括発行で次の'+fails.length+'件は発行していません（キューに残っています）。\n\n'+fails.join('\n'));
+    }
   }finally{
     _ledgerLotBatchBusy=false;
   }
