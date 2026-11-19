@@ -1359,13 +1359,11 @@ function renderNewClientNotice(){
   _newClientShown=shown;
   if(!shown.length){box.style.display='none';list.innerHTML='';return;}
   list.innerHTML=shown.slice(0,6).map((n,i)=>{
-    const synced=!!DB.clients[n];
+    // 伝票側にまだ入っていない客先でも「設定する」でよい（押すと自動で取り込んでから開く）
     return '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px dashed #f0c36d">'
       +'<span style="flex:1;min-width:0;font-weight:700;word-break:break-all">'+escH(n)+'</span>'
-      +(synced
-        ?'<button type="button" class="btn pri" style="padding:3px 8px;font-size:12px" onclick="openNewClientSetup('+i+')">設定する</button>'
-         +'<button type="button" class="btn" style="padding:3px 7px;font-size:12px" title="すでに設定済み（お知らせを消す）" onclick="markNewClientDone('+i+')">済</button>'
-        :'<button type="button" class="btn pri" style="padding:3px 8px;font-size:12px" onclick="syncNewClientsFromLedger()">取り込む</button>')
+      +'<button type="button" class="btn pri" style="padding:3px 8px;font-size:12px" onclick="openNewClientSetup('+i+')">設定する</button>'
+      +'<button type="button" class="btn" style="padding:3px 7px;font-size:12px" title="すでに設定済み（お知らせを消す）" onclick="markNewClientDone('+i+')">済</button>'
       +'</div>';
   }).join('')+(shown.length>6?'<div style="font-size:12px;color:#854f0b;padding-top:4px">ほか '+(shown.length-6)+' 件</div>':'');
   box.style.display='block';
