@@ -999,6 +999,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
     <button type="button" class="btn pri" style="font-size:12px;padding:7px 14px" onclick="printSelectedHist()">🖨 選択した伝票をまとめて印刷（<span id="hist-sel-count">0</span>件）</button>
     <button type="button" class="btn" style="font-size:12px;padding:7px 12px" onclick="selectAllVisibleHist()">表示中をすべて選択</button>
     <button type="button" class="btn" style="font-size:12px;padding:7px 12px" onclick="clearHistSelection()">選択解除</button>
+    <button type="button" class="btn" style="font-size:12px;padding:7px 12px;color:#c0392b;border-color:#c0392b;font-weight:700" onclick="deleteSelectedHist()" title="チェックした履歴をまとめて削除します（削除履歴に記録が残ります）">🗑 選択した履歴を削除（<span id="hist-sel-count-del">0</span>件）</button>
     <span style="width:1px;height:22px;background:#ccd6e8;margin:0 2px"></span>
     <label style="font-size:12px;color:var(--mu);white-space:nowrap">ロット</label>
     <select id="hist-lot-print" style="padding:5px 8px;border:1.5px solid var(--b2);border-radius:6px;font-size:12px;background:var(--w);font-weight:700"></select>
@@ -4297,6 +4298,8 @@ function formatDeletedAt(iso){
 function updateHistSelCount(){
   const el=document.getElementById('hist-sel-count');
   if(el)el.textContent=histSelectedIds.size;
+  const del=document.getElementById('hist-sel-count-del');
+  if(del)del.textContent=histSelectedIds.size;
 }
 function toggleHistSelect(id,checked){
   const key=String(id);
@@ -4583,6 +4586,24 @@ function delHist(id){
   renderHistory();
   fbDeleteHistoryEntry(id);
   toast('削除しました（削除履歴に記録）');
+}
+/** チェックした履歴をまとめて削除（1件ずつの削除と同じく、削除履歴に記録して復元できる） */
+function deleteSelectedHist(){
+  if(!histSelectedIds.size){toast('削除する履歴にチェックを入れてください','e');return;}
+  const items=[...histSelectedIds].map(id=>findHistById(id)).filter(Boolean);
+  if(!items.length){toast('削除できる履歴がありません','e');return;}
+  const lines=items.slice(0,5).map(h=>'・'+(h.client||'')+'　'+(historyDeliveryDate(h)||h.deliveryDate||h.date||'')).join('\n');
+  const more=items.length>5?'\n…ほか '+(items.length-5)+'件':'';
+  if(!confirm('選択した '+items.length+' 件の履歴を削除しますか？\n\n'+lines+more+'\n\n（削除履歴タブに記録が残り、あとで戻せます）'))return;
+  recordHistDeletions(items,'manual');
+  const gone=new Set(items.map(h=>String(h.id)));
+  DB.history=(DB.history||[]).filter(x=>!gone.has(String(x.id)));
+  histSelectedIds.clear();
+  if(openHistId!=null&&gone.has(String(openHistId)))openHistId=null;
+  persistHistoryLocal();
+  renderHistory();
+  items.forEach(h=>fbDeleteHistoryEntry(h.id));
+  toast(items.length+'件の履歴を削除しました（削除履歴に記録）');
 }
 function dlHistCSV(id){const h=findHistById(id);if(!h)return;let rows=[['客先名','納品日','品番','品目名','数量']];h.items.forEach(it=>rows.push([h.client,historyDeliveryDate(h)||h.deliveryDate,it.code,it.name,it.qty]));dlFile(rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),`purims_${h.client}_${String(h.date||'').replace(/\//g,'-')}.csv`,'text/csv');toast('CSVをダウンロードしました');}
 function clearHist(){
