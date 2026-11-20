@@ -3509,7 +3509,8 @@ function buildMeisaiRows(data){
   itemRows.forEach(r=>{
     r.totalQty=r.qtys.reduce((s,q)=>s+q,0);
     r.amount=r.price*r.totalQty;
-    r.priceMissing=r.totalQty>0&&!(Number(r.price)>0);
+    /* 単価が未入力の品目は、数量が0でも黄色（請求明細の単価セル） */
+    r.priceMissing=!(Number(r.price)>0);
   });
   /* 駐車場代明細は単価の安い順（同じ単価はまとまっている） */
   if(isParkingMeisai(data)){
