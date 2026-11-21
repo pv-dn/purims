@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261121-groups-fix';
+const CACHE_NAME = 'purims-v20261121-queue-purge';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {

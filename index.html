@@ -1525,6 +1525,7 @@ function updateLedgerQueueBadge(n){
 }
 async function refreshLedgerQueueBadge(){
   if(!currentUser||typeof ledgerFs==='undefined'){updateLedgerQueueBadge(0);return 0;}
+  try{await purgeProcessedLedgerQueue();}catch(e){}
   const list=await fetchLedgerIssueQueue();
   // 取得に失敗したときは件数を0にしない（前の表示を残す）
   if(_ledgerQueueFetchFailed)return -1;
@@ -1563,6 +1564,7 @@ async function openLedgerQueueModal(){
   if(!m||!box)return;
   m.style.display='flex';
   box.innerHTML='<div style="padding:16px;color:#888">読み込み中…</div>';
+  try{await purgeProcessedLedgerQueue();}catch(e){}
   const list=await fetchLedgerIssueQueue();
   if(_ledgerQueueFetchFailed){
     box.innerHTML='<div style="padding:18px;text-align:center;color:#a33;background:#fff6f6;border:1px dashed #e8b4b4;border-radius:8px;line-height:1.6">ネットに接続できないため、キューを読み込めませんでした。<br>つながったら「台帳から取込」を開き直してください。</div>';
@@ -1685,12 +1687,23 @@ async function issueSlipSilentFromPending(pending){
 async function markLedgerQueueConsumed(id,extra){
   if(!id)return;
   try{
-    await ledgerFs.collection(ledgerIssueCol()).doc(id).update(Object.assign({
-      status:'consumed',
-      consumedAt:new Date().toISOString(),
-      consumedBy:currentUser&&currentUser.username||''
-    },extra||{}));
+    // 処理済みは残さず削除（古いキューが溜まらないように）
+    await ledgerFs.collection(ledgerIssueCol()).doc(id).delete();
   }catch(e){console.warn('consume pending',e);}
+}
+/** 取り込み済み・取消済みのキューをクラウドから削除（導入前の掃除＋今後のメンテ） */
+async function purgeProcessedLedgerQueue(){
+  if(typeof ledgerFs==='undefined'||!ledgerFs)return 0;
+  let n=0;
+  try{
+    for(const st of ['consumed','dismissed']){
+      const snap=await ledgerFs.collection(ledgerIssueCol()).where('status','==',st).get({source:'server'});
+      for(const doc of snap.docs){
+        try{await doc.ref.delete();n++;}catch(e){console.warn('purge queue',doc.id,e);}
+      }
+    }
+  }catch(e){console.warn('purgeProcessedLedgerQueue',e);}
+  return n;
 }
 function issueAndPrintLedgerLotByIndex(gi){
   const key=(window._ledgerBatchLots||[])[gi];
@@ -1773,11 +1786,7 @@ async function issueAndPrintLedgerLot(lotKey){
 async function dismissLedgerQueueItem(id){
   if(!id||!confirm('このキューを取消しますか？\n（台帳側には残りますが、伝票には取り込みません）'))return;
   try{
-    await ledgerFs.collection(ledgerIssueCol()).doc(id).update({
-      status:'dismissed',
-      consumedAt:new Date().toISOString(),
-      consumedBy:currentUser&&currentUser.username||''
-    });
+    await ledgerFs.collection(ledgerIssueCol()).doc(id).delete();
     toast('キューから取消しました');
     await openLedgerQueueModal();
   }catch(e){console.warn(e);toast('取消に失敗しました','e');}
@@ -1852,13 +1861,7 @@ async function applyLedgerIssuePayload(pending,cloudKey){
   try{renderItems();}catch(e){}
   try{updateSkipButtons();}catch(e){}
   if(cloudKey){
-    try{
-      await ledgerFs.collection(ledgerIssueCol()).doc(cloudKey).update({
-        status:'consumed',
-        consumedAt:new Date().toISOString(),
-        consumedBy:currentUser&&currentUser.username||''
-      });
-    }catch(e){console.warn('consume pending',e);}
+    try{await ledgerFs.collection(ledgerIssueCol()).doc(cloudKey).delete();}catch(e){console.warn('consume pending',e);}
   }
   toast('台帳から数量を取り込みました'+(currentLotNo?'（ロット '+currentLotNo+'）':''));
   return true;
