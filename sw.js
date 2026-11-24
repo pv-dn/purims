@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261124-loginlog';
+const CACHE_NAME = 'purims-v20261124-primus-sep';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {
