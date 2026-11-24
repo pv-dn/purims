@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261121-queue-purge';
+const CACHE_NAME = 'purims-v20261124-ui-zoom';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {

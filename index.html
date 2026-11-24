@@ -105,7 +105,16 @@ body.viewer-ui #parking-fee-section,
 body.viewer-ui #billing-excel-section,
 body.viewer-ui #meisai-check-wrap,
 body.viewer-ui #billing-pending-view-btn{display:none!important}
-.main{flex:1;padding:0;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;padding:0;max-width:1100px;margin:0 auto;width:100%;display:flex;flex-direction:column;overflow:auto;transform-origin:top center}
+.zoom-ctrl{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:6px;padding:2px 8px}
+.zoom-ctrl .zoom-lbl-txt{font-size:11px;color:rgba(255,255,255,.9);white-space:nowrap}
+.zoom-ctrl button{width:26px;height:26px;border:1px solid rgba(255,255,255,.35);border-radius:4px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer;font-size:15px;font-weight:bold;line-height:1;padding:0}
+.zoom-ctrl button:hover{background:rgba(255,255,255,.28)}
+.zoom-ctrl .zoom-label{font-size:12px;font-weight:600;color:#fff;min-width:36px;text-align:center}
+.zoom-ctrl-inline{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #ccd6e8;border-radius:6px;padding:3px 8px}
+.zoom-ctrl-inline .zoom-lbl-txt{font-size:11px;color:#555;white-space:nowrap}
+.zoom-ctrl-inline button{width:26px;height:26px;border:1px solid #ccd6e8;border-radius:4px;background:#f0f4fa;cursor:pointer;font-size:15px;font-weight:bold;line-height:1;padding:0;color:var(--nv)}
+.zoom-ctrl-inline .zoom-label{font-size:12px;font-weight:600;color:var(--nv);min-width:36px;text-align:center}
 .panel{display:none;flex:1;overflow:hidden}.panel.on{display:flex;flex-direction:column}
 #panel-slip.on{display:flex!important;flex-direction:column}
 #panel-slip{overflow:hidden}
@@ -523,6 +532,12 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <div class="tabs-meta">
     <span class="login-user" id="current-user-display"></span>
     <div class="hdr-d" id="hdr-d"></div>
+    <div class="zoom-ctrl" title="全ページの表示倍率" role="group" aria-label="表示倍率">
+      <span class="zoom-lbl-txt">🔍 表示</span>
+      <button type="button" onclick="changeZoom(-1)" aria-label="縮小">－</button>
+      <span class="zoom-label">100%</span>
+      <button type="button" onclick="changeZoom(1)" aria-label="拡大">＋</button>
+    </div>
     <button type="button" class="ledger-import-btn" id="btn-ledger-queue" onclick="openLedgerQueueModal()" title="台帳（タブレット）から届いた伝票を取り込みます">📥 台帳から取込<span id="ledger-queue-badge" style="display:none;background:#fff;color:#c0392b;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:800">0</span></button>
   <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
   </div>
@@ -666,11 +681,11 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
       <button id="batch-print-btn" onclick="doBatchPrint()" style="display:none;background:#27ae60;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;cursor:pointer;font-weight:bold">📋 まとめて印刷</button>
       <button id="batch-clear-btn" onclick="clearPrintQueue()" style="display:none;background:#aaa;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer">🗑 クリア</button>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #ccd6e8;border-radius:6px;padding:3px 8px">
-          <span style="font-size:11px;color:#555;white-space:nowrap">🔍 表示</span>
-          <button onclick="changeZoom(-1)" style="width:26px;height:26px;border:1px solid #ccd6e8;border-radius:4px;background:#f0f4fa;cursor:pointer;font-size:15px;font-weight:bold;line-height:1">－</button>
-          <span id="zoom-label" style="font-size:12px;font-weight:600;color:var(--nv);min-width:36px;text-align:center">100%</span>
-          <button onclick="changeZoom(1)" style="width:26px;height:26px;border:1px solid #ccd6e8;border-radius:4px;background:#f0f4fa;cursor:pointer;font-size:15px;font-weight:bold;line-height:1">＋</button>
+        <div class="zoom-ctrl-inline" title="全ページの表示倍率" role="group" aria-label="表示倍率">
+          <span class="zoom-lbl-txt">🔍 表示</span>
+          <button type="button" onclick="changeZoom(-1)" aria-label="縮小">－</button>
+          <span class="zoom-label">100%</span>
+          <button type="button" onclick="changeZoom(1)" aria-label="拡大">＋</button>
         </div>
       </div>
     </div>
@@ -2386,26 +2401,18 @@ function updateQueueBadge(){const b=document.getElementById('queue-badge');if(b)
 const ZOOM_STEPS=[70,80,90,100,110,120,130,150];
 let zoomIdx=ZOOM_STEPS.indexOf(parseInt(localStorage.getItem(lsKey('zoom'))||'100'));
 if(zoomIdx<0)zoomIdx=3;
+/** 全タブ（.main 内）の表示倍率。印刷プレビュー／ログイン画面にはかけない */
 function applyZoom(){
   const z=ZOOM_STEPS[zoomIdx];
-  const fs=Math.round(13*z/100)+'px';
-  const qs=Math.round(14*z/100)+'px';
-  const pd=Math.round(5*z/100)+'px '+Math.round(8*z/100)+'px';
-  // ヘッダー行
-  document.querySelectorAll('.iarea-thead th').forEach(th=>{th.style.fontSize=Math.round(13*z/100)+'px';th.style.padding=Math.round(10*z/100)+'px';});
-  // データ行テキスト
-  document.querySelectorAll('.iarea-body .s-td,.iarea-body td').forEach(td=>{td.style.fontSize=fs;td.style.padding=pd;});
-  // 品名セル
-  document.querySelectorAll('.iarea-body .td-name').forEach(td=>{td.style.fontSize=fs;});
-  // 数量入力
-  document.querySelectorAll('.iarea-body .qty').forEach(el=>{el.style.fontSize=qs;el.style.width=Math.round(64*z/100)+'px';el.style.padding=pd;});
-  // 備考入力
-  document.querySelectorAll('.iarea-body input[type=text]').forEach(el=>{el.style.fontSize=fs;el.style.padding=pd;});
-  // cbdgバッジ
-  document.querySelectorAll('.iarea-body .cbdg').forEach(el=>{el.style.fontSize=Math.round(11*z/100)+'px';});
-  const lbl=document.getElementById('zoom-label');if(lbl)lbl.textContent=z+'%';
-  localStorage.setItem(lsKey('zoom'),z);
-  setTimeout(fitIareaBody,50);
+  const scale=z/100;
+  const main=document.querySelector('.main');
+  if(main) main.style.zoom=String(scale);
+  // 請求明細ビューアなど #app 外の全画面も同じ倍率に合わせる
+  const meisai=document.getElementById('meisai-viewer');
+  if(meisai) meisai.style.zoom=String(scale);
+  document.querySelectorAll('.zoom-label').forEach(lbl=>{lbl.textContent=z+'%';});
+  localStorage.setItem(lsKey('zoom'),String(z));
+  setTimeout(()=>{try{fitIareaBody();}catch(e){} try{resizeScrollPanel();}catch(e){}},50);
 }
 function changeZoom(dir){zoomIdx=Math.max(0,Math.min(ZOOM_STEPS.length-1,zoomIdx+dir));applyZoom();}
 function clearPrintQueue(){if(!printQueue.length){toast('キューは空です');return;}if(!confirm('キューの '+printQueue.length+' 件を削除してよいですか？'))return;printQueue=[];updateQueueBadge();toast('クリアしました');}
