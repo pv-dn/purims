@@ -1368,7 +1368,7 @@ async function pullSharedMastersCloud(){
     // 空配列も反映する（長さチェックだと「グループなし」にしても古い一覧が残って再保存される）
     if(Array.isArray(d.groups))DB.groups=d.groups; else DB.groups=[];
     if(d.clientGroups&&typeof d.clientGroups==='object')DB.clientGroups=d.clientGroups;
-    DB.clientOrder=normalizeClientOrderMap(d.clientOrder);
+    DB.clientOrder=preferClientOrder(DB.clientOrder,d.clientOrder);
     if(d.closing)DB.closing=d.closing;
     if(d.minCharge)DB.minCharge=d.minCharge;
     if(d.deliveryFee)DB.deliveryFee=d.deliveryFee;
@@ -4353,16 +4353,26 @@ function updateSkipButtons(){
   }
 }
 function normalizeClientOrderMap(co){if(!co||typeof co!=='object'||Array.isArray(co))return{};const out={};Object.keys(co).forEach(k=>{if(Array.isArray(co[k]))out[k]=co[k].filter(x=>typeof x==='string'&&x);});return out;}
+function isClientOrderSorting(){return Object.keys(cgSortMode||{}).some(k=>!!cgSortMode[k]);}
+/** 並び替え中／クラウドが空のときは手元の並びを守る（途中で最初に戻るのを防ぐ） */
+function preferClientOrder(local,remote){
+  const loc=normalizeClientOrderMap(local);
+  const rem=normalizeClientOrderMap(remote);
+  if(isClientOrderSorting())return loc;
+  if(Object.keys(rem).length)return rem;
+  if(Object.keys(loc).length)return loc;
+  return {};
+}
 function getOrderedMembers(gid,members){DB.clientOrder=normalizeClientOrderMap(DB.clientOrder);const order=DB.clientOrder[gid];if(!order||!order.length)return members;const inOrder=order.filter(c=>members.includes(c));const rest=members.filter(c=>!order.includes(c));return[...inOrder,...rest];}
 function renderClientGrpList(){const el=document.getElementById('client-grp-list');const q=(document.getElementById('cg-search')?.value||'').toLowerCase();const allClients=Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja'));const filtered=q?allClients.filter(c=>c.toLowerCase().includes(q)):allClients;const grouped={};const ungrouped=[];filtered.forEach(c=>{const ids=getClientGroupIds(c);if(!ids.length){ungrouped.push(c);return;}let any=false;ids.forEach(gid=>{if(!getGroup(gid))return;any=true;if(!grouped[gid])grouped[gid]=[];if(!grouped[gid].includes(c))grouped[gid].push(c);});if(!any)ungrouped.push(c);});let html='';DB.groups.forEach(g=>{const rawMembers=grouped[g.id]||[];const members=getOrderedMembers(g.id,rawMembers);const isOpen=!cgCollapsed[g.id];const isSorting=!!cgSortMode[g.id];const sortBtnStyle=isSorting?`background:var(--ok);color:#fff;border-color:var(--ok)`:`background:var(--w);color:var(--nv);border-color:${g.color}`;html+=`<div class="cg-group-block" style="border-color:${g.color}44;margin-bottom:8px"><div class="cg-group-header" style="background:${g.color}18" onclick="toggleCgGroup('${g.id}')"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};flex-shrink:0"></span><span class="cg-group-title" style="color:${g.color}">${g.name}</span><span style="font-size:11px;color:${g.color};opacity:.7">${members.length}件</span>${members.length>1?`<button type="button" onclick="event.stopPropagation();toggleCgSort('${g.id}')" style="padding:3px 10px;border-radius:5px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${sortBtnStyle}">${isSorting?'✅ 完了':'↕ 並び替え'}</button>`:''}<span class="cg-toggle" style="color:${g.color};transform:rotate(${isOpen?'0':'180'}deg)">&#9650;</span></div>`;if(isOpen){if(!members.length){html+=`<div class="cg-group-body"><div style="padding:10px 14px;font-size:12px;color:var(--mu)">このグループに客先がいません</div></div>`;}else if(isSorting){html+=`<div class="cg-group-body" id="cgbody-${g.id}">`+members.map((c,i)=>clientGrpRowSortable(c,g.id,i)).join('')+`</div>`;}else{html+=`<div class="cg-group-body">`+members.map(c=>clientGrpRow(c)).join('')+`</div>`;}}html+=`</div>`;});if(ungrouped.length){const isOpen=!cgCollapsed['__none__'];html+=`<div class="cg-group-block" style="border-color:var(--bd);margin-bottom:8px"><div class="cg-group-header" style="background:var(--s)" onclick="toggleCgGroup('__none__')"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mu);flex-shrink:0"></span><span class="cg-group-title" style="color:var(--mu)">グループ未設定</span><span style="font-size:11px;color:var(--mu)">${ungrouped.length}件</span><span class="cg-toggle" style="color:var(--mu);transform:rotate(${isOpen?'0':'180'}deg)">&#9650;</span></div>`;if(isOpen){html+=`<div class="cg-group-body">`+ungrouped.map(c=>clientGrpRow(c)).join('')+`</div>`;}html+=`</div>`;}if(!html)html='<div class="emp">該当する客先がありません</div>';el.innerHTML=html;}
 function clientGrpRow(c){const ids=getClientGroupIds(c);const opts=(sel)=>`<option value="">なし</option>`+DB.groups.map(g2=>`<option value="${g2.id}"${sel===g2.id?' selected':''}>${g2.name}</option>`).join('');const esc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");return`<div class="client-grp-row"><span class="client-grp-name">${c}</span><select class="grp-sel" title="グループ1" onchange="setClientGrpSlot('${esc}',0,this.value)">${opts(ids[0]||'')}</select><select class="grp-sel" title="グループ2" onchange="setClientGrpSlot('${esc}',1,this.value)">${opts(ids[1]||'')}</select></div>`;}
 function clientGrpRowSortable(c,gid,idx){const esc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");return`<div class="client-grp-row" draggable="true" ondragstart="cgDragStart(event,'${gid}',${idx})" ondragover="cgDragOver(event)" ondragleave="cgDragLeave(event)" ondrop="cgDrop(event,'${gid}',${idx})" ondragend="cgDragEnd(event)"><span class="drag-handle">&#x2807;</span><span class="client-grp-name">${c}</span><button type="button" class="btn" style="padding:2px 8px;font-size:12px;min-width:32px" onclick="event.stopPropagation();moveClientInGroup('${esc}','${gid}',-1)" aria-label="上へ">↑</button><button type="button" class="btn" style="padding:2px 8px;font-size:12px;min-width:32px" onclick="event.stopPropagation();moveClientInGroup('${esc}','${gid}',1)" aria-label="下へ">↓</button></div>`;}
-function moveClientInGroup(client,gid,dir){const rawMembers=Object.keys(DB.clients).filter(c=>clientBelongsToGroupId(c,gid));const ordered=getOrderedMembers(gid,rawMembers);const i=ordered.indexOf(client);const j=i+dir;if(i<0||j<0||j>=ordered.length)return;const t=ordered[i];ordered[i]=ordered[j];ordered[j]=t;DB.clientOrder[gid]=ordered;renderClientGrpList();}
+function moveClientInGroup(client,gid,dir){const rawMembers=Object.keys(DB.clients).filter(c=>clientBelongsToGroupId(c,gid));const ordered=getOrderedMembers(gid,rawMembers);const i=ordered.indexOf(client);const j=i+dir;if(i<0||j<0||j>=ordered.length)return;const t=ordered[i];ordered[i]=ordered[j];ordered[j]=t;DB.clientOrder[gid]=ordered;renderClientGrpList();persistLocal();}
 function toggleCgSort(gid){if(cgSortMode[gid]){cgSortMode[gid]=false;persist();toast('並び順を保存しました');}else{cgSortMode[gid]=true;cgCollapsed[gid]=false;}renderClientGrpList();}
 function cgDragStart(e,gid,idx){cgDragSrc={gid,idx};e.target.closest('.client-grp-row').classList.add('cg-dragging');e.dataTransfer.effectAllowed='move';}
 function cgDragOver(e){e.preventDefault();e.target.closest('.client-grp-row')?.classList.add('cg-drag-over');}
 function cgDragLeave(e){e.target.closest('.client-grp-row')?.classList.remove('cg-drag-over');}
-function cgDrop(e,gid,toIdx){e.preventDefault();if(!cgDragSrc||cgDragSrc.gid!==gid||cgDragSrc.idx===toIdx)return;const rawMembers=Object.keys(DB.clients).filter(c=>clientBelongsToGroupId(c,gid));const ordered=getOrderedMembers(gid,rawMembers);const moved=ordered.splice(cgDragSrc.idx,1)[0];ordered.splice(toIdx,0,moved);DB.clientOrder[gid]=ordered;cgDragSrc=null;renderClientGrpList();}
+function cgDrop(e,gid,toIdx){e.preventDefault();if(!cgDragSrc||cgDragSrc.gid!==gid||cgDragSrc.idx===toIdx)return;const rawMembers=Object.keys(DB.clients).filter(c=>clientBelongsToGroupId(c,gid));const ordered=getOrderedMembers(gid,rawMembers);const moved=ordered.splice(cgDragSrc.idx,1)[0];ordered.splice(toIdx,0,moved);DB.clientOrder[gid]=ordered;cgDragSrc=null;renderClientGrpList();persistLocal();}
 function cgDragEnd(e){cgDragSrc=null;document.querySelectorAll('.client-grp-row').forEach(r=>{r.classList.remove('cg-dragging');r.classList.remove('cg-drag-over');});}
 function toggleCgGroup(gid){cgCollapsed[gid]=!cgCollapsed[gid];renderClientGrpList();}
 function setClientGrpSlot(client,slot,gid){const ids=getClientGroupIds(client);const next=[ids[0]||'',ids[1]||''];next[slot]=gid||'';setClientGroupIds(client,next.filter(Boolean));persist();renderGroups();renderClientGrpList();fillSel('csel',curC);fillSel('msel',editC);toast('グループを更新しました');}
@@ -4961,7 +4971,7 @@ function fbSave(){
         DB.products=mergeProducts(cloud.products||[],DB.products);
         if(Array.isArray(cloud.groups))DB.groups=cloud.groups;
         if(cloud.clientGroups)DB.clientGroups=cloud.clientGroups;
-        if(cloud.clientOrder)DB.clientOrder=normalizeClientOrderMap(cloud.clientOrder);
+        DB.clientOrder=preferClientOrder(DB.clientOrder,cloud.clientOrder);
         if(cloud.closing)DB.closing=Object.assign({},DB.closing||{},cloud.closing);
         _lastAppliedSavedAt=cloud.savedAt||null;
         persistDraft();
@@ -5073,7 +5083,7 @@ function fbApplyData(d,history,historyDeleted){
   DB.products=d.products&&d.products.length?mergeProducts(d.products,prevProducts):prevProducts;
   DB.groups=Array.isArray(d.groups)?d.groups:[];
   DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};
-  DB.clientOrder=normalizeClientOrderMap(d.clientOrder);DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
+  DB.clientOrder=preferClientOrder(DB.clientOrder,d.clientOrder);DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
   const parkFixed=ensurePaperParkingFlags();
   _lastAppliedSavedAt=d.savedAt||null;
   DB.history=parseHistory(history);
@@ -5138,7 +5148,7 @@ async function fbStartListeners(){
     DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients),DB.clients);DB.cycles=d.cycles||{};
     DB.products=d.products&&d.products.length?mergeProducts(d.products,DB.products):DB.products;
     DB.groups=Array.isArray(d.groups)?d.groups:[];
-    DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};DB.clientOrder=normalizeClientOrderMap(d.clientOrder);DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
+    DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};DB.clientOrder=preferClientOrder(DB.clientOrder,d.clientOrder);DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
     _lastAppliedSavedAt=d.savedAt||_lastAppliedSavedAt;
     localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
     fillSel("csel",curC);fillSel("msel",editC);fillAllGrpSels();
