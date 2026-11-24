@@ -5303,9 +5303,7 @@ async function doLogin(){
     if(!matched){if(errEl)errEl.textContent='パスワードが違います';return;}
     user=users[matched];
     currentUser = {username: matched, isAdmin: !!(user&&(user.isAdmin||user.role==='admin')), role: (user&&(user.isAdmin||user.role==='admin'))?'admin':'user'};
-    if(!matched.startsWith('_')){
-      try{firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set({username:matched,loginAt:new Date().toISOString()});}catch(e){}
-    }
+    try{await recordLoginLog(matched);}catch(e){console.warn('recordLoginLog',e);}
     await finishLoginUI(matched);
     if(typeof loginSuccess==='function'){try{loginSuccess();}catch(e){console.warn(e);}}
     else if(typeof fbStartListeners==='function'){try{fbStartListeners();}catch(e){}}
@@ -5487,6 +5485,36 @@ function formatAuthLogTime(entry, key){
   }
   return (d&&!isNaN(d.getTime()))?d.toLocaleString('ja-JP'):'—';
 }
+/** 正規パスは purims/loginlog（RTDBで通る側）。旧 purims_loginlog も読む */
+function loginLogPrimaryRef(){return db.ref(FB_APP+'/loginlog');}
+async function recordLoginLog(username){
+  if(!username||String(username).startsWith('_'))return false;
+  const at=new Date().toISOString();
+  const entry={username,user:username,loginAt:at,time:at};
+  try{
+    if(!firebase.auth().currentUser){
+      try{await firebase.auth().signInAnonymously();}catch(e){console.warn('recordLoginLog auth',e);}
+    }
+    await loginLogPrimaryRef().push(entry);
+    try{await firebase.database().ref(FB_LOGINLOG+'/'+Date.now()).set(entry);}catch(e){}
+    return true;
+  }catch(e){
+    console.warn('recordLoginLog',e);
+    return false;
+  }
+}
+function collectLoginLogEntries(snap, into, seen){
+  if(!snap||!snap.exists())return;
+  snap.forEach(c=>{
+    const v=c.val()||{};
+    const username=v.username||v.user||'';
+    const loginAt=v.loginAt||v.time||v.at||'';
+    const sig=username+'|'+loginAt+'|'+c.key;
+    if(seen.has(sig))return;
+    seen.add(sig);
+    into.push({key:c.key,username,loginAt,user:username,...v});
+  });
+}
 function showMasterLog(){
   const m=document.getElementById('masterlog-modal');
   firebase.database().ref(FB_MASTERLOG).orderByKey().limitToLast(100).get().then(snap=>{
@@ -5501,18 +5529,30 @@ function showMasterLog(){
   }).catch(e=>{if(m)m.style.display='flex'; const el=document.getElementById('masterlog-list'); if(el) el.innerHTML='読み込み失敗: '+e.message;});
 }
 function closeMasterLog(){const m=document.getElementById('masterlog-modal'); if(m) m.style.display='none';}
-function showLoginLog(){
+async function showLoginLog(){
   const m=document.getElementById('loginlog-modal');
-  firebase.database().ref(FB_LOGINLOG).orderByKey().limitToLast(100).get().then(snap=>{
-    if(m) m.style.display='flex';
-    const el=document.getElementById('loginlog-list');
-    if(!el) return;
-    if(!snap.exists()){el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:8px">ログイン履歴がありません</div>';return;}
-    const logs=[]; snap.forEach(c=>logs.push({key:c.key, ...(c.val()||{})})); logs.reverse();
-    el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#1a2744;color:#fff"><th style="padding:8px 12px;text-align:left">日時</th><th style="padding:8px 12px;text-align:left">ユーザー名</th></tr></thead><tbody>'
-      +logs.map((l,i)=>{const dt=formatAuthLogTime(l,l.key);const bg=i%2?'#f0f1f3':'#fff';return `<tr style="background:${bg}"><td style="padding:8px 12px">${dt}</td><td style="padding:8px 12px;font-weight:600">${l.username||''}</td></tr>`;}).join('')
+  const el=document.getElementById('loginlog-list');
+  if(m) m.style.display='flex';
+  if(el) el.innerHTML='読み込み中...';
+  try{
+    const primary=await loginLogPrimaryRef().orderByKey().limitToLast(100).once('value');
+    let legacy=null;
+    try{legacy=await firebase.database().ref(FB_LOGINLOG).orderByKey().limitToLast(100).once('value');}catch(e){}
+    const logs=[]; const seen=new Set();
+    collectLoginLogEntries(primary,logs,seen);
+    collectLoginLogEntries(legacy,logs,seen);
+    logs.sort((a,b)=>{
+      const ta=Date.parse(a.loginAt||a.time||a.at||'')||Number(a.key)||0;
+      const tb=Date.parse(b.loginAt||b.time||b.at||'')||Number(b.key)||0;
+      return tb-ta;
+    });
+    if(!logs.length){if(el)el.innerHTML='<div style="color:var(--mu);font-size:13px;padding:8px">ログイン履歴がありません</div>';return;}
+    if(el)el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#1a2744;color:#fff"><th style="padding:8px 12px;text-align:left">日時</th><th style="padding:8px 12px;text-align:left">ユーザー名</th></tr></thead><tbody>'
+      +logs.slice(0,100).map((l,i)=>{const dt=formatAuthLogTime(l,l.key);const bg=i%2?'#f0f1f3':'#fff';return `<tr style="background:${bg}"><td style="padding:8px 12px">${dt}</td><td style="padding:8px 12px;font-weight:600">${l.username||l.user||''}</td></tr>`;}).join('')
       +'</tbody></table>';
-  });
+  }catch(e){
+    if(el) el.innerHTML='読み込み失敗: '+(e&&e.message?e.message:String(e));
+  }
 }
 function closeLoginLog(){const m=document.getElementById('loginlog-modal'); if(m) m.style.display='none';}
 
@@ -5695,18 +5735,6 @@ async function changeAdminPass_dup(){
   errEl.style.color='var(--ok)';errEl.textContent='管理者パスワードを変更しました';
   setTimeout(()=>{errEl.textContent='';errEl.style.color='';},3000);
 }
-
-// ===== ログイン履歴 =====
-async function showLoginLog_dup(){
-  document.getElementById('loginlog-modal').style.display='flex';
-  const snap=await db.ref(FB_APP+'/loginlog').orderByKey().limitToLast(100).once('value');
-  const logs=snap.val()||{};
-  const entries=Object.values(logs).reverse();
-  const el=document.getElementById('loginlog-list');
-  if(!entries.length){el.innerHTML='<div style="color:var(--mu)">履歴がありません</div>';return;}
-  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="background:var(--nv);color:#fff;padding:7px 10px;text-align:left;font-size:11px">日時</th><th style="background:var(--nv);color:#fff;padding:7px 10px;text-align:left;font-size:11px">ユーザー</th></tr></thead><tbody>${entries.map(e=>{const t=new Date(e.time);const ts=`${t.getFullYear()}/${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;return`<tr><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd)">${ts}</td><td style="padding:7px 10px;border-bottom:0.5px solid var(--bd);font-weight:600">${e.user||'?'}</td></tr>`;}).join('')}</tbody></table>`;
-}
-function closeLoginLog_dup(){document.getElementById('loginlog-modal').style.display='none';}
 
 /* 更新情報（新しいものを上に追加） type: 'feat'=機能更新 / 'fix'=バグ修正 */
 const APP_UPDATES=[
