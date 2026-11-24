@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261124-ui-zoom';
+const CACHE_NAME = 'purims-v20261124-client-order';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {
