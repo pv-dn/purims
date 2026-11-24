@@ -1297,15 +1297,56 @@ const BRIDGE_ISSUE_KEY=IS_DEMO?'primus_demo_issue_pending':'primus_issue_pending
 /** 台帳・門番用。自社版が混ざった旧 v14 は使わない */
 const SHARED_MASTER_DOC=IS_DEMO?'v14_demo':'v14_primus';
 function packSharedMastersPayload(){
-  return {clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}};
+  return {clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:normalizeClientOrderMap(DB.clientOrder),closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}};
+}
+/** 共有マスタへ書く前にクラウドと合成。異常な件数減だけ防ぎ、通常の削除は許可 */
+function mergeSharedMastersForPush(local,prev){
+  const out=JSON.parse(JSON.stringify(local||{}));
+  out.clientOrder=normalizeClientOrderMap(out.clientOrder);
+  if(!prev||typeof prev!=='object')return out;
+  const prevClients=prev.clients&&typeof prev.clients==='object'?prev.clients:{};
+  const nextClients=out.clients&&typeof out.clients==='object'?out.clients:{};
+  const prevCount=Object.keys(prevClients).length;
+  const localCount=Object.keys(nextClients).length;
+  // 手元が極端に少ない＝キャッシュ破損などの事故。クラウドの客先を戻す（通常の1件削除は妨げない）
+  if(prevCount>=50&&localCount<prevCount*0.5){
+    Object.keys(prevClients).forEach(name=>{
+      if(!nextClients[name]) nextClients[name]=prevClients[name];
+    });
+  }
+  out.clients=nextClients;
+  // 品目マスタは常に union（手元に無いだけで消さない）
+  const prodMap=new Map();
+  (Array.isArray(prev.products)?prev.products:[]).forEach(p=>{if(p&&p.code!=null&&p.code!=='')prodMap.set(String(p.code),p);});
+  (Array.isArray(out.products)?out.products:[]).forEach(p=>{if(p&&p.code!=null&&p.code!=='')prodMap.set(String(p.code),p);});
+  out.products=Array.from(prodMap.values());
+  if(!Object.keys(out.clientOrder||{}).length){
+    out.clientOrder=normalizeClientOrderMap(prev.clientOrder);
+  }
+  if(Array.isArray(prev.groups)&&prev.groups.length&&!(Array.isArray(out.groups)&&out.groups.length)) out.groups=prev.groups;
+  return out;
 }
 async function pushSharedMastersCloud(){
   try{
     if(typeof ledgerFs==='undefined'||!ledgerFs)return false;
-    const payload=packSharedMastersPayload();
+    let payload=packSharedMastersPayload();
     if(!payload.clients||!Object.keys(payload.clients).length)return false;
+    const ref=ledgerFs.collection('sharedMasters').doc(SHARED_MASTER_DOC);
+    const snap=await ref.get();
+    if(snap.exists){
+      let prev={};
+      try{prev=JSON.parse(snap.data().value||'{}');}catch(e){prev={};}
+      const prevCount=Object.keys(prev.clients||{}).length;
+      payload=mergeSharedMastersForPush(payload,prev);
+      const nextCount=Object.keys(payload.clients||{}).length;
+      // 安全弁: 合成後も半分以下なら書かない
+      if(prevCount>=50&&nextCount<prevCount*0.5){
+        console.error('pushSharedMastersCloud aborted: would shrink',prevCount,'->',nextCount);
+        return false;
+      }
+    }
     // merge:true … 台帳が付けた newClients（新規客先の目印）を消さないため
-    await ledgerFs.collection('sharedMasters').doc(SHARED_MASTER_DOC).set({
+    await ref.set({
       value:JSON.stringify(payload),
       updatedAt:new Date().toISOString(),
       updatedBy:'slip'
