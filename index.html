@@ -2230,16 +2230,33 @@ async function loadLedgerPhotoMemos(client){
   thumbs.innerHTML='<span style="font-size:12px;color:#888">写真を確認中…</span>';
   wrap.style.display='block';
   try{
-    const snap=await ledgerFs.collection(LEDGER_PHOTOS_COL).orderBy('at','desc').limit(60).get({source:'server'});
+    const snap=await ledgerFs.collection(LEDGER_PHOTOS_COL).orderBy('at','desc').limit(120).get({source:'server'});
     const docs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.customer===client&&Array.isArray(d.photos)&&d.photos.length);
-    // 下書きを優先し、なければ直近の保存済み
-    const draft=docs.find(d=>d.status==='draft');
-    const saved=docs.filter(d=>d.status==='saved');
-    const pick=draft||saved[0];
-    if(!pick){hideLedgerPhotoMemos();return;}
-    const photos=pick.photos.filter(p=>p&&p.dataUrl).slice(0,6);
+    // 下書きは1枚1ドキュメントなので全部まとめる。なければ保存済みの最新バッチ
+    const draftPhotos=[];
+    docs.filter(d=>d.status==='draft').forEach(d=>{
+      (d.photos||[]).forEach(p=>{if(p&&p.dataUrl&&!draftPhotos.some(x=>x.id===p.id))draftPhotos.push(p);});
+    });
+    let photos=[];
+    let label='';
+    if(draftPhotos.length){
+      photos=draftPhotos.slice(0,6);
+      label='入力中（共有）';
+    }else{
+      const batches=new Map();
+      docs.filter(d=>d.status==='saved').forEach(d=>{
+        const key=d.recordId!=null?('r:'+String(d.recordId)):('c:'+(d.deliveryDate||'')+'|'+(d.lotNo||'')+'|'+String(d.at||'').slice(0,16));
+        if(!batches.has(key))batches.set(key,{at:d.at,deliveryDate:d.deliveryDate||'',lotNo:d.lotNo||'',photos:[]});
+        const b=batches.get(key);
+        (d.photos||[]).forEach(p=>{if(p&&p.dataUrl&&!b.photos.some(x=>x.id===p.id))b.photos.push(p);});
+        if(Date.parse(d.at||'')>Date.parse(b.at||''))b.at=d.at;
+      });
+      const newest=[...batches.values()].sort((a,b)=>(Date.parse(b.at||'')||0)-(Date.parse(a.at||'')||0))[0];
+      if(!newest){hideLedgerPhotoMemos();return;}
+      photos=newest.photos.slice(0,6);
+      label=`保存済み ${newest.deliveryDate||''}${newest.lotNo?' · ロット '+newest.lotNo:''}`;
+    }
     if(!photos.length){hideLedgerPhotoMemos();return;}
-    const label=pick.status==='draft'?'入力中（共有）':`保存済み ${pick.deliveryDate||''}${pick.lotNo?' · ロット '+pick.lotNo:''}`;
     const labelEl=document.getElementById('ledger-photo-memos-label');
     if(labelEl)labelEl.textContent='📷 '+label;
     thumbs.innerHTML=photos.map(p=>`<button type="button" style="padding:0;border:1px solid #c5d6e4;border-radius:8px;overflow:hidden;width:100%;aspect-ratio:1;cursor:pointer;background:#fff" onclick="openLedgerPhotoView(this.querySelector('img').src)"><img src="${p.dataUrl}" alt="写真" style="width:100%;height:100%;object-fit:cover;display:block"></button>`).join('');
