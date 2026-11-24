@@ -506,11 +506,11 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
 <div class="hdr">
   <div><div class="hdr-s">株式会社Nexus</div><h1>Primus 伝票発行システム</h1></div>
   <div class="hdr-actions">
-    <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
-    <button onclick="showLoginLog()" id="tab-loginlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
+  <button onclick="showUserModal()" id="user-mgr-btn" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">👥 ユーザー管理</button>
+  <button onclick="showLoginLog()" id="tab-loginlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">🔐 ログイン履歴</button>
     <button onclick="showMasterLog()" id="tab-masterlog" style="display:none;margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">📝 マスタ操作履歴</button>
-    <button onclick="doLogout()" style="margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">ログアウト</button>
-    <button class="exit-btn" onclick="exitApp()">💾 保存して終了</button>
+  <button onclick="doLogout()" style="margin-left:8px;padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:12px;cursor:pointer">ログアウト</button>
+  <button class="exit-btn" onclick="exitApp()">💾 保存して終了</button>
   </div>
 </div>
 <div class="tabs">
@@ -519,12 +519,12 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   <button id="tab-master" class="tab" onclick="showMasterWithAuth(this)">マスタ管理<span id="master-tab-badge" title="台帳アプリで新規客先が追加されました。詳細の設定が必要です" style="display:none;margin-left:5px;background:#e67e22;color:#fff;border-radius:999px;padding:0 7px;font-size:11px;font-weight:800">0</span></button>
   <button id="tab-data" class="tab" onclick="showPanel('data',this)">データ</button>
   <button id="tab-billing" class="tab" onclick="showPanel('billing',this)">請求</button>
-  <button id="tab-help" class="tab" onclick="showPanel('help',this)">使い方・困ったとき</button>
+<button id="tab-help" class="tab" onclick="showPanel('help',this)">使い方・困ったとき</button>
   <div class="tabs-meta">
     <span class="login-user" id="current-user-display"></span>
     <div class="hdr-d" id="hdr-d"></div>
     <button type="button" class="ledger-import-btn" id="btn-ledger-queue" onclick="openLedgerQueueModal()" title="台帳（タブレット）から届いた伝票を取り込みます">📥 台帳から取込<span id="ledger-queue-badge" style="display:none;background:#fff;color:#c0392b;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:800">0</span></button>
-    <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
+  <button type="button" class="tab-updates" onclick="openUpdatesModal()">更新情報</button>
   </div>
 </div>
 
@@ -553,7 +553,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
 
 <!-- BILLING PANEL -->
 <div id="panel-billing" class="panel">
-  <div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
+<div style="background:var(--w);border:0.5px solid var(--b2);border-radius:10px;overflow:hidden;margin-bottom:14px">
     <div class="ch" style="background:#5c3d1e">📄 請求明細書（アプリ内閲覧）</div>
     <div style="padding:16px;font-size:13px;color:var(--mu);line-height:1.8">
       伝票の発行履歴と請求単価から、<strong style="color:var(--tx)">ネクサス名義の請求明細書</strong>をアプリ内で表示します。Excelを開かなくても確認・印刷できます。
@@ -621,7 +621,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
   </div>
 </div>
 
-<!-- SLIP PANEL -->
+    <!-- SLIP PANEL -->
 <div id="panel-slip" class="panel on">
   <div id="complete-view" style="display:none;padding:16px 20px;overflow-y:auto">
     <div class="complete-overlay">
@@ -767,7 +767,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
         <button class="btn" id="skip-client-btn-bottom" style="display:none" onclick="skipCurrentClient()"></button>
         <button class="btn pri" onclick="showPrev()">伝票発行</button>
       </div>
-    </div>
+      </div>
     </div>
   </div>
 </div>
@@ -804,9 +804,11 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
               <div class="cyc-btn-wrap" id="e-cyc-btns"></div><input type="hidden" id="e-cyc">
             </div>
             <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-              <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">グループ</label>
-              <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:180px" id="e-grp"></select>
-              <span style="font-size:11px;color:var(--mu)">※伝票の「ルート番号」欄にグループ名が出ます</span>
+              <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">グループ1</label>
+              <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:160px" id="e-grp"></select>
+              <label style="font-size:12px;color:var(--mu);font-weight:500">グループ2</label>
+              <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:160px" id="e-grp2"></select>
+              <span style="font-size:11px;color:var(--mu)">※最大2つ。伝票の「ルート番号」に出ます</span>
             </div>
             <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
               <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">記号</label>
@@ -891,8 +893,10 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
             <div class="cyc-btn-wrap" id="nc-cyc-btns"></div><input type="hidden" id="nc-cyc">
           </div>
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-            <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">グループ</label>
-            <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:180px" id="nc-grp"></select>
+            <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">グループ1</label>
+            <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:160px" id="nc-grp"></select>
+            <label style="font-size:12px;color:var(--mu);font-weight:500">グループ2</label>
+            <select style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:14px;background:var(--w);color:var(--tx);min-width:160px" id="nc-grp2"></select>
           </div>
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
             <label style="font-size:12px;color:var(--mu);min-width:80px;font-weight:500">記号</label>
@@ -1030,12 +1034,12 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
         <div>
           <div style="font-weight:600;color:var(--tx);margin-bottom:4px">請求系マスタ項目</div>
           <div style="font-size:12px">締め日・最低保証・配送費・包装料・駐車場代（および請求単価）をマスタ画面に表示します。使わない場合はOFFのままにしてください。</div>
-        </div>
+      </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--tx);cursor:pointer;white-space:nowrap;background:var(--s);padding:8px 12px;border-radius:8px;border:1px solid var(--bd)">
           <input type="checkbox" id="billing-master-toggle" onchange="saveBillingMasterSetting()" style="width:18px;height:18px">
           <span id="billing-master-toggle-label">OFF</span>
         </label>
-      </div>
+          </div>
       <div style="border-top:1px solid var(--bd);padding-top:14px">
         <div style="font-weight:600;color:var(--tx);margin-bottom:4px">伝票フッターの会社名</div>
         <div style="font-size:12px;margin-bottom:10px">印刷される伝票の右下に出る会社情報です。空欄の項目は印刷に出ません。クラウドに保存され、全PCで共通になります。</div>
@@ -1053,7 +1057,7 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
             <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">FAX
               <input id="slip-co-fax" type="text" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="任意">
             </label>
-          </div>
+      </div>
           <label style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mu)">メール
             <input id="slip-co-email" type="email" style="padding:8px 10px;border:1.5px solid var(--b2);border-radius:6px;font-size:13px;color:var(--tx);background:var(--w)" placeholder="任意">
           </label>
@@ -1299,8 +1303,9 @@ async function pullSharedMastersCloud(){
     DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients||{}),DB.clients);
     if(d.cycles&&Object.keys(d.cycles).length)DB.cycles=d.cycles;
     if(Array.isArray(d.products)&&d.products.length)DB.products=d.products;
+    // 空配列も反映する（長さチェックだと「グループなし」にしても古い一覧が残って再保存される）
     if(Array.isArray(d.groups))DB.groups=d.groups; else DB.groups=[];
-    if(d.clientGroups)DB.clientGroups=d.clientGroups;
+    if(d.clientGroups&&typeof d.clientGroups==='object')DB.clientGroups=d.clientGroups;
     if(d.clientOrder)DB.clientOrder=d.clientOrder;
     if(d.closing)DB.closing=d.closing;
     if(d.minCharge)DB.minCharge=d.minCharge;
@@ -1309,7 +1314,7 @@ async function pullSharedMastersCloud(){
     if(d.parkingEnabled)DB.parkingEnabled=d.parkingEnabled;
     persistDraft();
     try{fillSel('csel',curC);fillSel('msel',editC);}catch(e){}
-    try{fillGrpSel('e-grp');fillGrpSel('nc-grp');}catch(e){}
+    try{fillAllGrpSels();}catch(e){}
     try{renderProducts();renderGroups();renderClientGrpList();}catch(e){}
     if(curC&&DB.clients[curC]){try{renderItems();}catch(e){}}
     toast('台帳とマスタを同期しました');
@@ -1470,7 +1475,7 @@ function reloadMastersFromBridgeStorage(){
     DB.parkingEnabled=d.parkingEnabled||{};
     fillSel('csel',curC);
     fillSel('msel',editC);
-    try{fillGrpSel('e-grp');fillGrpSel('nc-grp');}catch(e){}
+    try{fillAllGrpSels();}catch(e){}
     try{renderProducts();}catch(e){}
     try{renderGroups();}catch(e){}
     try{renderClientGrpList();}catch(e){}
@@ -2099,21 +2104,42 @@ function persist(){
   clearTimeout(persist._t);persist._t=setTimeout(fbSave,1500);
 }
 function getGroup(id){return DB.groups.find(g=>g.id===id)||null;}
-function getClientGroup(name){return getGroup(DB.clientGroups[name]);}
+/** clientGroups は string（旧）または string[]（最大2） */
+function getClientGroupIds(name){
+  const v=DB.clientGroups[name];
+  if(Array.isArray(v)) return [...new Set(v.filter(Boolean))].slice(0,2);
+  return v ? [v] : [];
+}
+function getClientGroups(name){return getClientGroupIds(name).map(id=>getGroup(id)).filter(Boolean);}
+function getClientGroup(name){const gs=getClientGroups(name);return gs[0]||null;}
+function setClientGroupIds(client,ids){
+  const uniq=[...new Set((ids||[]).filter(Boolean))].slice(0,2);
+  if(!uniq.length) delete DB.clientGroups[client];
+  else if(uniq.length===1) DB.clientGroups[client]=uniq[0];
+  else DB.clientGroups[client]=uniq;
+}
+function clientBelongsToGroupId(client,gid){return getClientGroupIds(client).includes(gid);}
 function fillSel(id,cur){
   const s=document.getElementById(id);const prev=cur!==undefined?cur:s.value;
   s.innerHTML='<option value="">— 客先を選択してください —</option>';
   const grouped={};const ungrouped=[];
-  Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja')).forEach(c=>{const gid=DB.clientGroups[c];const g=getGroup(gid);if(g){if(!grouped[gid])grouped[gid]=[];grouped[gid].push(c);}else ungrouped.push(c);});
+  Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja')).forEach(c=>{
+    const ids=getClientGroupIds(c);
+    if(!ids.length){ungrouped.push(c);return;}
+    let any=false;
+    ids.forEach(gid=>{const g=getGroup(gid);if(!g)return;any=true;if(!grouped[gid])grouped[gid]=[];if(!grouped[gid].includes(c))grouped[gid].push(c);});
+    if(!any) ungrouped.push(c);
+  });
   DB.groups.forEach(g=>{if(!grouped[g.id]||!grouped[g.id].length)return;const og=document.createElement('optgroup');og.label='━━ '+g.name+' ━━';getOrderedMembers(g.id,grouped[g.id]).forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;og.appendChild(o);});s.appendChild(og);});
   if(ungrouped.length){const og=document.createElement('optgroup');og.label='━━ グループ未設定 ━━';ungrouped.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;og.appendChild(o);});s.appendChild(og);}
   s.value=prev||'';
 }
 function fillGrpSel(id,cur){const s=document.getElementById(id);if(!s)return;const prev=cur||s.value||'';s.innerHTML='<option value="">グループなし</option>';DB.groups.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;s.appendChild(o);});s.value=prev;}
+function fillAllGrpSels(){fillGrpSel('e-grp');fillGrpSel('e-grp2');fillGrpSel('nc-grp');fillGrpSel('nc-grp2');}
 function nxtDel(cyc){if(!cyc)return null;const m={月:1,火:2,水:3,木:4,金:5,土:6,日:0};const tw=new Date().getDay();let min=99;for(const c of cyc){if(m[c]!==undefined){const d=(m[c]-tw+7)%7;if(d<min)min=d;}}if(min===99)return null;const r=new Date();r.setDate(r.getDate()+min);return r;}
 function fmtD(d){if(!d)return'—';return fmtDateStr(d);}
 function nextPCode(){let max=0;DB.products.forEach(p=>{const m=p.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});Object.values(DB.clients).forEach(cl=>{(cl.items||[]).forEach(it=>{const m=it.code.match(/P(\d+)/i);if(m)max=Math.max(max,parseInt(m[1]));});});return 'P'+String(max+1).padStart(3,'0');}
-function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} try{loadSlipCompanySetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();renderMasterPickInitials();try{initMeisaiMonth();}catch(e){}try{updateBillingPendingBadge();}catch(e){}}
+function init(){ try{loadHistoryKeepSetting();}catch(e){} try{loadBillingMasterSetting();}catch(e){} try{loadSlipCompanySetting();}catch(e){} load();pruneExpiredHistory({quiet:true});pruneDeletedHistory({quiet:true});const now=new Date();document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;fillSel('csel');fillSel('msel');fillAllGrpSels();renderProducts();renderHistory();renderGroups();renderClientGrpList();setNPCode();setNC2();syncMasterPickSortUi();renderMasterPickInitials();try{initMeisaiMonth();}catch(e){}try{updateBillingPendingBadge();}catch(e){}}
 function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.style.borderLeftColor=type==='e'?'#c0392b':'var(--ac)';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
 
 // ===== 伝票発行 =====
@@ -2314,8 +2340,8 @@ function clientNameStyle(name){
 }
 
 function slipClientRouteLabel(client){
-  const g=typeof getClientGroup==='function'?getClientGroup(client):null;
-  return g&&g.name?String(g.name):'';
+  const gs=typeof getClientGroups==='function'?getClientGroups(client):(typeof getClientGroup==='function'?[getClientGroup(client)].filter(Boolean):[]);
+  return gs.map(g=>g&&g.name?String(g.name):'').filter(Boolean).join('／');
 }
 function slipClientSymbol(client){
   const s=DB.clients&&DB.clients[client]?DB.clients[client].symbol:'';
@@ -4034,7 +4060,7 @@ function focusNextEnterField(from){
   return false;
 }
 function importCSV(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const lines=ev.target.result.replace(/\r/g,'').split('\n').filter(l=>l.trim());const nc={};const ncy={};lines.slice(1).forEach(line=>{const cols=line.split(',').map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());if(cols.length<3||!cols[0])return;const[client,code,name,cyc]=cols;if(!nc[client])nc[client]={items:[]};if(name)nc[client].items.push({code:code||'P000',name});if(cyc)ncy[client]=cyc;});if(!Object.keys(nc).length){toast('読み込めるデータがありませんでした','e');return;}if(!confirm(`${Object.keys(nc).length}件の客先データをインポートします。続けますか？`))return;Object.assign(DB.clients,nc);Object.assign(DB.cycles,ncy);persist();fillSel('csel');fillSel('msel');toast(`${Object.keys(nc).length}件をインポートしました`);}catch(err){toast('CSVの読み込みに失敗しました','e');}e.target.value='';};r.readAsText(file,'UTF-8');}
-function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!d.clients){toast('フォーマットが違います','e');return;}if(!confirm('バックアップから全データを復元します。続けますか？'))return;DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};if(d.products&&d.products.length)DB.products=d.products;if(Array.isArray(d.groups))DB.groups=d.groups;if(d.clientGroups)DB.clientGroups=d.clientGroups;if(d.clientOrder)DB.clientOrder=d.clientOrder;if(d.closing)DB.closing=d.closing;if(d.minCharge)DB.minCharge=d.minCharge;if(d.deliveryFee)DB.deliveryFee=d.deliveryFee;if(d.packagingFee)DB.packagingFee=d.packagingFee;if(d.parkingEnabled)DB.parkingEnabled=d.parkingEnabled;if(d.slipCheckedThrough!=null)DB.slipCheckedThrough=d.slipCheckedThrough||'';if(d.slipCheckedThroughByClosing)DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing;if(d.slipCheckedAtByClosing)DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing;if(d.slipIssuedAckIds)DB.slipIssuedAckIds=d.slipIssuedAckIds;if(d.slipCompany){SLIP_COMPANY=normalizeSlipCompany(d.slipCompany);localStorage.setItem(lsKey('slipCompany'),JSON.stringify(SLIP_COMPANY));try{firebase.database().ref(FB_APP+'/settings/slipCompany').set(SLIP_COMPANY);}catch(e){}syncSlipCompanyUi();}if(Array.isArray(d.history)){DB.history=d.history;persistHistoryLocal();if(currentUser){const obj={};DB.history.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref(FB_APP+'/history').set(obj).catch(e=>toast('履歴の復元に失敗しました: '+e.message,'e'));}}if(Array.isArray(d.historyDeleted)){DB.historyDeleted=d.historyDeleted;persistDeletedHistoryLocal();if(currentUser){const obj={};DB.historyDeleted.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref(FB_APP+'/historyDeleted').set(obj).catch(e=>toast('削除履歴の復元に失敗しました: '+e.message,'e'));}}persist();fillSel('csel');fillSel('msel');fillGrpSel('e-grp');fillGrpSel('nc-grp');renderProducts();renderHistory();renderGroups();renderClientGrpList();const pruned=pruneExpiredHistory({quiet:true});const skipped=markOutOfScopeAsBilled();const parts=[];if(pruned)parts.push(`保存期間超過 ${pruned}件削除`);if(skipped)parts.push(`7月以前 ${skipped}件を請求対象外`);toast(parts.length?`${Object.keys(DB.clients).length}件を復元しました（${parts.join('、')}）`:`${Object.keys(DB.clients).length}件を復元しました`);}catch(err){toast('JSONの読み込みに失敗しました','e');}e.target.value='';};r.readAsText(file,'UTF-8');}
+function importJSON(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!d.clients){toast('フォーマットが違います','e');return;}if(!confirm('バックアップから全データを復元します。続けますか？'))return;DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};if(d.products&&d.products.length)DB.products=d.products;if(Array.isArray(d.groups))DB.groups=d.groups; else DB.groups=[];if(d.clientGroups)DB.clientGroups=d.clientGroups;if(d.clientOrder)DB.clientOrder=d.clientOrder;if(d.closing)DB.closing=d.closing;if(d.minCharge)DB.minCharge=d.minCharge;if(d.deliveryFee)DB.deliveryFee=d.deliveryFee;if(d.packagingFee)DB.packagingFee=d.packagingFee;if(d.parkingEnabled)DB.parkingEnabled=d.parkingEnabled;if(d.slipCheckedThrough!=null)DB.slipCheckedThrough=d.slipCheckedThrough||'';if(d.slipCheckedThroughByClosing)DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing;if(d.slipCheckedAtByClosing)DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing;if(d.slipIssuedAckIds)DB.slipIssuedAckIds=d.slipIssuedAckIds;if(d.slipCompany){SLIP_COMPANY=normalizeSlipCompany(d.slipCompany);localStorage.setItem(lsKey('slipCompany'),JSON.stringify(SLIP_COMPANY));try{firebase.database().ref(FB_APP+'/settings/slipCompany').set(SLIP_COMPANY);}catch(e){}syncSlipCompanyUi();}if(Array.isArray(d.history)){DB.history=d.history;persistHistoryLocal();if(currentUser){const obj={};DB.history.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref(FB_APP+'/history').set(obj).catch(e=>toast('履歴の復元に失敗しました: '+e.message,'e'));}}if(Array.isArray(d.historyDeleted)){DB.historyDeleted=d.historyDeleted;persistDeletedHistoryLocal();if(currentUser){const obj={};DB.historyDeleted.forEach(h=>{if(h&&h.id!=null)obj[String(h.id)]=h;});db.ref(FB_APP+'/historyDeleted').set(obj).catch(e=>toast('削除履歴の復元に失敗しました: '+e.message,'e'));}}persist();fillSel('csel');fillSel('msel');fillAllGrpSels();renderProducts();renderHistory();renderGroups();renderClientGrpList();const pruned=pruneExpiredHistory({quiet:true});const skipped=markOutOfScopeAsBilled();const parts=[];if(pruned)parts.push(`保存期間超過 ${pruned}件削除`);if(skipped)parts.push(`7月以前 ${skipped}件を請求対象外`);toast(parts.length?`${Object.keys(DB.clients).length}件を復元しました（${parts.join('、')}）`:`${Object.keys(DB.clients).length}件を復元しました`);}catch(err){toast('JSONの読み込みに失敗しました','e');}e.target.value='';};r.readAsText(file,'UTF-8');}
 
 // ===== マスタ管理 =====
 function showPanel(id,btn){
@@ -4069,7 +4095,7 @@ const CYC_DAYS=['月','火','水','木','金','土','日'];
 function renderCycBtns(wrapperId,hiddenId,current){const wrap=document.getElementById(wrapperId);if(!wrap)return;const sel=new Set([...(current||'')]);wrap.innerHTML=CYC_DAYS.map(d=>{const cls='cyc-btn'+(d==='土'?' sat':d==='日'?' sun':'')+(sel.has(d)?' on':'');return`<button type="button" class="${cls}" onclick="toggleCycBtn(this,'${d}','${hiddenId}')">${d}</button>`;}).join('');syncCycHidden(wrapperId,hiddenId);}
 function toggleCycBtn(btn,day,hiddenId){btn.classList.toggle('on');syncCycHidden(btn.closest('.cyc-btn-wrap').id,hiddenId);}
 function syncCycHidden(wrapperId,hiddenId){const wrap=document.getElementById(wrapperId);const hidden=document.getElementById(hiddenId);if(!wrap||!hidden)return;const val=CYC_DAYS.filter(d=>[...wrap.querySelectorAll('.cyc-btn')][CYC_DAYS.indexOf(d)]?.classList.contains('on')).join('');hidden.value=val;}
-function onMC(){editC=document.getElementById('msel').value||null;masterItemsDirty=false;if(!editC){document.getElementById('medit').style.display='none';const bar=document.getElementById('mitems-save-bar');if(bar)bar.style.display='none';return;}document.getElementById('medit').style.display='block';document.getElementById('e-name').value=editC;renderCycBtns('e-cyc-btns','e-cyc',DB.cycles[editC]||'');fillGrpSel('e-grp',DB.clientGroups[editC]||'');const es=document.getElementById('e-symbol');if(es)es.value=DB.clients[editC]?.symbol||'';document.getElementById('e-closing').value=DB.closing[editC]||'';const mcEl=document.getElementById('e-mincharge');if(mcEl)mcEl.value=(DB.minCharge&&DB.minCharge[editC])||'';const dfEl=document.getElementById('e-delivery-fee');if(dfEl)dfEl.value=(DB.deliveryFee&&DB.deliveryFee[editC])||'';const pfEl=document.getElementById('e-packaging-fee');if(pfEl)pfEl.value=(DB.packagingFee&&DB.packagingFee[editC])||'';const peEl=document.getElementById('e-parking-enabled');if(peEl)peEl.checked=isParkingEnabled(editC);setNC2();fillMasterSel();renderMItems();}
+function onMC(){editC=document.getElementById('msel').value||null;masterItemsDirty=false;if(!editC){document.getElementById('medit').style.display='none';const bar=document.getElementById('mitems-save-bar');if(bar)bar.style.display='none';return;}document.getElementById('medit').style.display='block';document.getElementById('e-name').value=editC;renderCycBtns('e-cyc-btns','e-cyc',DB.cycles[editC]||'');const _gids=getClientGroupIds(editC);fillGrpSel('e-grp',_gids[0]||'');fillGrpSel('e-grp2',_gids[1]||'');const es=document.getElementById('e-symbol');if(es)es.value=DB.clients[editC]?.symbol||'';document.getElementById('e-closing').value=DB.closing[editC]||'';const mcEl=document.getElementById('e-mincharge');if(mcEl)mcEl.value=(DB.minCharge&&DB.minCharge[editC])||'';const dfEl=document.getElementById('e-delivery-fee');if(dfEl)dfEl.value=(DB.deliveryFee&&DB.deliveryFee[editC])||'';const pfEl=document.getElementById('e-packaging-fee');if(pfEl)pfEl.value=(DB.packagingFee&&DB.packagingFee[editC])||'';const peEl=document.getElementById('e-parking-enabled');if(peEl)peEl.checked=isParkingEnabled(editC);setNC2();fillMasterSel();renderMItems();}
 function switchAddTab2(tab){const isMaster=tab==='master';document.getElementById('add-tab-master').style.background=isMaster?'var(--nv)':'var(--s)';document.getElementById('add-tab-master').style.color=isMaster?'#fff':'var(--mu)';document.getElementById('add-tab-free').style.background=isMaster?'var(--s)':'var(--nv)';document.getElementById('add-tab-free').style.color=isMaster?'var(--mu)':'#fff';document.getElementById('add-area-master').style.display=isMaster?'flex':'none';document.getElementById('add-area-free').style.display=isMaster?'none':'flex';}
 function fillMasterSel(){const sel=document.getElementById('ni-master-sel');if(!sel)return;const existing=(DB.clients[editC]?.items||[]).map(i=>i.code);sel.innerHTML='<option value="">— 品目を選択 —</option>';sortedProductsForPick(existing).forEach(p=>{const opt=document.createElement('option');opt.value=p.code;opt.textContent=p.code+'　'+p.name;sel.appendChild(opt);});syncMasterPickSortUi();renderMasterPickInitials();}
 function addItemFromMaster(){const sel=document.getElementById('ni-master-sel');const code=sel.value;if(!code){toast('品目を選択してください','e');return;}const prod=(DB.products||[]).find(p=>p.code===code);if(!prod){toast('品目が見つかりません','e');return;}if(!DB.clients[editC])return;flushMItemsFromDom();DB.clients[editC].items.push({code:prod.code,name:prod.name});persist();setMasterItemsDirty(false);fillMasterSel();renderMItems();toast(`「${prod.name}」を追加しました`);}
@@ -4118,7 +4144,7 @@ function refreshOpenMeisaiViewerPrices(){
 }
 function renderMItems(){if(!editC)return;const items=DB.clients[editC]?.items||[];const wrap=document.getElementById('mitems');const bar=document.getElementById('mitems-save-bar');if(bar)bar.style.display='flex';if(!items.length){wrap.innerHTML='<div class="emp" style="padding:14px">品目がありません</div>';setMasterItemsDirty(masterItemsDirty);return;}wrap.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed" id="mitems-tbl"><thead><tr><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;font-weight:500;width:36px"></th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;font-weight:500;width:15%">品番</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;font-weight:500">品目名</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:right;font-weight:500;width:90px">請求単価</th><th style="background:var(--nv);color:#fff;padding:7px 10px;font-size:11px;text-align:center;font-weight:500;width:15%">操作</th></tr></thead><tbody id="mitems-body">${items.map((it,i)=>`<tr draggable="true" data-idx="${i}"><td style="padding:6px 10px;border-bottom:0.5px solid var(--bd);text-align:center;color:var(--mu);cursor:grab;font-size:16px;user-select:none">☰</td><td style="padding:6px 10px;border-bottom:0.5px solid var(--bd)"><input class="enter-skip" data-field="code" style="width:100%;padding:5px 8px;border:0.5px solid var(--b2);border-radius:4px;font-size:12px;background:var(--w);color:var(--tx);font-family:monospace" value="${escH(it.code||'')}" oninput="upd(${i},'code',this.value)"></td><td style="padding:6px 10px;border-bottom:0.5px solid var(--bd)"><input class="enter-skip" data-field="name" style="width:100%;padding:5px 8px;border:0.5px solid var(--b2);border-radius:4px;font-size:13px;background:var(--w);color:var(--tx)" value="${escH(it.name||'')}" oninput="upd(${i},'name',this.value)"></td><td style="padding:6px 10px;border-bottom:0.5px solid var(--bd)"><input data-field="price" data-enter-col="price" type="number" min="0" style="width:100%;padding:5px 8px;border:0.5px solid var(--b2);border-radius:4px;font-size:13px;background:var(--w);color:var(--tx);text-align:right" value="${it.price||''}" placeholder="0" oninput="updPrice(${i},this.value)"></td><td style="padding:6px 10px;border-bottom:0.5px solid var(--bd);text-align:center"><button style="background:transparent;color:var(--ng);border:0.5px solid var(--ng);padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600" onclick="delItem(${i})">削除</button></td></tr>`).join('')}</tbody></table>`;initMItemsDrag();setMasterItemsDirty(masterItemsDirty);}
 function initMItemsDrag(){const tbody=document.getElementById('mitems-body');if(!tbody)return;let dragSrc=null;tbody.querySelectorAll('tr').forEach(row=>{row.addEventListener('dragstart',e=>{dragSrc=row;row.style.opacity='0.4';e.dataTransfer.effectAllowed='move';});row.addEventListener('dragend',e=>{row.style.opacity='';tbody.querySelectorAll('tr').forEach(r=>r.style.background='');});row.addEventListener('dragover',e=>{e.preventDefault();tbody.querySelectorAll('tr').forEach(r=>r.style.background='');if(row!==dragSrc)row.style.background='rgba(200,153,42,0.15)';});row.addEventListener('drop',e=>{e.preventDefault();if(dragSrc===row)return;flushMItemsFromDom();const fi=parseInt(dragSrc.dataset.idx);const ti=parseInt(row.dataset.idx);const items=DB.clients[editC].items;const moved=items.splice(fi,1)[0];items.splice(ti,0,moved);persist();setMasterItemsDirty(false);if(curC===editC){renderItems();updateChips();}renderMItems();toast('順番を変更しました');});});}
-function saveBasic(){if(!editC)return;const _origName=editC;const newN=document.getElementById('e-name').value.trim();const newC=document.getElementById('e-cyc').value.trim();const newG=document.getElementById('e-grp').value;const newCL=document.getElementById('e-closing').value;if(!newN){toast('客先名を入力してください','e');return;}if(newN!==editC){if(DB.clients[newN]){toast('同名の客先が既に存在します','e');return;}const oldName=editC;DB.clients[newN]=DB.clients[editC];delete DB.clients[editC];if(DB.cycles[editC]){DB.cycles[newN]=DB.cycles[editC];delete DB.cycles[editC];}if(DB.closing[editC]){DB.closing[newN]=DB.closing[editC];delete DB.closing[editC];}if(DB.minCharge&&DB.minCharge[editC]){DB.minCharge[newN]=DB.minCharge[editC];delete DB.minCharge[editC];}if(DB.deliveryFee&&DB.deliveryFee[editC]){DB.deliveryFee[newN]=DB.deliveryFee[editC];delete DB.deliveryFee[editC];}if(DB.packagingFee&&DB.packagingFee[editC]){DB.packagingFee[newN]=DB.packagingFee[editC];delete DB.packagingFee[editC];}if(DB.parkingEnabled&&DB.parkingEnabled[editC]){DB.parkingEnabled[newN]=DB.parkingEnabled[editC];delete DB.parkingEnabled[editC];}if(DB.clientGroups[editC]){DB.clientGroups[newN]=DB.clientGroups[editC];delete DB.clientGroups[editC];}Object.keys(DB.clientOrder||{}).forEach(gid=>{const ord=DB.clientOrder[gid];if(!Array.isArray(ord))return;const i=ord.indexOf(oldName);if(i>=0)ord[i]=newN;});if(curC===editC)curC=newN;editC=newN;}DB.cycles[editC]=newC;if(newCL)DB.closing[editC]=newCL;else delete DB.closing[editC];if(!DB.minCharge)DB.minCharge={};const minv=parseInt(document.getElementById('e-mincharge')?.value,10);if(!isNaN(minv)&&minv>0)DB.minCharge[editC]=minv;else delete DB.minCharge[editC];if(!DB.deliveryFee)DB.deliveryFee={};const feev=parseInt(document.getElementById('e-delivery-fee')?.value,10);if(!isNaN(feev)&&feev>0)DB.deliveryFee[editC]=feev;else delete DB.deliveryFee[editC];if(!DB.packagingFee)DB.packagingFee={};const packv=parseInt(document.getElementById('e-packaging-fee')?.value,10);if(!isNaN(packv)&&packv>0)DB.packagingFee[editC]=packv;else delete DB.packagingFee[editC];if(!DB.parkingEnabled)DB.parkingEnabled={};if(document.getElementById('e-parking-enabled')?.checked)DB.parkingEnabled[editC]=true;else delete DB.parkingEnabled[editC];if(newG)DB.clientGroups[editC]=newG;else delete DB.clientGroups[editC];if(!DB.clients[editC])DB.clients[editC]={items:[]};const sym=(document.getElementById('e-symbol')?.value||'').trim();if(sym)DB.clients[editC].symbol=sym;else delete DB.clients[editC].symbol;flushMItemsFromDom();setMasterItemsDirty(false);persist();fillSel('csel',curC);fillSel('msel',editC);if(curC)updateChips();renderGroups();renderClientGrpList();toast('変更を保存しました');clearNewClientMarker(_origName);if(editC!==_origName)clearNewClientMarker(editC);}
+function saveBasic(){if(!editC)return;const _origName=editC;const newN=document.getElementById('e-name').value.trim();const newC=document.getElementById('e-cyc').value.trim();const newG=document.getElementById('e-grp').value;const newCL=document.getElementById('e-closing').value;if(!newN){toast('客先名を入力してください','e');return;}if(newN!==editC){if(DB.clients[newN]){toast('同名の客先が既に存在します','e');return;}const oldName=editC;DB.clients[newN]=DB.clients[editC];delete DB.clients[editC];if(DB.cycles[editC]){DB.cycles[newN]=DB.cycles[editC];delete DB.cycles[editC];}if(DB.closing[editC]){DB.closing[newN]=DB.closing[editC];delete DB.closing[editC];}if(DB.minCharge&&DB.minCharge[editC]){DB.minCharge[newN]=DB.minCharge[editC];delete DB.minCharge[editC];}if(DB.deliveryFee&&DB.deliveryFee[editC]){DB.deliveryFee[newN]=DB.deliveryFee[editC];delete DB.deliveryFee[editC];}if(DB.packagingFee&&DB.packagingFee[editC]){DB.packagingFee[newN]=DB.packagingFee[editC];delete DB.packagingFee[editC];}if(DB.parkingEnabled&&DB.parkingEnabled[editC]){DB.parkingEnabled[newN]=DB.parkingEnabled[editC];delete DB.parkingEnabled[editC];}if(DB.clientGroups[editC]){DB.clientGroups[newN]=DB.clientGroups[editC];delete DB.clientGroups[editC];}Object.keys(DB.clientOrder||{}).forEach(gid=>{const ord=DB.clientOrder[gid];if(!Array.isArray(ord))return;const i=ord.indexOf(oldName);if(i>=0)ord[i]=newN;});if(curC===editC)curC=newN;editC=newN;}DB.cycles[editC]=newC;if(newCL)DB.closing[editC]=newCL;else delete DB.closing[editC];if(!DB.minCharge)DB.minCharge={};const minv=parseInt(document.getElementById('e-mincharge')?.value,10);if(!isNaN(minv)&&minv>0)DB.minCharge[editC]=minv;else delete DB.minCharge[editC];if(!DB.deliveryFee)DB.deliveryFee={};const feev=parseInt(document.getElementById('e-delivery-fee')?.value,10);if(!isNaN(feev)&&feev>0)DB.deliveryFee[editC]=feev;else delete DB.deliveryFee[editC];if(!DB.packagingFee)DB.packagingFee={};const packv=parseInt(document.getElementById('e-packaging-fee')?.value,10);if(!isNaN(packv)&&packv>0)DB.packagingFee[editC]=packv;else delete DB.packagingFee[editC];if(!DB.parkingEnabled)DB.parkingEnabled={};if(document.getElementById('e-parking-enabled')?.checked)DB.parkingEnabled[editC]=true;else delete DB.parkingEnabled[editC];const newG2=(document.getElementById('e-grp2')?.value)||'';setClientGroupIds(editC,[newG,newG2].filter(Boolean));if(!DB.clients[editC])DB.clients[editC]={items:[]};const sym=(document.getElementById('e-symbol')?.value||'').trim();if(sym)DB.clients[editC].symbol=sym;else delete DB.clients[editC].symbol;flushMItemsFromDom();setMasterItemsDirty(false);persist();fillSel('csel',curC);fillSel('msel',editC);if(curC)updateChips();renderGroups();renderClientGrpList();toast('変更を保存しました');clearNewClientMarker(_origName);if(editC!==_origName)clearNewClientMarker(editC);}
 function delClient(){if(!editC){toast('客先を選択してください','e');return;}if(!confirm(`「${editC}」を削除しますか？`))return;const name=editC;clearNewClientMarker(name);delete DB.clients[name];delete DB.cycles[name];delete DB.clientGroups[name];delete DB.closing[name];if(DB.minCharge)delete DB.minCharge[name];if(DB.deliveryFee)delete DB.deliveryFee[name];if(DB.packagingFee)delete DB.packagingFee[name];if(DB.parkingEnabled)delete DB.parkingEnabled[name];Object.keys(DB.clientOrder||{}).forEach(gid=>{if(Array.isArray(DB.clientOrder[gid]))DB.clientOrder[gid]=DB.clientOrder[gid].filter(c=>c!==name);});masterItemsDirty=false;persist();if(curC===name){curC=null;document.getElementById('csel').value='';onCC();}editC=null;document.getElementById('msel').value='';document.getElementById('medit').style.display='none';const bar=document.getElementById('mitems-save-bar');if(bar)bar.style.display='none';fillSel('csel');fillSel('msel');renderGroups();renderClientGrpList();toast('削除しました');}
 function upd(i,f,v){if(DB.clients[editC]?.items[i])DB.clients[editC].items[i][f]=v.trim();persistDraft();setMasterItemsDirty(true);}
 function updPrice(i,v){
@@ -4136,24 +4162,24 @@ function addItem(){if(!editC){toast('客先を選択してください','e');ret
 /* サイズ入力のときは品目名と単価を残し、サイズだけ空にして次のサイズを続けて入れられるようにする */
 if(sz){document.getElementById('ni-tate').value='';document.getElementById('ni-yoko').value='';document.getElementById('ni-tate').focus();}else{document.getElementById('ni-name').value='';const pip=document.getElementById('ni-price');if(pip)pip.value='';}
 persist();setMasterItemsDirty(false);renderMItems();setNC2();if(curC===editC){renderItems();updateChips();}toast(`「${name}」（${code}）を追加しました`);}
-function addClient(){const name=document.getElementById('nc-name').value.trim();const cyc=document.getElementById('nc-cyc').value.trim();const gid=document.getElementById('nc-grp').value;const sym=(document.getElementById('nc-symbol')?.value||'').trim();const cl=document.getElementById('nc-closing').value;const minv=parseInt(document.getElementById('nc-mincharge')?.value,10);const feev=parseInt(document.getElementById('nc-delivery-fee')?.value,10);const packv=parseInt(document.getElementById('nc-packaging-fee')?.value,10);const parkOn=!!document.getElementById('nc-parking-enabled')?.checked;if(!name){toast('客先名を入力してください','e');return;}if(DB.clients[name]){toast('同名の客先が既に存在します','e');return;}DB.clients[name]={items:[],...(sym?{symbol:sym}:{})};if(cyc)DB.cycles[name]=cyc;if(cl)DB.closing[name]=cl;if(!isNaN(minv)&&minv>0){if(!DB.minCharge)DB.minCharge={};DB.minCharge[name]=minv;}if(!isNaN(feev)&&feev>0){if(!DB.deliveryFee)DB.deliveryFee={};DB.deliveryFee[name]=feev;}if(!isNaN(packv)&&packv>0){if(!DB.packagingFee)DB.packagingFee={};DB.packagingFee[name]=packv;}if(parkOn){if(!DB.parkingEnabled)DB.parkingEnabled={};DB.parkingEnabled[name]=true;}if(gid)DB.clientGroups[name]=gid;document.getElementById('nc-name').value='';renderCycBtns('nc-cyc-btns','nc-cyc','');const nsym=document.getElementById('nc-symbol');if(nsym)nsym.value='';document.getElementById('nc-closing').value='';const nmc=document.getElementById('nc-mincharge');if(nmc)nmc.value='';const ndf=document.getElementById('nc-delivery-fee');if(ndf)ndf.value='';const npf=document.getElementById('nc-packaging-fee');if(npf)npf.value='';const npe=document.getElementById('nc-parking-enabled');if(npe)npe.checked=false;persist();fillSel('csel');fillSel('msel');renderGroups();renderClientGrpList();showCTab('edit',document.getElementById('ctab-edit'));document.getElementById('msel').value=name;onMC();toast(`「${name}」を追加しました`);}
+function addClient(){const name=document.getElementById('nc-name').value.trim();const cyc=document.getElementById('nc-cyc').value.trim();const gid=document.getElementById('nc-grp').value;const sym=(document.getElementById('nc-symbol')?.value||'').trim();const cl=document.getElementById('nc-closing').value;const minv=parseInt(document.getElementById('nc-mincharge')?.value,10);const feev=parseInt(document.getElementById('nc-delivery-fee')?.value,10);const packv=parseInt(document.getElementById('nc-packaging-fee')?.value,10);const parkOn=!!document.getElementById('nc-parking-enabled')?.checked;if(!name){toast('客先名を入力してください','e');return;}if(DB.clients[name]){toast('同名の客先が既に存在します','e');return;}DB.clients[name]={items:[],...(sym?{symbol:sym}:{})};if(cyc)DB.cycles[name]=cyc;if(cl)DB.closing[name]=cl;if(!isNaN(minv)&&minv>0){if(!DB.minCharge)DB.minCharge={};DB.minCharge[name]=minv;}if(!isNaN(feev)&&feev>0){if(!DB.deliveryFee)DB.deliveryFee={};DB.deliveryFee[name]=feev;}if(!isNaN(packv)&&packv>0){if(!DB.packagingFee)DB.packagingFee={};DB.packagingFee[name]=packv;}if(parkOn){if(!DB.parkingEnabled)DB.parkingEnabled={};DB.parkingEnabled[name]=true;}const gid2=(document.getElementById('nc-grp2')?.value)||'';setClientGroupIds(name,[gid,gid2].filter(Boolean));document.getElementById('nc-name').value='';renderCycBtns('nc-cyc-btns','nc-cyc','');const nsym=document.getElementById('nc-symbol');if(nsym)nsym.value='';document.getElementById('nc-closing').value='';const nmc=document.getElementById('nc-mincharge');if(nmc)nmc.value='';const ndf=document.getElementById('nc-delivery-fee');if(ndf)ndf.value='';const npf=document.getElementById('nc-packaging-fee');if(npf)npf.value='';const npe=document.getElementById('nc-parking-enabled');if(npe)npe.checked=false;persist();fillSel('csel');fillSel('msel');renderGroups();renderClientGrpList();showCTab('edit',document.getElementById('ctab-edit'));document.getElementById('msel').value=name;onMC();toast(`「${name}」を追加しました`);}
 
 // ===== グループ管理 =====
 let dragSrcIdx=null;
-function renderGroups(){const el=document.getElementById('grp-list');if(!DB.groups.length){el.innerHTML='<div class="emp" style="padding:12px">グループがありません</div>';return;}el.innerHTML=DB.groups.map((g,i)=>{const cnt=Object.values(DB.clientGroups).filter(v=>v===g.id).length;const preview=`background:${g.color}22;color:${g.color};border:1.5px solid ${g.color}66`;return`<div class="grp-row" draggable="true" data-idx="${i}" ondragstart="grpDragStart(event,${i})" ondragover="grpDragOver(event,${i})" ondragleave="grpDragLeave(event)" ondrop="grpDrop(event,${i})" ondragend="grpDragEnd(event)"><span class="drag-handle">&#x2807;</span><input type="color" value="${g.color}" onchange="updGrp(${i},'color',this.value)" style="width:38px;height:34px;border:1.5px solid var(--b2);border-radius:6px;cursor:pointer;padding:2px;flex-shrink:0"><input class="grp-name-inp" value="${g.name}" oninput="updGrpName(${i},this.value)" onblur="finishGrpName(${i},this.value)"><span class="grp-badge" style="${preview}">${g.name||'（未設定）'}</span><span class="grp-count-badge">${cnt}件</span><button class="bdel" onclick="delGroup(${i})">削除</button></div>`;}).join('');}
+function renderGroups(){const el=document.getElementById('grp-list');if(!DB.groups.length){el.innerHTML='<div class="emp" style="padding:12px">グループがありません</div>';return;}el.innerHTML=DB.groups.map((g,i)=>{const cnt=Object.keys(DB.clientGroups).filter(c=>clientBelongsToGroupId(c,g.id)).length;const preview=`background:${g.color}22;color:${g.color};border:1.5px solid ${g.color}66`;return`<div class="grp-row" draggable="true" data-idx="${i}" ondragstart="grpDragStart(event,${i})" ondragover="grpDragOver(event,${i})" ondragleave="grpDragLeave(event)" ondrop="grpDrop(event,${i})" ondragend="grpDragEnd(event)"><span class="drag-handle">&#x2807;</span><input type="color" value="${g.color}" onchange="updGrp(${i},'color',this.value)" style="width:38px;height:34px;border:1.5px solid var(--b2);border-radius:6px;cursor:pointer;padding:2px;flex-shrink:0"><input class="grp-name-inp" value="${g.name}" oninput="updGrpName(${i},this.value)" onblur="finishGrpName(${i},this.value)"><span class="grp-badge" style="${preview}">${g.name||'（未設定）'}</span><span class="grp-count-badge">${cnt}件</span><button class="bdel" onclick="delGroup(${i})">削除</button></div>`;}).join('');}
 function grpDragStart(e,i){dragSrcIdx=i;e.target.closest('.grp-row').classList.add('dragging');e.dataTransfer.effectAllowed='move';}
 function grpDragOver(e,i){e.preventDefault();document.querySelectorAll('.grp-row').forEach(r=>r.classList.remove('drag-over'));e.target.closest('.grp-row')?.classList.add('drag-over');}
 function grpDragLeave(e){e.target.closest('.grp-row')?.classList.remove('drag-over');}
 function grpDrop(e,i){e.preventDefault();if(dragSrcIdx===null||dragSrcIdx===i)return;const moved=DB.groups.splice(dragSrcIdx,1)[0];DB.groups.splice(i,0,moved);dragSrcIdx=null;persist();renderGroups();fillSel('csel',curC);fillSel('msel',editC);renderClientGrpList();toast('グループの順番を変更しました');}
 function grpDragEnd(e){dragSrcIdx=null;document.querySelectorAll('.grp-row').forEach(r=>{r.classList.remove('dragging');r.classList.remove('drag-over');});}
 function updGrpName(i,v){if(DB.groups[i])DB.groups[i].name=v;const row=document.querySelectorAll('.grp-row')[i];if(row){const badge=row.querySelector('.grp-badge');if(badge)badge.textContent=v||'（未設定）';}}
-function finishGrpName(i,v){if(DB.groups[i])DB.groups[i].name=v.trim()||DB.groups[i].name;persist();fillSel('csel',curC);fillSel('msel',editC);fillGrpSel('e-grp');fillGrpSel('nc-grp');renderClientGrpList();toast('グループ名を変更しました');}
+function finishGrpName(i,v){if(DB.groups[i])DB.groups[i].name=v.trim()||DB.groups[i].name;persist();fillSel('csel',curC);fillSel('msel',editC);fillAllGrpSels();renderClientGrpList();toast('グループ名を変更しました');}
 function updGrp(i,f,v){if(DB.groups[i])DB.groups[i][f]=v;persist();if(f==='color'){const row=document.querySelectorAll('.grp-row')[i];if(row){const badge=row.querySelector('.grp-badge');if(badge){badge.style.background=v+'22';badge.style.color=v;badge.style.border=`1.5px solid ${v}66`;}}fillSel('csel',curC);fillSel('msel',editC);renderClientGrpList();}}
-function delGroup(i){const g=DB.groups[i];if(!confirm('「'+g.name+'」を削除しますか？'))return;Object.keys(DB.clientGroups).forEach(c=>{if(DB.clientGroups[c]===g.id)delete DB.clientGroups[c];});DB.groups.splice(i,1);persist();renderGroups();renderClientGrpList();fillSel('csel',curC);fillSel('msel',editC);fillGrpSel('e-grp');fillGrpSel('nc-grp');toast('グループを削除しました');}
-function addGroup(){const name=document.getElementById('ng-name').value.trim();const color=document.getElementById('ng-color').value;if(!name){toast('グループ名を入力してください','e');return;}const id='g'+Date.now();DB.groups.push({id,name,color});document.getElementById('ng-name').value='';persist();renderGroups();fillGrpSel('e-grp');fillGrpSel('nc-grp');fillSel('csel',curC);fillSel('msel',editC);renderClientGrpList();toast('「'+name+'」グループを追加しました');}
+function delGroup(i){const g=DB.groups[i];if(!confirm('「'+g.name+'」を削除しますか？'))return;Object.keys(DB.clientGroups).forEach(c=>{setClientGroupIds(c,getClientGroupIds(c).filter(id=>id!==g.id));});DB.groups.splice(i,1);persist();renderGroups();renderClientGrpList();fillSel('csel',curC);fillSel('msel',editC);fillAllGrpSels();toast('グループを削除しました');}
+function addGroup(){const name=document.getElementById('ng-name').value.trim();const color=document.getElementById('ng-color').value;if(!name){toast('グループ名を入力してください','e');return;}const id='g'+Date.now();DB.groups.push({id,name,color});document.getElementById('ng-name').value='';persist();renderGroups();fillAllGrpSels();fillSel('csel',curC);fillSel('msel',editC);renderClientGrpList();toast('「'+name+'」グループを追加しました');}
 
 let cgCollapsed={},cgSortMode={},cgDragSrc=null;
-function getClientList(){const grouped={};const ungrouped=[];Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja')).forEach(c=>{const gid=DB.clientGroups[c];const g=getGroup(gid);if(g){if(!grouped[gid])grouped[gid]=[];grouped[gid].push(c);}else ungrouped.push(c);});const list=[];DB.groups.forEach(g=>{if(!grouped[g.id]||!grouped[g.id].length)return;getOrderedMembers(g.id,grouped[g.id]).forEach(c=>list.push(c));});ungrouped.forEach(c=>list.push(c));return list;}
+function getClientList(){const grouped={};const ungrouped=[];Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja')).forEach(c=>{const ids=getClientGroupIds(c);if(!ids.length){ungrouped.push(c);return;}let any=false;ids.forEach(gid=>{if(!getGroup(gid))return;any=true;if(!grouped[gid])grouped[gid]=[];if(!grouped[gid].includes(c))grouped[gid].push(c);});if(!any)ungrouped.push(c);});const list=[];const seen=new Set();DB.groups.forEach(g=>{if(!grouped[g.id]||!grouped[g.id].length)return;getOrderedMembers(g.id,grouped[g.id]).forEach(c=>{if(seen.has(c))return;seen.add(c);list.push(c);});});ungrouped.forEach(c=>{if(!seen.has(c))list.push(c);});return list;}
 function getNextClient(){const list=getClientList();const idx=list.indexOf(curC);return(idx>=0&&idx<list.length-1)?list[idx+1]:null;}
 function getClientAfter(offset){const list=getClientList();const idx=list.indexOf(curC);if(idx<0)return null;return list[idx+offset]||null;}
 function goToClient(name){if(!name){toast('次の客先はありません');return false;}resetToSelect();document.getElementById('csel').value=name;onCC();return true;}
@@ -4176,17 +4202,18 @@ function updateSkipButtons(){
   }
 }
 function getOrderedMembers(gid,members){const order=DB.clientOrder[gid];if(!order||!order.length)return members;const inOrder=order.filter(c=>members.includes(c));const rest=members.filter(c=>!order.includes(c));return[...inOrder,...rest];}
-function renderClientGrpList(){const el=document.getElementById('client-grp-list');const q=(document.getElementById('cg-search')?.value||'').toLowerCase();const allClients=Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja'));const filtered=q?allClients.filter(c=>c.toLowerCase().includes(q)):allClients;const grouped={};const ungrouped=[];filtered.forEach(c=>{const gid=DB.clientGroups[c];const g=getGroup(gid);if(g){if(!grouped[gid])grouped[gid]=[];grouped[gid].push(c);}else ungrouped.push(c);});let html='';DB.groups.forEach(g=>{const rawMembers=grouped[g.id]||[];const members=getOrderedMembers(g.id,rawMembers);const isOpen=!cgCollapsed[g.id];const isSorting=!!cgSortMode[g.id];const sortBtnStyle=isSorting?`background:var(--ok);color:#fff;border-color:var(--ok)`:`background:var(--w);color:var(--nv);border-color:${g.color}`;html+=`<div class="cg-group-block" style="border-color:${g.color}44;margin-bottom:8px"><div class="cg-group-header" style="background:${g.color}18" onclick="toggleCgGroup('${g.id}')"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};flex-shrink:0"></span><span class="cg-group-title" style="color:${g.color}">${g.name}</span><span style="font-size:11px;color:${g.color};opacity:.7">${members.length}件</span>${members.length>1?`<button type="button" onclick="event.stopPropagation();toggleCgSort('${g.id}')" style="padding:3px 10px;border-radius:5px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${sortBtnStyle}">${isSorting?'✅ 完了':'↕ 並び替え'}</button>`:''}<span class="cg-toggle" style="color:${g.color};transform:rotate(${isOpen?'0':'180'}deg)">&#9650;</span></div>`;if(isOpen){if(!members.length){html+=`<div class="cg-group-body"><div style="padding:10px 14px;font-size:12px;color:var(--mu)">このグループに客先がいません</div></div>`;}else if(isSorting){html+=`<div class="cg-group-body" id="cgbody-${g.id}">`+members.map((c,i)=>clientGrpRowSortable(c,g.id,i)).join('')+`</div>`;}else{html+=`<div class="cg-group-body">`+members.map(c=>clientGrpRow(c)).join('')+`</div>`;}}html+=`</div>`;});if(ungrouped.length){const isOpen=!cgCollapsed['__none__'];html+=`<div class="cg-group-block" style="border-color:var(--bd);margin-bottom:8px"><div class="cg-group-header" style="background:var(--s)" onclick="toggleCgGroup('__none__')"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mu);flex-shrink:0"></span><span class="cg-group-title" style="color:var(--mu)">グループ未設定</span><span style="font-size:11px;color:var(--mu)">${ungrouped.length}件</span><span class="cg-toggle" style="color:var(--mu);transform:rotate(${isOpen?'0':'180'}deg)">&#9650;</span></div>`;if(isOpen){html+=`<div class="cg-group-body">`+ungrouped.map(c=>clientGrpRow(c)).join('')+`</div>`;}html+=`</div>`;}if(!html)html='<div class="emp">該当する客先がありません</div>';el.innerHTML=html;}
-function clientGrpRow(c){const opts=`<option value="">グループなし</option>`+DB.groups.map(g2=>`<option value="${g2.id}"${DB.clientGroups[c]===g2.id?' selected':''}>${g2.name}</option>`).join('');const esc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");return`<div class="client-grp-row"><span class="client-grp-name">${c}</span><select class="grp-sel" onchange="setClientGrp('${esc}',this.value)">${opts}</select></div>`;}
+function renderClientGrpList(){const el=document.getElementById('client-grp-list');const q=(document.getElementById('cg-search')?.value||'').toLowerCase();const allClients=Object.keys(DB.clients).sort((a,b)=>a.localeCompare(b,'ja'));const filtered=q?allClients.filter(c=>c.toLowerCase().includes(q)):allClients;const grouped={};const ungrouped=[];filtered.forEach(c=>{const ids=getClientGroupIds(c);if(!ids.length){ungrouped.push(c);return;}let any=false;ids.forEach(gid=>{if(!getGroup(gid))return;any=true;if(!grouped[gid])grouped[gid]=[];if(!grouped[gid].includes(c))grouped[gid].push(c);});if(!any)ungrouped.push(c);});let html='';DB.groups.forEach(g=>{const rawMembers=grouped[g.id]||[];const members=getOrderedMembers(g.id,rawMembers);const isOpen=!cgCollapsed[g.id];const isSorting=!!cgSortMode[g.id];const sortBtnStyle=isSorting?`background:var(--ok);color:#fff;border-color:var(--ok)`:`background:var(--w);color:var(--nv);border-color:${g.color}`;html+=`<div class="cg-group-block" style="border-color:${g.color}44;margin-bottom:8px"><div class="cg-group-header" style="background:${g.color}18" onclick="toggleCgGroup('${g.id}')"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};flex-shrink:0"></span><span class="cg-group-title" style="color:${g.color}">${g.name}</span><span style="font-size:11px;color:${g.color};opacity:.7">${members.length}件</span>${members.length>1?`<button type="button" onclick="event.stopPropagation();toggleCgSort('${g.id}')" style="padding:3px 10px;border-radius:5px;border:1.5px solid;font-size:11px;font-weight:700;cursor:pointer;${sortBtnStyle}">${isSorting?'✅ 完了':'↕ 並び替え'}</button>`:''}<span class="cg-toggle" style="color:${g.color};transform:rotate(${isOpen?'0':'180'}deg)">&#9650;</span></div>`;if(isOpen){if(!members.length){html+=`<div class="cg-group-body"><div style="padding:10px 14px;font-size:12px;color:var(--mu)">このグループに客先がいません</div></div>`;}else if(isSorting){html+=`<div class="cg-group-body" id="cgbody-${g.id}">`+members.map((c,i)=>clientGrpRowSortable(c,g.id,i)).join('')+`</div>`;}else{html+=`<div class="cg-group-body">`+members.map(c=>clientGrpRow(c)).join('')+`</div>`;}}html+=`</div>`;});if(ungrouped.length){const isOpen=!cgCollapsed['__none__'];html+=`<div class="cg-group-block" style="border-color:var(--bd);margin-bottom:8px"><div class="cg-group-header" style="background:var(--s)" onclick="toggleCgGroup('__none__')"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mu);flex-shrink:0"></span><span class="cg-group-title" style="color:var(--mu)">グループ未設定</span><span style="font-size:11px;color:var(--mu)">${ungrouped.length}件</span><span class="cg-toggle" style="color:var(--mu);transform:rotate(${isOpen?'0':'180'}deg)">&#9650;</span></div>`;if(isOpen){html+=`<div class="cg-group-body">`+ungrouped.map(c=>clientGrpRow(c)).join('')+`</div>`;}html+=`</div>`;}if(!html)html='<div class="emp">該当する客先がありません</div>';el.innerHTML=html;}
+function clientGrpRow(c){const ids=getClientGroupIds(c);const opts=(sel)=>`<option value="">なし</option>`+DB.groups.map(g2=>`<option value="${g2.id}"${sel===g2.id?' selected':''}>${g2.name}</option>`).join('');const esc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");return`<div class="client-grp-row"><span class="client-grp-name">${c}</span><select class="grp-sel" title="グループ1" onchange="setClientGrpSlot('${esc}',0,this.value)">${opts(ids[0]||'')}</select><select class="grp-sel" title="グループ2" onchange="setClientGrpSlot('${esc}',1,this.value)">${opts(ids[1]||'')}</select></div>`;}
 function clientGrpRowSortable(c,gid,idx){const esc=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");return`<div class="client-grp-row" draggable="true" ondragstart="cgDragStart(event,'${gid}',${idx})" ondragover="cgDragOver(event)" ondragleave="cgDragLeave(event)" ondrop="cgDrop(event,'${gid}',${idx})" ondragend="cgDragEnd(event)"><span class="drag-handle">&#x2807;</span><span class="client-grp-name">${c}</span></div>`;}
 function toggleCgSort(gid){if(cgSortMode[gid]){cgSortMode[gid]=false;persist();toast('並び順を保存しました');}else{cgSortMode[gid]=true;cgCollapsed[gid]=false;}renderClientGrpList();}
 function cgDragStart(e,gid,idx){cgDragSrc={gid,idx};e.target.closest('.client-grp-row').classList.add('cg-dragging');e.dataTransfer.effectAllowed='move';}
 function cgDragOver(e){e.preventDefault();e.target.closest('.client-grp-row')?.classList.add('cg-drag-over');}
 function cgDragLeave(e){e.target.closest('.client-grp-row')?.classList.remove('cg-drag-over');}
-function cgDrop(e,gid,toIdx){e.preventDefault();if(!cgDragSrc||cgDragSrc.gid!==gid||cgDragSrc.idx===toIdx)return;const rawMembers=Object.keys(DB.clients).filter(c=>DB.clientGroups[c]===gid).sort((a,b)=>a.localeCompare(b,'ja'));const ordered=getOrderedMembers(gid,rawMembers);const moved=ordered.splice(cgDragSrc.idx,1)[0];ordered.splice(toIdx,0,moved);DB.clientOrder[gid]=ordered;cgDragSrc=null;renderClientGrpList();}
+function cgDrop(e,gid,toIdx){e.preventDefault();if(!cgDragSrc||cgDragSrc.gid!==gid||cgDragSrc.idx===toIdx)return;const rawMembers=Object.keys(DB.clients).filter(c=>clientBelongsToGroupId(c,gid)).sort((a,b)=>a.localeCompare(b,'ja'));const ordered=getOrderedMembers(gid,rawMembers);const moved=ordered.splice(cgDragSrc.idx,1)[0];ordered.splice(toIdx,0,moved);DB.clientOrder[gid]=ordered;cgDragSrc=null;renderClientGrpList();}
 function cgDragEnd(e){cgDragSrc=null;document.querySelectorAll('.client-grp-row').forEach(r=>{r.classList.remove('cg-dragging');r.classList.remove('cg-drag-over');});}
 function toggleCgGroup(gid){cgCollapsed[gid]=!cgCollapsed[gid];renderClientGrpList();}
-function setClientGrp(client,gid){if(gid)DB.clientGroups[client]=gid;else delete DB.clientGroups[client];persist();renderGroups();renderClientGrpList();fillSel('csel',curC);fillSel('msel',editC);toast('グループを更新しました');}
+function setClientGrpSlot(client,slot,gid){const ids=getClientGroupIds(client);const next=[ids[0]||'',ids[1]||''];next[slot]=gid||'';setClientGroupIds(client,next.filter(Boolean));persist();renderGroups();renderClientGrpList();fillSel('csel',curC);fillSel('msel',editC);toast('グループを更新しました');}
+function setClientGrp(client,gid){setClientGrpSlot(client,0,gid);}
 
 // ===== 商品マスタ =====
 function renderProducts(){
@@ -4875,7 +4902,7 @@ function fbApplyData(d,history,historyDeleted){
   DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};
   DB.products=d.products&&d.products.length?d.products:DB.products;
   DB.groups=Array.isArray(d.groups)?d.groups:[];
-  DB.clientGroups=d.clientGroups||{};
+  DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};
   DB.clientOrder=d.clientOrder||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
   const parkFixed=ensurePaperParkingFlags();
   _lastAppliedSavedAt=d.savedAt||null;
@@ -4886,7 +4913,7 @@ function fbApplyData(d,history,historyDeleted){
     persistDeletedHistoryLocal();
   }
   localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
-  fillSel("csel",curC);fillSel("msel",editC);fillGrpSel("e-grp");fillGrpSel("nc-grp");
+  fillSel("csel",curC);fillSel("msel",editC);fillAllGrpSels();
   renderProducts();renderHistory();renderGroups();renderClientGrpList();
   const pruned=pruneExpiredHistory({quiet:true});
   pruneDeletedHistory({quiet:true});
@@ -4938,10 +4965,10 @@ async function fbStartListeners(){
     DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};
     DB.products=d.products&&d.products.length?d.products:DB.products;
     DB.groups=Array.isArray(d.groups)?d.groups:[];
-    DB.clientGroups=d.clientGroups||{};DB.clientOrder=d.clientOrder||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
+    DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};DB.clientOrder=d.clientOrder||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
     _lastAppliedSavedAt=d.savedAt||_lastAppliedSavedAt;
     localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
-    fillSel("csel",curC);fillSel("msel",editC);fillGrpSel("e-grp");fillGrpSel("nc-grp");
+    fillSel("csel",curC);fillSel("msel",editC);fillAllGrpSels();
     renderProducts();renderGroups();renderClientGrpList();
     toast("☁️ 他のPCでマスタが更新されました");
   });
@@ -5084,7 +5111,7 @@ async function finishLoginUI(matched){
   toast('ようこそ、'+matched+'さん');
   try{load();}catch(e){console.warn(e);}
   try{fillSel('csel');fillSel('msel');}catch(e){}
-  try{fillGrpSel('e-grp');fillGrpSel('nc-grp');}catch(e){}
+  try{fillAllGrpSels();}catch(e){}
   try{renderProducts();renderGroups();renderClientGrpList();}catch(e){}
   try{syncHistKeepUi();}catch(e){}
   if(typeof pruneExpiredHistory==='function') try{pruneExpiredHistory({quiet:true});}catch(e){}
@@ -5625,7 +5652,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const now=new Date();
   document.getElementById('hdr-d').textContent=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WD[now.getDay()]}曜日`;
   fillSel('csel');fillSel('msel');
-  fillGrpSel('e-grp');fillGrpSel('nc-grp');
+  fillAllGrpSels();
   renderProducts();renderHistory();renderGroups();renderClientGrpList();
   setNPCode();setNC2();
   renderCycBtns('nc-cyc-btns','nc-cyc','');
