@@ -743,6 +743,10 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
             </div>
           </div>
         </div>
+        <div id="ledger-photo-memos" style="display:none;margin-top:8px;padding:8px 10px;background:#f7fafc;border:1px solid #d6e4ef;border-radius:8px">
+          <div style="font-size:11px;color:#5a7a90;font-weight:700;margin-bottom:6px">📷 台帳の写真メモ（タップで拡大）</div>
+          <div id="ledger-photo-memos-thumbs" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
       </div>
       <div style="padding:0 16px 8px;flex:1;overflow:hidden;display:flex;flex-direction:column">
         <div id="add-item-area" class="add-item-area" style="display:none">
@@ -2163,8 +2167,52 @@ function onNdPick(el){if(!el.value){el.style.display='none';return;}const parts=
 function resetNdPicker(){customDeliveryDate=null;document.getElementById('nd-picker').style.display='none';document.getElementById('nd-reset-btn').style.display='none';document.getElementById('nd-cal-btn').textContent='📅 変更';const auto=nxtDel(DB.cycles[curC]||'');document.getElementById('nd-v').textContent=fmtD(auto);document.getElementById('nd-v').style.color='';toast('納品日を自動計算に戻しました');}
 function getDeliveryDate(){if(customDeliveryDate)return fmtD(customDeliveryDate);return fmtD(nxtDel(DB.cycles[curC]||''));}
 function focusFirstQty(){const el=document.querySelector('#iarea-body .qty');if(!el)return;el.focus();el.select();}
-function onCC(){if(_correctingHistId!=null){_correctingHistId=null;updateCorrectionBanner();}curC=document.getElementById('csel').value||null;qtys={};bikos={};extraItems=[];customDeliveryDate=null;const picker=document.getElementById('nd-picker');if(picker)picker.style.display='none';const resetBtn=document.getElementById('nd-reset-btn');if(resetBtn)resetBtn.style.display='none';const calBtn=document.getElementById('nd-cal-btn');if(calBtn)calBtn.textContent='📅 変更';const ndv=document.getElementById('nd-v');if(ndv)ndv.style.color='';const aa=document.getElementById('add-item-area');if(aa)aa.style.display='none';const st=document.getElementById('sbtns-top');if(!curC){document.getElementById('chips').style.display='none';document.getElementById('sbtns').style.display='none';if(st)st.style.display='none';document.getElementById('iarea').innerHTML='<div class="emp">上のプルダウンから客先を選択してください</div>';updateSkipButtons();return;}updateChips();document.getElementById('sbtns').style.display='flex';if(st)st.style.display='flex';renderItems();updateSkipButtons();setTimeout(()=>{fitIareaBody();focusFirstQty();},80);}
+function onCC(){if(_correctingHistId!=null){_correctingHistId=null;updateCorrectionBanner();}curC=document.getElementById('csel').value||null;qtys={};bikos={};extraItems=[];customDeliveryDate=null;const picker=document.getElementById('nd-picker');if(picker)picker.style.display='none';const resetBtn=document.getElementById('nd-reset-btn');if(resetBtn)resetBtn.style.display='none';const calBtn=document.getElementById('nd-cal-btn');if(calBtn)calBtn.textContent='📅 変更';const ndv=document.getElementById('nd-v');if(ndv)ndv.style.color='';const aa=document.getElementById('add-item-area');if(aa)aa.style.display='none';const st=document.getElementById('sbtns-top');if(!curC){document.getElementById('chips').style.display='none';document.getElementById('sbtns').style.display='none';if(st)st.style.display='none';document.getElementById('iarea').innerHTML='<div class="emp">上のプルダウンから客先を選択してください</div>';hideLedgerPhotoMemos();updateSkipButtons();return;}updateChips();document.getElementById('sbtns').style.display='flex';if(st)st.style.display='flex';renderItems();updateSkipButtons();loadLedgerPhotoMemos(curC);setTimeout(()=>{fitIareaBody();focusFirstQty();},80);}
 function updateChips(){if(!curC)return;const cyc=DB.cycles[curC]||'';document.getElementById('chips').style.display='flex';if(!customDeliveryDate){document.getElementById('nd-v').textContent=fmtD(nxtDel(cyc));document.getElementById('nd-v').style.color='';}const cv=document.getElementById('cyc-v');cv.textContent=cyc?cyc+'曜日':'（未設定）';cv.style.display='';document.getElementById('cyc-edit-hint').style.display='';document.getElementById('cyc-btn-area').style.display='none';document.getElementById('icnt').textContent=(DB.clients[curC]?.items||[]).length+' 品目';try{syncSlipLotUi();}catch(e){}}
+const LEDGER_PHOTOS_COL=IS_DEMO?'ledgerPhotos_demo':'ledgerPhotos';
+function hideLedgerPhotoMemos(){
+  const wrap=document.getElementById('ledger-photo-memos');
+  if(wrap)wrap.style.display='none';
+  const thumbs=document.getElementById('ledger-photo-memos-thumbs');
+  if(thumbs)thumbs.innerHTML='';
+}
+function openLedgerPhotoView(src){
+  if(!src)return;
+  let ov=document.getElementById('ledger-photo-view');
+  if(!ov){
+    ov=document.createElement('div');
+    ov.id='ledger-photo-view';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9500;display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.onclick=e=>{if(e.target===ov)ov.remove();};
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML=`<button type="button" style="position:absolute;top:14px;right:14px;padding:8px 14px;border:none;border-radius:8px;background:#fff;font-weight:700;cursor:pointer" onclick="document.getElementById('ledger-photo-view')?.remove()">閉じる</button><img src="${src}" alt="台帳写真" style="max-width:min(960px,96vw);max-height:88vh;border-radius:8px">`;
+}
+async function loadLedgerPhotoMemos(client){
+  const wrap=document.getElementById('ledger-photo-memos');
+  const thumbs=document.getElementById('ledger-photo-memos-thumbs');
+  if(!wrap||!thumbs)return;
+  if(!client||typeof ledgerFs==='undefined'){hideLedgerPhotoMemos();return;}
+  thumbs.innerHTML='<span style="font-size:12px;color:#888">写真を確認中…</span>';
+  wrap.style.display='block';
+  try{
+    const snap=await ledgerFs.collection(LEDGER_PHOTOS_COL).orderBy('at','desc').limit(60).get({source:'server'});
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.customer===client&&Array.isArray(d.photos)&&d.photos.length);
+    // 下書きを優先し、なければ直近の保存済み
+    const draft=docs.find(d=>d.status==='draft');
+    const saved=docs.filter(d=>d.status==='saved');
+    const pick=draft||saved[0];
+    if(!pick){hideLedgerPhotoMemos();return;}
+    const photos=pick.photos.filter(p=>p&&p.dataUrl).slice(0,6);
+    if(!photos.length){hideLedgerPhotoMemos();return;}
+    const label=pick.status==='draft'?'入力中（共有）':`保存済み ${pick.deliveryDate||''}${pick.lotNo?' · ロット '+pick.lotNo:''}`;
+    wrap.querySelector('div').textContent='📷 台帳の写真メモ · '+label+'（タップで拡大）';
+    thumbs.innerHTML=photos.map(p=>`<button type="button" style="padding:0;border:1px solid #c5d6e4;border-radius:8px;overflow:hidden;width:72px;height:72px;cursor:pointer;background:#fff" onclick="openLedgerPhotoView(this.querySelector('img').src)"><img src="${p.dataUrl}" alt="写真" style="width:100%;height:100%;object-fit:cover;display:block"></button>`).join('');
+  }catch(e){
+    console.warn('loadLedgerPhotoMemos',e);
+    hideLedgerPhotoMemos();
+  }
+}
 function startCyc(){if(!curC)return;document.getElementById('cyc-v').style.display='none';document.getElementById('cyc-edit-hint').style.display='none';renderCycBtns('slip-cyc-btns','slip-cyc',DB.cycles[curC]||'');document.getElementById('cyc-btn-area').style.display='flex';}
 function saveCycBtns(){if(!curC)return;const val=document.getElementById('slip-cyc').value.trim();DB.cycles[curC]=val;persist();if(!customDeliveryDate){document.getElementById('nd-v').textContent=fmtD(nxtDel(val));}updateChips();if(editC===curC)renderCycBtns('e-cyc-btns','e-cyc',val);toast('サイクルを更新しました');}
 function cancelCyc(){document.getElementById('cyc-btn-area').style.display='none';document.getElementById('cyc-v').style.display='';document.getElementById('cyc-edit-hint').style.display='';}

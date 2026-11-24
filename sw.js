@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261124-client-order';
+const CACHE_NAME = 'purims-v20261124-photo-share';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {
