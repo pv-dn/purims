@@ -689,6 +689,10 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
         </div>
       </div>
     </div>
+    <div id="ledger-photo-memos" style="display:none;padding:8px;background:#f7fafc;border:1px solid #d6e4ef;border-radius:7px">
+      <div id="ledger-photo-memos-label" style="font-size:11px;color:#5a7a90;font-weight:700;margin-bottom:6px">📷 台帳の写真</div>
+      <div id="ledger-photo-memos-thumbs" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
     </aside>
     <div class="card slip-main" style="display:flex;flex-direction:column;flex:1;overflow:hidden;margin-bottom:0">
       <div class="ch">
@@ -742,10 +746,6 @@ body:not(.billing-master-on) td.billing-master-field { display:none !important; 
               <span style="font-size:10px;color:var(--mu)">荷造り照合用</span>
             </div>
           </div>
-        </div>
-        <div id="ledger-photo-memos" style="display:none;margin-top:8px;padding:8px 10px;background:#f7fafc;border:1px solid #d6e4ef;border-radius:8px">
-          <div style="font-size:11px;color:#5a7a90;font-weight:700;margin-bottom:6px">📷 台帳の写真メモ（タップで拡大）</div>
-          <div id="ledger-photo-memos-thumbs" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         </div>
       </div>
       <div style="padding:0 16px 8px;flex:1;overflow:hidden;display:flex;flex-direction:column">
@@ -2206,8 +2206,9 @@ async function loadLedgerPhotoMemos(client){
     const photos=pick.photos.filter(p=>p&&p.dataUrl).slice(0,6);
     if(!photos.length){hideLedgerPhotoMemos();return;}
     const label=pick.status==='draft'?'入力中（共有）':`保存済み ${pick.deliveryDate||''}${pick.lotNo?' · ロット '+pick.lotNo:''}`;
-    wrap.querySelector('div').textContent='📷 台帳の写真メモ · '+label+'（タップで拡大）';
-    thumbs.innerHTML=photos.map(p=>`<button type="button" style="padding:0;border:1px solid #c5d6e4;border-radius:8px;overflow:hidden;width:72px;height:72px;cursor:pointer;background:#fff" onclick="openLedgerPhotoView(this.querySelector('img').src)"><img src="${p.dataUrl}" alt="写真" style="width:100%;height:100%;object-fit:cover;display:block"></button>`).join('');
+    const labelEl=document.getElementById('ledger-photo-memos-label');
+    if(labelEl)labelEl.textContent='📷 '+label;
+    thumbs.innerHTML=photos.map(p=>`<button type="button" style="padding:0;border:1px solid #c5d6e4;border-radius:8px;overflow:hidden;width:100%;aspect-ratio:1;cursor:pointer;background:#fff" onclick="openLedgerPhotoView(this.querySelector('img').src)"><img src="${p.dataUrl}" alt="写真" style="width:100%;height:100%;object-fit:cover;display:block"></button>`).join('');
   }catch(e){
     console.warn('loadLedgerPhotoMemos',e);
     hideLedgerPhotoMemos();
