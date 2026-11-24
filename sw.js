@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261124-photo-side';
+const CACHE_NAME = 'purims-v20261124-item-merge';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {

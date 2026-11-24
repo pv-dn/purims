@@ -1321,7 +1321,7 @@ async function pullSharedMastersCloud(){
     if(!d||!d.clients||!Object.keys(d.clients).length)return false;
     DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients||{}),DB.clients);
     if(d.cycles&&Object.keys(d.cycles).length)DB.cycles=d.cycles;
-    if(Array.isArray(d.products)&&d.products.length)DB.products=d.products;
+    if(Array.isArray(d.products)&&d.products.length)DB.products=mergeProducts(d.products,DB.products);
     // 空配列も反映する（長さチェックだと「グループなし」にしても古い一覧が残って再保存される）
     if(Array.isArray(d.groups))DB.groups=d.groups; else DB.groups=[];
     if(d.clientGroups&&typeof d.clientGroups==='object')DB.clientGroups=d.clientGroups;
@@ -1335,13 +1335,26 @@ async function pullSharedMastersCloud(){
     try{fillSel('csel',curC);fillSel('msel',editC);}catch(e){}
     try{fillAllGrpSels();}catch(e){}
     try{renderProducts();renderGroups();renderClientGrpList();}catch(e){}
-    if(curC&&DB.clients[curC]){try{renderItems();}catch(e){}}
+    if(editC&&DB.clients[editC]){try{fillMasterSel();renderMItems();}catch(e){}}
+    if(curC&&DB.clients[curC]){try{renderItems();updateChips();}catch(e){}}
     toast('台帳とマスタを同期しました');
     try{applyLedgerNewClients(snap.data().newClients,{announce:true});}catch(e){console.warn(e);}
     return true;
   }catch(e){console.warn('pullSharedMastersCloud',e);return false;}
 }
-/** 台帳から取り込むとき、台帳が持たない詳細（symbol・品目の単価など）は手元の値を残す */
+/** 商品マスタも union（同じ品番は incoming 優先、手元だけの品番は残す） */
+function mergeProducts(incoming,local){
+  const map=new Map();
+  (local||[]).forEach(p=>{if(p&&p.code!=null&&p.code!=='')map.set(String(p.code),p);});
+  (incoming||[]).forEach(p=>{
+    if(!p||p.code==null||p.code==='')return;
+    const k=String(p.code);
+    map.set(k,Object.assign({},map.get(k)||{},p));
+  });
+  return Array.from(map.values());
+}
+/** 台帳から取り込むとき、台帳が持たない詳細（symbol・品目の単価など）は手元の値を残す。
+ *  伝票側だけで追加した品目も消さない（union）。 */
 function mergeLedgerClients(incoming,local){
   const out={};
   Object.keys(incoming||{}).forEach(name=>{
@@ -1350,11 +1363,21 @@ function mergeLedgerClients(incoming,local){
     if(!loc||typeof loc!=='object'){out[name]=inc;return;}
     const rec=Object.assign({},loc,inc);
     const locItems=Array.isArray(loc.items)?loc.items:[];
-    rec.items=(inc.items||[]).map(it=>{
+    const merged=(inc.items||[]).map(it=>{
       const li=locItems.find(x=>x&&it&&it.code&&x.code===it.code)||locItems.find(x=>x&&it&&x.name===it.name);
       return li?Object.assign({},li,it):it;
     });
+    locItems.forEach(li=>{
+      if(!li)return;
+      const exists=merged.some(it=>it&&((li.code&&it.code===li.code)||(li.name&&it.name===li.name)));
+      if(!exists)merged.push(li);
+    });
+    rec.items=merged;
     out[name]=rec;
+  });
+  // 伝票側にだけある客先も残す
+  Object.keys(local||{}).forEach(name=>{
+    if(!out[name])out[name]=local[name];
   });
   return out;
 }
@@ -2186,7 +2209,18 @@ function openLedgerPhotoView(src){
     ov.onclick=e=>{if(e.target===ov)ov.remove();};
     document.body.appendChild(ov);
   }
-  ov.innerHTML=`<button type="button" style="position:absolute;top:14px;right:14px;padding:8px 14px;border:none;border-radius:8px;background:#fff;font-weight:700;cursor:pointer" onclick="document.getElementById('ledger-photo-view')?.remove()">閉じる</button><img src="${src}" alt="台帳写真" style="max-width:min(960px,96vw);max-height:88vh;border-radius:8px">`;
+  ov.innerHTML='';
+  const closeBtn=document.createElement('button');
+  closeBtn.type='button';
+  closeBtn.textContent='閉じる';
+  closeBtn.style.cssText='position:absolute;top:14px;right:14px;padding:8px 14px;border:none;border-radius:8px;background:#fff;font-weight:700;cursor:pointer';
+  closeBtn.onclick=()=>ov.remove();
+  const img=document.createElement('img');
+  img.src=src;
+  img.alt='台帳写真';
+  img.style.cssText='max-width:min(960px,96vw);max-height:88vh;border-radius:8px';
+  ov.appendChild(closeBtn);
+  ov.appendChild(img);
 }
 async function loadLedgerPhotoMemos(client){
   const wrap=document.getElementById('ledger-photo-memos');
@@ -4154,7 +4188,7 @@ function syncCycHidden(wrapperId,hiddenId){const wrap=document.getElementById(wr
 function onMC(){editC=document.getElementById('msel').value||null;masterItemsDirty=false;if(!editC){document.getElementById('medit').style.display='none';const bar=document.getElementById('mitems-save-bar');if(bar)bar.style.display='none';return;}document.getElementById('medit').style.display='block';document.getElementById('e-name').value=editC;renderCycBtns('e-cyc-btns','e-cyc',DB.cycles[editC]||'');const _gids=getClientGroupIds(editC);fillGrpSel('e-grp',_gids[0]||'');fillGrpSel('e-grp2',_gids[1]||'');const es=document.getElementById('e-symbol');if(es)es.value=DB.clients[editC]?.symbol||'';document.getElementById('e-closing').value=DB.closing[editC]||'';const mcEl=document.getElementById('e-mincharge');if(mcEl)mcEl.value=(DB.minCharge&&DB.minCharge[editC])||'';const dfEl=document.getElementById('e-delivery-fee');if(dfEl)dfEl.value=(DB.deliveryFee&&DB.deliveryFee[editC])||'';const pfEl=document.getElementById('e-packaging-fee');if(pfEl)pfEl.value=(DB.packagingFee&&DB.packagingFee[editC])||'';const peEl=document.getElementById('e-parking-enabled');if(peEl)peEl.checked=isParkingEnabled(editC);setNC2();fillMasterSel();renderMItems();}
 function switchAddTab2(tab){const isMaster=tab==='master';document.getElementById('add-tab-master').style.background=isMaster?'var(--nv)':'var(--s)';document.getElementById('add-tab-master').style.color=isMaster?'#fff':'var(--mu)';document.getElementById('add-tab-free').style.background=isMaster?'var(--s)':'var(--nv)';document.getElementById('add-tab-free').style.color=isMaster?'var(--mu)':'#fff';document.getElementById('add-area-master').style.display=isMaster?'flex':'none';document.getElementById('add-area-free').style.display=isMaster?'none':'flex';}
 function fillMasterSel(){const sel=document.getElementById('ni-master-sel');if(!sel)return;const existing=(DB.clients[editC]?.items||[]).map(i=>i.code);sel.innerHTML='<option value="">— 品目を選択 —</option>';sortedProductsForPick(existing).forEach(p=>{const opt=document.createElement('option');opt.value=p.code;opt.textContent=p.code+'　'+p.name;sel.appendChild(opt);});syncMasterPickSortUi();renderMasterPickInitials();}
-function addItemFromMaster(){const sel=document.getElementById('ni-master-sel');const code=sel.value;if(!code){toast('品目を選択してください','e');return;}const prod=(DB.products||[]).find(p=>p.code===code);if(!prod){toast('品目が見つかりません','e');return;}if(!DB.clients[editC])return;flushMItemsFromDom();DB.clients[editC].items.push({code:prod.code,name:prod.name});persist();setMasterItemsDirty(false);fillMasterSel();renderMItems();toast(`「${prod.name}」を追加しました`);}
+function addItemFromMaster(){if(!editC){toast('客先を選択してください','e');return;}const sel=document.getElementById('ni-master-sel');const code=sel&&sel.value;if(!code){toast('品目を選択してください','e');return;}const prod=(DB.products||[]).find(p=>p.code===code);if(!prod){toast('品目が見つかりません','e');return;}if(!DB.clients[editC])DB.clients[editC]={items:[]};if(!Array.isArray(DB.clients[editC].items))DB.clients[editC].items=[];flushMItemsFromDom();if(DB.clients[editC].items.some(it=>it.code===prod.code||it.name===prod.name)){toast(`「${prod.name}」は既に登録されています`,'e');return;}DB.clients[editC].items.push({code:prod.code,name:prod.name});persist();setMasterItemsDirty(false);fillMasterSel();renderMItems();if(curC===editC){renderItems();updateChips();}toast(`「${prod.name}」を追加しました`);}
 function setNC2(){const el=document.getElementById('ni-code');if(el){el.placeholder=nextPCode()+' (自動)';el.value='';}}
 let masterItemsDirty=false;
 function setMasterItemsDirty(on){
@@ -4214,9 +4248,10 @@ function updPrice(i,v){
   setMasterItemsDirty(true);
 }
 function delItem(i){flushMItemsFromDom();DB.clients[editC]?.items.splice(i,1);persist();setMasterItemsDirty(false);renderMItems();setNC2();if(curC===editC){renderItems();updateChips();}}
-function addItem(){if(!editC){toast('客先を選択してください','e');return;}const sz=readSizeInputs('ni-tate','ni-yoko');if(sz===null){toast('縦と横は両方入力してください','e');return;}const name=composeItemName(document.getElementById('ni-name').value,sz);if(!name){toast('品目名を入力してください','e');return;}const code=document.getElementById('ni-code').value.trim()||nextPCode();if(!DB.clients[editC])DB.clients[editC]={items:[]};flushMItemsFromDom();if(DB.clients[editC].items.some(it=>it.name===name)){toast(`「${name}」は既に登録されています`,'e');return;}const pv=parseInt(document.getElementById('ni-price').value,10);DB.clients[editC].items.push({code,name,...(!isNaN(pv)&&pv>0?{price:pv}:{})});
+function addItem(){if(!editC){toast('客先を選択してください','e');return;}const sz=readSizeInputs('ni-tate','ni-yoko');if(sz===null){toast('縦と横は両方入力してください','e');return;}const nameEl=document.getElementById('ni-name');const name=composeItemName(nameEl?nameEl.value:'',sz);if(!name){toast('品目名を入力してください','e');return;}const codeEl=document.getElementById('ni-code');const code=((codeEl&&codeEl.value)||'').trim()||nextPCode();if(!DB.clients[editC])DB.clients[editC]={items:[]};if(!Array.isArray(DB.clients[editC].items))DB.clients[editC].items=[];flushMItemsFromDom();if(DB.clients[editC].items.some(it=>it.name===name)){toast(`「${name}」は既に登録されています`,'e');return;}const priceEl=document.getElementById('ni-price');const pv=parseInt(priceEl?priceEl.value:'',10);DB.clients[editC].items.push({code,name,...(!isNaN(pv)&&pv>0?{price:pv}:{})});
+if(!(DB.products||[]).some(p=>p.code===code)){if(!DB.products)DB.products=[];DB.products.push({code,name});}
 /* サイズ入力のときは品目名と単価を残し、サイズだけ空にして次のサイズを続けて入れられるようにする */
-if(sz){document.getElementById('ni-tate').value='';document.getElementById('ni-yoko').value='';document.getElementById('ni-tate').focus();}else{document.getElementById('ni-name').value='';const pip=document.getElementById('ni-price');if(pip)pip.value='';}
+if(sz){const t=document.getElementById('ni-tate');const y=document.getElementById('ni-yoko');if(t)t.value='';if(y)y.value='';if(t)t.focus();}else{if(nameEl)nameEl.value='';if(priceEl)priceEl.value='';}
 persist();setMasterItemsDirty(false);renderMItems();setNC2();if(curC===editC){renderItems();updateChips();}toast(`「${name}」（${code}）を追加しました`);}
 function addClient(){const name=document.getElementById('nc-name').value.trim();const cyc=document.getElementById('nc-cyc').value.trim();const gid=document.getElementById('nc-grp').value;const sym=(document.getElementById('nc-symbol')?.value||'').trim();const cl=document.getElementById('nc-closing').value;const minv=parseInt(document.getElementById('nc-mincharge')?.value,10);const feev=parseInt(document.getElementById('nc-delivery-fee')?.value,10);const packv=parseInt(document.getElementById('nc-packaging-fee')?.value,10);const parkOn=!!document.getElementById('nc-parking-enabled')?.checked;if(!name){toast('客先名を入力してください','e');return;}if(DB.clients[name]){toast('同名の客先が既に存在します','e');return;}DB.clients[name]={items:[],...(sym?{symbol:sym}:{})};if(cyc)DB.cycles[name]=cyc;if(cl)DB.closing[name]=cl;if(!isNaN(minv)&&minv>0){if(!DB.minCharge)DB.minCharge={};DB.minCharge[name]=minv;}if(!isNaN(feev)&&feev>0){if(!DB.deliveryFee)DB.deliveryFee={};DB.deliveryFee[name]=feev;}if(!isNaN(packv)&&packv>0){if(!DB.packagingFee)DB.packagingFee={};DB.packagingFee[name]=packv;}if(parkOn){if(!DB.parkingEnabled)DB.parkingEnabled={};DB.parkingEnabled[name]=true;}const gid2=(document.getElementById('nc-grp2')?.value)||'';setClientGroupIds(name,[gid,gid2].filter(Boolean));document.getElementById('nc-name').value='';renderCycBtns('nc-cyc-btns','nc-cyc','');const nsym=document.getElementById('nc-symbol');if(nsym)nsym.value='';document.getElementById('nc-closing').value='';const nmc=document.getElementById('nc-mincharge');if(nmc)nmc.value='';const ndf=document.getElementById('nc-delivery-fee');if(ndf)ndf.value='';const npf=document.getElementById('nc-packaging-fee');if(npf)npf.value='';const npe=document.getElementById('nc-parking-enabled');if(npe)npe.checked=false;persist();fillSel('csel');fillSel('msel');renderGroups();renderClientGrpList();showCTab('edit',document.getElementById('ctab-edit'));document.getElementById('msel').value=name;onMC();toast(`「${name}」を追加しました`);}
 
@@ -4855,9 +4890,24 @@ function fbSave(){
     return master;
   }).then(result=>{
     if(!result.committed){
-      toast('他のPCとマスタが競合しました。クラウドを再読み込みします','e');
-      fbLoad();
-      return;
+      // 巻き戻しせず、クラウド最新と手元をマージしてから再保存（品目追加が消えないように）
+      toast('他のPCとマスタが競合しました。マージして再保存します','e');
+      return db.ref(FB_APP+'/data').once('value').then(snap=>{
+        const cloud=snap.val();
+        if(!cloud||!cloud.clients){fbLoad();return;}
+        DB.clients=mergeLedgerClients(unpackClientsFromFirebase(cloud.clients),DB.clients);
+        if(cloud.cycles)DB.cycles=Object.assign({},DB.cycles||{},cloud.cycles);
+        DB.products=mergeProducts(cloud.products||[],DB.products);
+        if(Array.isArray(cloud.groups))DB.groups=cloud.groups;
+        if(cloud.clientGroups)DB.clientGroups=cloud.clientGroups;
+        if(cloud.clientOrder)DB.clientOrder=cloud.clientOrder;
+        if(cloud.closing)DB.closing=Object.assign({},DB.closing||{},cloud.closing);
+        _lastAppliedSavedAt=cloud.savedAt||null;
+        persistDraft();
+        if(editC){try{fillMasterSel();renderMItems();}catch(e){}}
+        if(curC){try{renderItems();updateChips();}catch(e){}}
+        clearTimeout(persist._t);persist._t=setTimeout(fbSave,600);
+      });
     }
     _lastAppliedSavedAt=master.savedAt;
     toast('クラウドに保存しました');
@@ -4956,8 +5006,10 @@ function migrateHistoryIfNeeded(raw){
 
 function fbApplyData(d,history,historyDeleted){
   if(!d||!d.clients)return;
-  DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};
-  DB.products=d.products&&d.products.length?d.products:DB.products;
+  const prevClients=DB.clients;
+  const prevProducts=DB.products;
+  DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients),prevClients);DB.cycles=d.cycles||{};
+  DB.products=d.products&&d.products.length?mergeProducts(d.products,prevProducts):prevProducts;
   DB.groups=Array.isArray(d.groups)?d.groups:[];
   DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};
   DB.clientOrder=d.clientOrder||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
@@ -4972,6 +5024,8 @@ function fbApplyData(d,history,historyDeleted){
   localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
   fillSel("csel",curC);fillSel("msel",editC);fillAllGrpSels();
   renderProducts();renderHistory();renderGroups();renderClientGrpList();
+  if(editC&&DB.clients[editC]){try{fillMasterSel();renderMItems();}catch(e){}}
+  if(curC&&DB.clients[curC]){try{renderItems();updateChips();}catch(e){}}
   const pruned=pruneExpiredHistory({quiet:true});
   pruneDeletedHistory({quiet:true});
   const skipped=markOutOfScopeAsBilled();
@@ -5019,14 +5073,17 @@ async function fbStartListeners(){
   const onData=refData.on("value",snap=>{
     if(skipData||_isSelfSaving)return;
     const d=snap.val();if(!d||!d.clients)return;
-    DB.clients=unpackClientsFromFirebase(d.clients);DB.cycles=d.cycles||{};
-    DB.products=d.products&&d.products.length?d.products:DB.products;
+    // 手元で追加直後の品目が他PC更新で消えないよう union
+    DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients),DB.clients);DB.cycles=d.cycles||{};
+    DB.products=d.products&&d.products.length?mergeProducts(d.products,DB.products):DB.products;
     DB.groups=Array.isArray(d.groups)?d.groups:[];
     DB.clientGroups=(d.clientGroups&&typeof d.clientGroups==='object')?d.clientGroups:{};DB.clientOrder=d.clientOrder||{};DB.closing=d.closing||{};DB.minCharge=d.minCharge||{};DB.deliveryFee=d.deliveryFee||{};DB.packagingFee=d.packagingFee||{};DB.parkingEnabled=d.parkingEnabled||{};DB.slipCheckedThrough=d.slipCheckedThrough||'';DB.slipCheckedThroughByClosing=d.slipCheckedThroughByClosing||{};DB.slipCheckedAtByClosing=d.slipCheckedAtByClosing||{};DB.slipIssuedAckIds=d.slipIssuedAckIds||{};
     _lastAppliedSavedAt=d.savedAt||_lastAppliedSavedAt;
     localStorage.setItem(lsKey('v14'),JSON.stringify({clients:DB.clients,cycles:DB.cycles,products:DB.products,groups:DB.groups,clientGroups:DB.clientGroups,clientOrder:DB.clientOrder,closing:DB.closing,minCharge:DB.minCharge||{},deliveryFee:DB.deliveryFee||{},packagingFee:DB.packagingFee||{},parkingEnabled:DB.parkingEnabled||{},slipCheckedThrough:DB.slipCheckedThrough||'',slipCheckedThroughByClosing:DB.slipCheckedThroughByClosing||{},slipCheckedAtByClosing:DB.slipCheckedAtByClosing||{},slipIssuedAckIds:DB.slipIssuedAckIds||{}}));
     fillSel("csel",curC);fillSel("msel",editC);fillAllGrpSels();
     renderProducts();renderGroups();renderClientGrpList();
+    if(editC&&DB.clients[editC]){try{fillMasterSel();renderMItems();}catch(e){}}
+    if(curC&&DB.clients[curC]){try{renderItems();updateChips();}catch(e){}}
     toast("☁️ 他のPCでマスタが更新されました");
   });
   const onHist=refHist.on("value",snap=>{
