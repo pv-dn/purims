@@ -1362,7 +1362,7 @@ async function pullSharedMastersCloud(){
     const raw=snap.data().value;
     const d=typeof raw==='string'?JSON.parse(raw):raw;
     if(!d||!d.clients||!Object.keys(d.clients).length)return false;
-    DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients||{}),DB.clients);
+    DB.clients=mergeLedgerClients(unpackClientsFromFirebase(d.clients||{}),DB.clients,{replaceItems:true});
     if(d.cycles&&Object.keys(d.cycles).length)DB.cycles=d.cycles;
     if(Array.isArray(d.products)&&d.products.length)DB.products=mergeProducts(d.products,DB.products);
     // 空配列も反映する（長さチェックだと「グループなし」にしても古い一覧が残って再保存される）
@@ -1398,7 +1398,8 @@ function mergeProducts(incoming,local){
 }
 /** 台帳から取り込むとき、台帳が持たない詳細（symbol・品目の単価など）は手元の値を残す。
  *  伝票側だけで追加した品目も消さない（union）。 */
-function mergeLedgerClients(incoming,local){
+function mergeLedgerClients(incoming,local,opt){
+  const replaceItems=!!(opt&&opt.replaceItems);
   const out={};
   Object.keys(incoming||{}).forEach(name=>{
     const inc=incoming[name];
@@ -1410,11 +1411,14 @@ function mergeLedgerClients(incoming,local){
       const li=locItems.find(x=>x&&it&&it.code&&x.code===it.code)||locItems.find(x=>x&&it&&x.name===it.name);
       return li?Object.assign({},li,it):it;
     });
-    locItems.forEach(li=>{
-      if(!li)return;
-      const exists=merged.some(it=>it&&((li.code&&it.code===li.code)||(li.name&&it.name===li.name)));
-      if(!exists)merged.push(li);
-    });
+    // 共有マスタ取り込み時は紙合わせの品目順を正とし、手元だけの旧品目を付け戻さない
+    if(!replaceItems){
+      locItems.forEach(li=>{
+        if(!li)return;
+        const exists=merged.some(it=>it&&((li.code&&it.code===li.code)||(li.name&&it.name===li.name)));
+        if(!exists)merged.push(li);
+      });
+    }
     rec.items=merged;
     out[name]=rec;
   });

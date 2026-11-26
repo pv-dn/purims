@@ -1,4 +1,4 @@
-const CACHE_NAME = 'purims-v20261124-order-keep';
+const CACHE_NAME = 'purims-v20261126-paper-items';
 const SHELL = ['./', './index.html'];
 
 self.addEventListener('install', event => {
